@@ -1,0 +1,15 @@
+[submodule "build-infra"]
+	path = build-infra
+	url = git@github.com:Metaswitch/clearwater-build-infra.git
+[submodule "modules/rapidjson"]
+	path = modules/rapidjson
+	url = git@github.com:zvelo/rapidjson.git
+[submodule "modules/libevhtp"]
+	path = modules/libevhtp
+	url = git@github.com:ellzey/libevhtp.git
+[submodule "modules/freeDiameter"]
+	path = modules/freeDiameter
+	url = git@github.com:Metaswitch/freeDiameter.git
+[submodule "modules/cpp-common"]
+	path = modules/cpp-common
+	url = git@github.com:Metaswitch/cpp-common.git
