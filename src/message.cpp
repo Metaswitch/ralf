@@ -36,14 +36,16 @@
 #include "rapidjson/document.h"
 #include "message.hpp"
 
+/* Constructor of Message. Takes ownership of the passed-in
+ * rapidjson::Document pointer. */
 Message::Message(const std::string& call_id, rapidjson::Document* body)
 {
     this->call_id = call_id;
     this->received_json = body;
 };
 
+/* Deletes the enclosed rapidjson::Document. */
 Message::~Message()
 {
-    this->call_id = call_id;
     delete this->received_json;
 }
