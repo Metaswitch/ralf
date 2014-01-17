@@ -42,13 +42,13 @@ struct Message
     ~Message();
 
     /* The Call-ID and JSON document are known by the controller when
-    this message is constructed, so are set in the constructor and
-    shouldn't be modified thereafter. */
+       this message is constructed, so are set in the constructor and
+       shouldn't be modified thereafter. */
     std::string call_id;
     rapidjson::Document* received_json;
 
     /* The CCFs and ECFs may come from the controller (on initial
-     * messages) or from the database store (on subsequent ones). */
+       messages) or from the database store (on subsequent ones). */
     std::vector<std::string> ccfs;
     std::vector<std::string> ecfs;
 
