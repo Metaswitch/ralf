@@ -12,8 +12,10 @@ TARGET := ralf
 TARGET_TEST := ralf_test
 
 TARGET_SOURCES := accesslogger.cpp \
+                  localstore.cpp \
                   memcachedstore.cpp \
                   memcachedstoreview.cpp \
+                  signalhandler.cpp \
                   sessionstore.cpp \
                   message.cpp \
                   httpstack.cpp \
@@ -24,11 +26,7 @@ TARGET_SOURCES := accesslogger.cpp \
 TARGET_SOURCES_BUILD := main.cpp
 
 TARGET_SOURCES_TEST := test_main.cpp \
-                       cx_test.cpp \
-                       diameterstack_test.cpp \
-                       cache_test.cpp \
-                       handlers_test.cpp \
-                       httpstack_test.cpp
+                       test_sessionstore.cpp \
 
 TARGET_EXTRA_OBJS_TEST := gmock-all.o \
                           gtest-all.o

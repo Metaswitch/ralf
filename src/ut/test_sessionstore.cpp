@@ -1,5 +1,5 @@
 /**
- * @file sessionstore.h Definitions of interfaces for the session store.
+ * @file test_sessionstore.cpp UT for Ralf session store.
  *
  * Project Clearwater - IMS in the Cloud
  * Copyright (C) 2013  Metaswitch Networks Ltd
@@ -34,67 +34,50 @@
  * as those licenses appear in the file LICENSE-OPENSSL.
  */
 
-#ifndef SESSION_STORE_H__
-#define SESSION_STORE_H__
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 
-#include <string>
-#include <vector>
+#include "localstore.h"
+#include "sessionstore.h"
 
-#include "store.h"
-
-class SessionStore
+class SessionStoreTest : public ::testing::Test
 {
-public:
-  
-  class Session
+  SessionStoreTest()
   {
-  public:
-    // The DIAMETER session ID for this call.
-    // e.g. 1234567890;example.com;1234567890
-    std::string session_id;
+  }
 
-    // The CCF/ECF addresses for this session in priority order.
-    // e.g. 10.0.0.1
-    std::vector<std::string> ccf;
-    std::vector<std::string> ecf;
-
-    // The accouting record number for the next ACR sent.
-    uint32_t acct_record_number;
-
-    // The timer ID for Chronos (if applicable)
-    std::string timer_id;
-
-    // The session refresh time for this session as specified in the SIP
-    // session expiry header.
-    uint32_t session_refresh_time;
-
-  private:
-    // CAS value for this Session.  Used to guarantee consistency
-    // between memcached instances.
-    uint64_t _cas;
-
-    // The SessionStore will set/read the _cas value but no-one else
-    // should.
-    friend class SessionStore;
-  };
-
-  SessionStore(Store *);
-  ~SessionStore();
-
-  // Retrieve session state for a given Call-ID.
-  Session* get_session_data(const std::string& call_id);
-
-  // Save the session object back into the store (this may fail due to CAS atomicity
-  // checking)
-  bool set_session_data(const std::string& call_id, Session* data);
-
-private:
-  // Serialise a session to a string, ready to store in the DB.
-  std::string serialize_session(Session *data);
-
-  Session* deserialize_session(const std::string& s);
-
-  Store* _store;
+  virtual ~SessionStoreTest()
+  {
+  }
 };
 
-#endif
+TEST_F(SessionStoreTest, SimpleTest)
+{
+  LocalStore* memstore = new LocalStore();
+  SessionStore* store = new SessionStore(memstore);
+  SessionStore::Session* session = new SessionStore::Session();
+  session->session_id = "session_id";
+  session->ccf.push_back("ccf1");
+  session->ccf.push_back("ccf2");
+  session->acct_record_number = 2;
+  session->timer_id = "timer_id";
+  session->session_refresh_time = 5 * 60;
+
+  // Save the session in the store
+  bool rc = store->set_session_data("call_id", session);
+  EXPECT_EQ(true, rc);
+  delete session;
+  session = NULL;
+
+  // Retrieve the session again.
+  session = store->get_session_data("call_id");
+  EXPECT_EQ("session_id", session->session_id);
+  EXPECT_EQ(2, session->acct_record_number);
+  EXPECT_EQ("timer_id", session->timer_id);
+  EXPECT_EQ(5 * 60, session->session_refresh_time);
+  EXPECT_EQ(2, session->ccf.size());
+
+  delete session;
+  delete store;
+  delete memstore;
+}
