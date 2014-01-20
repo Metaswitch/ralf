@@ -130,7 +130,7 @@ Message* BillingControllerHandler::parse_body()
   }
 
   Message* msg = new Message(call_id(), body);
-  if (!ccfs.empty)
+  if (!ccfs.empty())
   {
     msg->ccfs = ccfs;
   }
