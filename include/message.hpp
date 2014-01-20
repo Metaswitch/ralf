@@ -41,14 +41,14 @@
 
 struct Message
 {
-    Message(const std::string& call_id, rapidjson::Value* body_event);
+    Message(const std::string& call_id, rapidjson::Document* body);
     ~Message();
 
     /* The Call-ID and JSON document are known by the controller when
        this message is constructed, so are set in the constructor and
        shouldn't be modified thereafter. */
     std::string call_id;
-    rapidjson::Value* received_event_json;
+    rapidjson::Document* received_json;
 
     /* The CCFs and ECFs may come from the controller (on initial
        messages) or from the database store (on subsequent ones). */
