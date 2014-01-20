@@ -54,6 +54,7 @@ class BillingControllerHandler : public HttpStack::Handler
 public:
   BillingControllerHandler(HttpStack::Request& req) : HttpStack::Handler(req) {};
   void run();
+private:
   Message* parse_body();
   inline std::string call_id() {return _req.file();};
 };

@@ -98,7 +98,7 @@ Message* BillingControllerHandler::parse_body()
         (record_type.compare("STOP") == 0) ||
         (record_type.compare("EVENT") == 0)))
   {
-    LOG_WARNING("Accounting-Record-Type was not one of START/INTERIM/STOP/EVENT");
+    LOG_ERROR("Accounting-Record-Type was not one of START/INTERIM/STOP/EVENT");
     return NULL;
   }
 
@@ -109,12 +109,12 @@ Message* BillingControllerHandler::parse_body()
   {
     if (!((body->HasMember("peers")) && (*body)["peers"].IsObject()))
     {
-      LOG_WARNING("JSON lacked a 'peers' object (mandatory for START/EVENT)");
+      LOG_ERROR("JSON lacked a 'peers' object (mandatory for START/EVENT)");
       return NULL;
     }
     if (!((*body)["peers"].HasMember("ccf")) ||(!(*body)["peers"]["ccf"].IsArray()) || ((*body)["peers"]["ccf"].Size() == 0))
     {
-      LOG_WARNING("JSON lacked a 'ccf' array, or the array was empty (mandatory for START/EVENT)");
+      LOG_ERROR("JSON lacked a 'ccf' array, or the array was empty (mandatory for START/EVENT)");
       return NULL;
     }
 
@@ -122,7 +122,7 @@ Message* BillingControllerHandler::parse_body()
     {
       if (!(*body)["peers"]["ccf"][i].IsString())
       {
-        LOG_WARNING("JSON contains a 'ccf' array but not all the elements are strings");
+        LOG_ERROR("JSON contains a 'ccf' array but not all the elements are strings");
         return NULL;
       }
       ccfs.push_back((*body)["peers"]["ccf"][i].GetString());
@@ -130,6 +130,9 @@ Message* BillingControllerHandler::parse_body()
   }
 
   Message* msg = new Message(call_id(), body);
-  msg->ccfs = ccfs;
+  if (!ccfs.empty)
+  {
+    msg->ccfs = ccfs;
+  }
   return msg;
 }
