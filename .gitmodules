@@ -19,3 +19,6 @@
 [submodule "modules/libevent"]
 	path = modules/libevent
 	url = git@github.com:libevent/libevent.git
+[submodule "modules/gmock"]
+	path = modules/gmock
+	url = git@github.com:Metaswitch/gmock-upstream.git
