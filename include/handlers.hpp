@@ -40,12 +40,22 @@
 #include <boost/bind.hpp>
 
 #include "httpstack.h"
+#include "message.hpp"
 
 class PingHandler : public HttpStack::Handler
 {
 public:
   PingHandler(HttpStack::Request& req) : HttpStack::Handler(req) {};
   void run();
+};
+
+class BillingControllerHandler : public HttpStack::Handler
+{
+public:
+  BillingControllerHandler(HttpStack::Request& req) : HttpStack::Handler(req) {};
+  void run();
+  Message* parse_body();
+  inline std::string call_id() {return _req.file();};
 };
 
 #endif

@@ -38,14 +38,14 @@
 
 /* Constructor of Message. Takes ownership of the passed-in
    rapidjson::Document pointer. */
-Message::Message(const std::string& call_id, rapidjson::Document* body)
+Message::Message(const std::string& call_id, rapidjson::Value* body_event)
 {
     this->call_id = call_id;
-    this->received_json = body;
+    this->received_event_json = body_event;
 };
 
 /* Deletes the enclosed rapidjson::Document. */
 Message::~Message()
 {
-    delete this->received_json;
+    delete this->received_event_json;
 }

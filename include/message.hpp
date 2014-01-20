@@ -32,20 +32,23 @@
 * as those licenses appear in the file LICENSE-OPENSSL.
 */
 
+#ifndef RALF_MESSAGE_HPP
+#define RALF_MESSAGE_HPP
+
 #include <vector>
 #include <string>
 #include "rapidjson/document.h"
 
 struct Message
 {
-    Message(const std::string& call_id, rapidjson::Document* body);
+    Message(const std::string& call_id, rapidjson::Value* body_event);
     ~Message();
 
     /* The Call-ID and JSON document are known by the controller when
        this message is constructed, so are set in the constructor and
        shouldn't be modified thereafter. */
     std::string call_id;
-    rapidjson::Document* received_json;
+    rapidjson::Value* received_event_json;
 
     /* The CCFs and ECFs may come from the controller (on initial
        messages) or from the database store (on subsequent ones). */
@@ -57,3 +60,5 @@ struct Message
     std::string session_id;
     long accounting_record_number;
 };
+
+#endif
