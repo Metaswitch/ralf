@@ -12,6 +12,9 @@ TARGET := ralf
 TARGET_TEST := ralf_test
 
 TARGET_SOURCES := accesslogger.cpp \
+                  memcachedstore.cpp \
+                  memcachedstoreview.cpp \
+                  sessionstore.cpp \
                   message.cpp \
                   httpstack.cpp \
                   handlers.cpp \
@@ -79,6 +82,7 @@ LDFLAGS += -L${ROOT}/usr/lib
 LDFLAGS += -lzmq \
            -levhtp \
            -levent_pthreads \
+           -lmemcached \
            -levent \
            -lpthread
 
