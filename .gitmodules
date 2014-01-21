@@ -6,7 +6,7 @@
 	url = git@github.com:zvelo/rapidjson.git
 [submodule "modules/libevhtp"]
 	path = modules/libevhtp
-	url = git@github.com:ellzey/libevhtp.git
+	url = git@github.com:Metaswitch/libevhtp.git
 [submodule "modules/freeDiameter"]
 	path = modules/freeDiameter
 	url = git@github.com:Metaswitch/freeDiameter.git
