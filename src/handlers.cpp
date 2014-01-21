@@ -35,9 +35,10 @@
 */
 
 #include "handlers.hpp"
-
+#include "message.hpp"
 #include "log.h"
 
+#include "rapidjson/rapidjson.h"
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
 
@@ -46,4 +47,92 @@ void PingHandler::run()
   _req.add_content("OK");
   _req.send_reply(200);
   delete this;
+}
+
+void BillingControllerHandler::run()
+{
+  if (_req.method() != htp_method_POST)
+  {
+    _req.send_reply(405);
+    return;
+  }
+  Message* msg = parse_body();
+  if (msg == NULL)
+  {
+    _req.send_reply(400);
+    return;
+  }
+  _req.send_reply(200);
+  //SessionManager->handle(msg);
+  delete this;
+}
+
+Message* BillingControllerHandler::parse_body()
+{
+  rapidjson::Document* body = new rapidjson::Document();
+  std::string bodys = _req.body();
+  body->Parse<0>(bodys.c_str());
+  std::vector<std::string> ccfs;
+
+  // Verify that the body is correct JSON with an "event" element
+  if (!(*body).IsObject() ||
+      !(*body).HasMember("event") ||
+      !(*body)["event"].IsObject())
+  {
+    LOG_WARNING("JSON document was either not valid or did not have an 'event' key");
+    return NULL;
+  }
+
+  // Verify that there is an Accounting-Record-Type and it is one of
+  // the four valid types
+  if (!((*body)["event"].HasMember("Accounting-Record-Type") &&
+        ((*body)["event"]["Accounting-Record-Type"].IsString())))
+  {
+    LOG_WARNING("Accounting-Record-Type not available in JSON");
+    return NULL;
+  }
+
+  std::string record_type = (*body)["event"]["Accounting-Record-Type"].GetString();
+  if (!((record_type.compare("START") == 0) ||
+        (record_type.compare("INTERIM") == 0) ||
+        (record_type.compare("STOP") == 0) ||
+        (record_type.compare("EVENT") == 0)))
+  {
+    LOG_ERROR("Accounting-Record-Type was not one of START/INTERIM/STOP/EVENT");
+    return NULL;
+  }
+
+  // If we have a START or EVENT Accounting-Record-Type, we must have
+  // a list of CCFs to use as peers.
+  if ((record_type.compare("START") == 0) ||
+      (record_type.compare("EVENT") == 0))
+  {
+    if (!((body->HasMember("peers")) && (*body)["peers"].IsObject()))
+    {
+      LOG_ERROR("JSON lacked a 'peers' object (mandatory for START/EVENT)");
+      return NULL;
+    }
+    if (!((*body)["peers"].HasMember("ccf")) ||(!(*body)["peers"]["ccf"].IsArray()) || ((*body)["peers"]["ccf"].Size() == 0))
+    {
+      LOG_ERROR("JSON lacked a 'ccf' array, or the array was empty (mandatory for START/EVENT)");
+      return NULL;
+    }
+
+    for (rapidjson::SizeType i = 0; i < (*body)["peers"]["ccf"].Size(); i++)
+    {
+      if (!(*body)["peers"]["ccf"][i].IsString())
+      {
+        LOG_ERROR("JSON contains a 'ccf' array but not all the elements are strings");
+        return NULL;
+      }
+      ccfs.push_back((*body)["peers"]["ccf"][i].GetString());
+    }
+  }
+
+  Message* msg = new Message(call_id(), body);
+  if (!ccfs.empty())
+  {
+    msg->ccfs = ccfs;
+  }
+  return msg;
 }

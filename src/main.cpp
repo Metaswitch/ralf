@@ -188,7 +188,7 @@ int main(int argc, char**argv)
   signal(SIGTERM, terminate_handler);
 
   struct options options;
-  options.diameter_conf = "homestead.conf";
+  options.diameter_conf = "ralf.conf";
   options.http_address = "0.0.0.0";
   options.http_port = 8888;
   options.http_threads = 1;
@@ -246,15 +246,15 @@ int main(int argc, char**argv)
 
   HttpStack* http_stack = HttpStack::get_instance();
   HttpStack::HandlerFactory<PingHandler> ping_handler_factory;
-  //HttpStack::HandlerFactory<BillingHandler> billing_handler_factory;
+  HttpStack::HandlerFactory<BillingControllerHandler> billing_handler_factory;
   try
   {
     http_stack->initialize();
     http_stack->configure(options.http_address, options.http_port, options.http_threads, access_logger);
     http_stack->register_handler("^/ping$",
                                  &ping_handler_factory);
-    //http_stack->register_handler("^/call-id/[^/]*$",
-    //                             &billing_handler_factory);
+    http_stack->register_handler("^/call-id/[^/]*$",
+                                 &billing_handler_factory);
     http_stack->start();
   }
   catch (HttpStack::Exception& e)

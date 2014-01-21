@@ -32,6 +32,9 @@
 * as those licenses appear in the file LICENSE-OPENSSL.
 */
 
+#ifndef RALF_MESSAGE_HPP
+#define RALF_MESSAGE_HPP
+
 #include <vector>
 #include <string>
 #include "rapidjson/document.h"
@@ -57,3 +60,5 @@ struct Message
     std::string session_id;
     long accounting_record_number;
 };
+
+#endif
