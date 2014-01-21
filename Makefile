@@ -16,7 +16,7 @@ DEB_NAMES := ralf ralf-dbg
 INCLUDE_DIR := ${INSTALL_DIR}/include
 LIB_DIR := ${INSTALL_DIR}/lib
 
-SUBMODULES := libevhtp
+SUBMODULES := libevhtp libmemcached
 
 include $(patsubst %, ${MK_DIR}/%.mk, ${SUBMODULES})
 include ${MK_DIR}/ralf.mk
