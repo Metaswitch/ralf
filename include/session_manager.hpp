@@ -44,10 +44,12 @@ class SessionManager
 public:
   SessionManager(SessionStore* store): _store(store) {};
   void handle(Message* msg);
+  void on_ccf_response (bool accepted, int interim_interval, std::string session_id, int rc, Message* msg);
+
 private:
   SessionStore* _store;
+  rapidjson::Value::Member* create_opaque_data(Message* msg);
   //ChronosConnection* _timer_conn;
-  //PeerManager* _pm;
 };
 
 

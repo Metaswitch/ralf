@@ -61,6 +61,10 @@ struct Message
        the session manager. */
     std::string session_id;
     long accounting_record_number;
+    std::string timer_id;
+
+    int interim_interval;
+    int session_refresh_time;
 };
 
 #endif
