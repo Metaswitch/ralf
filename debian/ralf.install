@@ -1,0 +1,2 @@
+build/bin/ralf usr/share/clearwater/bin
+ralf.root/* /
