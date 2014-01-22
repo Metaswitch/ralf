@@ -50,7 +50,7 @@ set -e
 # for details, see http://www.debian.org/doc/debian-policy/ or
 # the debian-policy package
 
-NAME=homestead
+NAME=ralf
 log_directory=/var/log/$NAME
 
 #

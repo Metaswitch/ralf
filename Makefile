@@ -11,7 +11,7 @@ MODULE_DIR := ${ROOT}/modules
 
 DEB_COMPONENT := ralf
 DEB_MAJOR_VERSION := 1.0
-DEB_NAMES := ralf ralf-dbg
+DEB_NAMES := ralf ralf-dbg ralf-libs ralf-libs-dbg
 
 INCLUDE_DIR := ${INSTALL_DIR}/include
 LIB_DIR := ${INSTALL_DIR}/lib
@@ -27,11 +27,11 @@ test: ${SUBMODULES} ralf_test
 
 testall: $(patsubst %, %_test, ${SUBMODULES}) test
 
-clean: $(patsubst %, %_clean, ${SUBMODULES}) homestead_clean
+clean: $(patsubst %, %_clean, ${SUBMODULES}) ralf_clean
 	rm -rf ${ROOT}/usr
 	rm -rf ${ROOT}/build
 
-distclean: $(patsubst %, %_distclean, ${SUBMODULES}) homestead_distclean
+distclean: $(patsubst %, %_distclean, ${SUBMODULES}) ralf_distclean
 	rm -rf ${ROOT}/usr
 	rm -rf ${ROOT}/build
 
