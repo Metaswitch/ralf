@@ -17,6 +17,7 @@ TARGET_SOURCES := accesslogger.cpp \
                   memcachedstoreview.cpp \
                   signalhandler.cpp \
                   sessionstore.cpp \
+                  session_manager.cpp \
                   message.cpp \
                   httpstack.cpp \
                   handlers.cpp \
@@ -27,6 +28,7 @@ TARGET_SOURCES_BUILD := main.cpp
 
 TARGET_SOURCES_TEST := test_main.cpp \
                        test_sessionstore.cpp \
+		       test_session_manager.cpp
 
 TARGET_EXTRA_OBJS_TEST := gmock-all.o \
                           gtest-all.o

@@ -63,7 +63,7 @@ void BillingControllerHandler::run()
     return;
   }
   _req.send_reply(200);
-  //SessionManager->handle(msg);
+  _sess_mgr->handle(msg);
   delete this;
 }
 
@@ -129,7 +129,7 @@ Message* BillingControllerHandler::parse_body()
     }
   }
 
-  Message* msg = new Message(call_id(), body);
+  Message* msg = new Message(call_id(), body, record_type);
   if (!ccfs.empty())
   {
     msg->ccfs = ccfs;

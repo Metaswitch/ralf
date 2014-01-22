@@ -41,6 +41,7 @@
 
 #include "httpstack.h"
 #include "message.hpp"
+#include "session_manager.hpp"
 
 class PingHandler : public HttpStack::Handler
 {
@@ -49,14 +50,20 @@ public:
   void run();
 };
 
+struct BillingControllerConfig
+{
+  SessionManager* mgr;
+};
+
 class BillingControllerHandler : public HttpStack::Handler
 {
 public:
-  BillingControllerHandler(HttpStack::Request& req) : HttpStack::Handler(req) {};
+  BillingControllerHandler(HttpStack::Request& req, const BillingControllerConfig* cfg) :  HttpStack::Handler(req),  _sess_mgr(cfg->mgr) {};
   void run();
 private:
   Message* parse_body();
   inline std::string call_id() {return _req.file();};
+  SessionManager* _sess_mgr;
 };
 
 #endif

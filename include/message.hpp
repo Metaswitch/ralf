@@ -41,7 +41,7 @@
 
 struct Message
 {
-    Message(const std::string& call_id, rapidjson::Document* body);
+    Message(const std::string& call_id, rapidjson::Document* body, const std::string& record_type, bool timer_interim=false);
     ~Message();
 
     /* The Call-ID and JSON document are known by the controller when
@@ -49,6 +49,8 @@ struct Message
        shouldn't be modified thereafter. */
     std::string call_id;
     rapidjson::Document* received_json;
+    std::string record_type;
+    bool timer_interim;
 
     /* The CCFs and ECFs may come from the controller (on initial
        messages) or from the database store (on subsequent ones). */

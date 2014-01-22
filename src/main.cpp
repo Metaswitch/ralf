@@ -39,6 +39,7 @@
 #include <semaphore.h>
 #include <strings.h>
 
+#include "memcachedstore.h"
 #include "accesslogger.h"
 #include "log.h"
 #include "httpstack.h"
@@ -243,10 +244,14 @@ int main(int argc, char**argv)
   }
   */
 
+  MemcachedStore* mstore = new MemcachedStore(false, "./cluster_settings");
+  SessionStore* store = new SessionStore(mstore);
+  BillingControllerConfig* cfg = new BillingControllerConfig();
+  cfg->mgr = new SessionManager(store);
 
   HttpStack* http_stack = HttpStack::get_instance();
   HttpStack::HandlerFactory<PingHandler> ping_handler_factory;
-  HttpStack::HandlerFactory<BillingControllerHandler> billing_handler_factory;
+  HttpStack::ConfiguredHandlerFactory<BillingControllerHandler, BillingControllerConfig> billing_handler_factory(cfg);
   try
   {
     http_stack->initialize();
