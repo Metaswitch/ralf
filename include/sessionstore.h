@@ -87,6 +87,7 @@ public:
   // Save the session object back into the store (this may fail due to CAS atomicity
   // checking)
   bool set_session_data(const std::string& call_id, Session* data);
+  bool delete_session_data(const std::string& call_id, Session* data);
 
 private:
   // Serialise a session to a string, ready to store in the DB.

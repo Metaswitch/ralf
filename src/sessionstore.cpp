@@ -57,7 +57,7 @@ SessionStore::Session* SessionStore::get_session_data(const std::string& call_id
   uint64_t cas;
   Store::Status status = _store->get_data("session", call_id, data, cas);
 
-  if (status == Store::Status::OK)
+  if (status == Store::Status::OK && !data.empty())
   {
     rc = deserialize_session(data);
     rc->_cas = cas;
@@ -80,6 +80,20 @@ bool SessionStore::set_session_data(const std::string& call_id, Session* session
                                           data,
                                           session->_cas,
                                           session->session_refresh_time);
+  LOG_DEBUG("Store returned %d", status);
+
+  return (status = Store::Status::OK);
+}
+
+
+bool SessionStore::delete_session_data(const std::string& call_id, Session* session)
+{
+  LOG_DEBUG("Deleting session data for %s, CAS = %ld",
+            call_id.c_str(),
+            session->_cas);
+
+  Store::Status status = _store->delete_data("session",
+                                          call_id);
   LOG_DEBUG("Store returned %d", status);
 
   return (status = Store::Status::OK);
