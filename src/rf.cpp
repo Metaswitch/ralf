@@ -39,7 +39,8 @@
 namespace Rf {
 
 Dictionary::Dictionary() :
-  ACCOUNTING_CHARGING_REQUEST("Accounting-Charging-Request")
+  ACCOUNTING_CHARGING_REQUEST("Accounting-Charging-Request"),
+  ACCOUNTING_CHARGING_RESPONSE("Accounting-Charging-Response")
 {
 }
 
@@ -109,6 +110,15 @@ AccountingChargingRequest::AccountingChargingRequest(const Dictionary* dict,
 }
 
 AccountingChargingRequest::~AccountingChargingRequest()
+{
+}
+
+AccountingChargingResponse::AccountingChargingResponse(const Dictionary* dict) :
+                                                       Diameter::Message(dict, dict->ACCOUNTING_CHARGING_RESPONSE)
+{
+}
+
+AccountingChargingResponse::~AccountingChargingResponse()
 {
 }
 

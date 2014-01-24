@@ -52,6 +52,7 @@ class Dictionary : public Diameter::Dictionary
 public:
   Dictionary();
   const Diameter::Dictionary::Message ACCOUNTING_CHARGING_REQUEST;
+  const Diameter::Dictionary::Message ACCOUNTING_CHARGING_RESPONSE;
 };
 
 class AccountingChargingRequest : public Diameter::Message
@@ -62,6 +63,13 @@ public:
                             const uint32_t& record_number,
                             const rapidjson::Value& contents);
   ~AccountingChargingRequest();
+};
+
+class AccountingChargingResponse : public Diameter::Message
+{
+public:
+  AccountingChargingResponse(const Dictionary* dict);
+  ~AccountingChargingResponse();
 };
 
 }
