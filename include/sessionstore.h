@@ -58,7 +58,7 @@ public:
     std::vector<std::string> ccf;
     std::vector<std::string> ecf;
 
-    // The accouting record number for the next ACR sent.
+    // The accounting record number for the next ACR sent.
     uint32_t acct_record_number;
 
     // The timer ID for Chronos (if applicable)
@@ -67,6 +67,9 @@ public:
     // The session refresh time for this session as specified in the SIP
     // session expiry header.
     uint32_t session_refresh_time;
+
+    // The interim interval time for this session as specified in the Diameter Acct-Interim-Interval AVP.
+    uint32_t interim_interval;
 
   private:
     // CAS value for this Session.  Used to guarantee consistency
@@ -87,7 +90,7 @@ public:
   // Save the session object back into the store (this may fail due to CAS atomicity
   // checking)
   bool set_session_data(const std::string& call_id, Session* data);
-  bool delete_session_data(const std::string& call_id, Session* data);
+  bool delete_session_data(const std::string& call_id);
 
 private:
   // Serialise a session to a string, ready to store in the DB.

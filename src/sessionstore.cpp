@@ -86,11 +86,10 @@ bool SessionStore::set_session_data(const std::string& call_id, Session* session
 }
 
 
-bool SessionStore::delete_session_data(const std::string& call_id, Session* session)
+bool SessionStore::delete_session_data(const std::string& call_id)
 {
-  LOG_DEBUG("Deleting session data for %s, CAS = %ld",
-            call_id.c_str(),
-            session->_cas);
+  LOG_DEBUG("Deleting session data for %s",
+            call_id.c_str());
 
   Store::Status status = _store->delete_data("session",
                                           call_id);
@@ -122,6 +121,8 @@ std::string SessionStore::serialize_session(Session* session)
 
   oss.write((const char*)&session->session_refresh_time, sizeof(uint32_t));
 
+  oss.write((const char*)&session->interim_interval, sizeof(uint32_t));
+
   return oss.str();
 }
 
@@ -148,6 +149,8 @@ SessionStore::Session* SessionStore::deserialize_session(const std::string& data
   getline(iss, session->timer_id, '\0');
 
   iss.read((char*)&session->session_refresh_time, sizeof(uint32_t));
+
+  iss.read((char*)&session->interim_interval, sizeof(uint32_t));
 
   return session;
 }

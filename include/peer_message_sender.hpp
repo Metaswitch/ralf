@@ -1,5 +1,5 @@
 /**
- * @file session_manager.hpp
+ * @file peer_message_sender.hpp
  *
  * Project Clearwater - IMS in the Cloud
  * Copyright (C) 2014  Metaswitch Networks Ltd
@@ -33,24 +33,32 @@
  * under which the OpenSSL Project distributes the OpenSSL toolkit software,
  * as those licenses appear in the file LICENSE-OPENSSL.
  */
-#ifndef SESSION_MANAGER_HPP_
-#define SESSION_MANAGER_HPP_
+#ifndef PEER_MESSAGE_SENDER_HPP_
+#define PEER_MESSAGE_SENDER_HPP_
+
+#include <freeDiameter/freeDiameter-host.h>
+#include <freeDiameter/libfdcore.h>
 
 #include "message.hpp"
-#include "sessionstore.h"
+#include "session_manager.hpp"
 
-class SessionManager
+// A PeerMessageSender is responsible for ensuring that a connection is open
+// to either the primary or backup CCF, and once a connection has been opened,
+// sending the message to it.
+class PeerMessageSender
 {
 public:
-  SessionManager(SessionStore* store): _store(store) {};
-  void handle(Message* msg);
-  void on_ccf_response (bool accepted, int interim_interval, std::string session_id, int rc, Message* msg);
+  PeerMessageSender(Message* msg, SessionManager* sm);
+  void send();
 
 private:
-  SessionStore* _store;
-  rapidjson::Value::Member* create_opaque_data(Message* msg);
-  //ChronosConnection* _timer_conn;
+  static void fd_add_cb(peer_info* peer, void* this_ptr);
+  void fd_add_cb(peer_info* peer);
+  void int_send_msg();
+  Message* _msg;
+  int _which;
+  std::vector<std::string> _ccfs;
+  SessionManager* _sm;
 };
 
-
-#endif /* SESSION_MANAGER_HPP_ */
+#endif /* PEER_MESSAGE_SENDER_HPP_ */
