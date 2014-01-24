@@ -82,6 +82,8 @@ LDFLAGS += -lzmq \
            -levent_pthreads \
            -lmemcached \
            -levent \
+           -lfdcore \
+           -lfdproto \
            -lpthread
 
 # Test build uses just-built libraries, which may not be installed
