@@ -17,6 +17,8 @@ TARGET_SOURCES := accesslogger.cpp \
                   memcachedstoreview.cpp \
                   signalhandler.cpp \
                   sessionstore.cpp \
+                  diameterstack.cpp \
+                  rf.cpp \
                   message.cpp \
                   httpstack.cpp \
                   handlers.cpp \
