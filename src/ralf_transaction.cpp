@@ -34,6 +34,8 @@
  * as those licenses appear in the file LICENSE-OPENSSL.
  */
 
+#include "ralf_transaction.hpp"
+
 void RalfTransaction::on_timeout()
 {
   _sm->on_ccf_response(false, 0, "", 0, _msg);
@@ -48,8 +50,8 @@ void RalfTransaction::on_response(Diameter::Message& rsp)
   std::string session_id;
 
   rsp.result_code(&result_code);
-  rsp.get_str_from_avp(Diameter::Dictionary::SESSION_ID, &session_id);
-  rsp.get_i32_from_avp(Diameter::Dictionary::ACCT_INTERIM_INTERVAL, &interim_interval);
+  rsp.get_str_from_avp(_dict->SESSION_ID, &session_id);
+  rsp.get_i32_from_avp(_dict->ACCT_INTERIM_INTERVAL, &interim_interval);
 
   if (result_code == 2001)
   {

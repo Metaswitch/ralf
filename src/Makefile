@@ -26,6 +26,11 @@ TARGET_SOURCES := accesslogger.cpp \
                   httpstack.cpp \
                   handlers.cpp \
                   logger.cpp \
+                  httpconnection.cpp \
+                  chronosconnection.cpp \
+                  load_monitor.cpp \
+                  statistic.cpp \
+                  utils.cpp \
                   log.cpp
 
 TARGET_SOURCES_BUILD := main.cpp
@@ -59,6 +64,8 @@ CPPFLAGS += -Wno-write-strings \
 CPPFLAGS += -I${ROOT}/include \
             -I${ROOT}/usr/include \
             -I${ROOT}/modules/cpp-common/include \
+            -I${ROOT}/modules/sas-client/include \
+            -I${ROOT}/modules/jsoncpp/include \
             -I${ROOT}/modules/rapidjson/include
 
 # Add modules/cpp-common/src as a VPATH to pull in required common modules
@@ -90,6 +97,9 @@ LDFLAGS += -lzmq \
            -levent \
            -lfdcore \
            -lfdproto \
+           -ljsoncpp \
+           -lsas \
+           -lcurl \
            -lpthread
 
 # Test build uses just-built libraries, which may not be installed

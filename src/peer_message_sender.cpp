@@ -41,8 +41,8 @@
 #include <errno.h>
 #include "log.h"
 #include "peer_message_sender.hpp"
-//#include "ralf_transaction.hpp"
-
+#include "ralf_transaction.hpp"
+#include "rf.h"
 
 /* Creates a PeerMessageSender. The object is deleted when:
  *   - we call send() and the call to fd_peer_add() fails
@@ -113,8 +113,10 @@ void PeerMessageSender::int_send_msg()
 {
   std::string ccf = _ccfs[_which];
   LOG_DEBUG("Sending message to %s (number %d)", ccf.c_str(), _which);
-  //RalfTransaction* tsx = new RalfTransaction(_sm);
-  //Rf::AccountingChargingRequest acr(NULL, ccf, _msg->accounting_record_number, _msg->received_json->FindMember("event")->value());
+  Rf::Dictionary dict;
+  RalfTransaction* tsx = new RalfTransaction(&dict, _sm, _msg);
+  Rf::AccountingChargingRequest acr(&dict, ccf, _msg->accounting_record_number, _msg->received_json->FindMember("event")->value);
+  acr.send(tsx);
   delete this;
 }
 

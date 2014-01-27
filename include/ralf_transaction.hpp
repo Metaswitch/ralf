@@ -36,11 +36,16 @@
 #ifndef RALF_TRANSACTION_HPP_
 #define RALF_TRANSACTION_HPP_
 
-class RalfTransaction: Diameter::Transaction
+#include "diameterstack.h"
+#include "message.hpp"
+#include "session_manager.hpp"
+
+class RalfTransaction: public Diameter::Transaction
 {
+public:
   void on_response(Diameter::Message& rsp);
   void on_timeout();
-  void RalfTransaction(SessionManager* sm, Message* msg): _sm(sm), _msg(msg) {};
+  RalfTransaction(Diameter::Dictionary* dict, SessionManager* sm, Message* msg): Diameter::Transaction(dict), _sm(sm), _msg(msg) {};
 
 private:
   SessionManager* _sm;

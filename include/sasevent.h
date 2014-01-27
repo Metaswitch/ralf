@@ -1,8 +1,8 @@
 /**
- * @file session_manager.hpp
+ * @file sasevent.h
  *
  * Project Clearwater - IMS in the Cloud
- * Copyright (C) 2014  Metaswitch Networks Ltd
+ * Copyright (C) 2013  Metaswitch Networks Ltd
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -33,26 +33,46 @@
  * under which the OpenSSL Project distributes the OpenSSL toolkit software,
  * as those licenses appear in the file LICENSE-OPENSSL.
  */
-#ifndef SESSION_MANAGER_HPP_
-#define SESSION_MANAGER_HPP_
 
-#include "message.hpp"
-#include "sessionstore.h"
-#include "chronosconnection.h"
+#ifndef SASEVENT_H__
+#define SASEVENT_H__
 
-class SessionManager
-{
-public:
-  SessionManager(SessionStore* store): _store(store) {_timer_conn = new ChronosConnection("localhost:7253");};
-  ~SessionManager() {delete _timer_conn;};
-  void handle(Message* msg);
-  void on_ccf_response (bool accepted, uint32_t interim_interval, std::string session_id, int rc, Message* msg);
+#include <string>
 
-private:
-  SessionStore* _store;
-  std::string create_opaque_data(Message* msg);
-  ChronosConnection* _timer_conn;
-};
+namespace SASEvent {
 
+  const std::string CURRENT_RESOURCE_BUNDLE = "org.projectclearwater.sprout.20131107";
 
-#endif /* SESSION_MANAGER_HPP_ */
+  const int SIP_BASE = 0x010000;
+  const int HTTP_BASE = 0x020000;
+  const int DNS_BASE = 0x030000;
+
+  const int HTTP_REQ = 0;
+  const int HTTP_RSP = 1;
+  const int HTTP_ERR = 2;
+
+  const int RX_SIP_MSG = SIP_BASE + 0;
+  const int TX_SIP_MSG = SIP_BASE + 1;
+
+  const int TX_HSS_BASE = HTTP_BASE + 0x00;
+  const int TX_HSS_REQ = TX_HSS_BASE + HTTP_REQ;
+  const int RX_HSS_RSP = TX_HSS_BASE + HTTP_RSP;
+  const int RX_HSS_ERR = TX_HSS_BASE + HTTP_ERR;
+
+  const int TX_XDM_BASE = HTTP_BASE + 0x40;
+  const int TX_XDM_GET_BASE = TX_XDM_BASE;
+  const int TX_XDM_GET_REQ = TX_XDM_GET_BASE + HTTP_REQ;
+  const int RX_XDM_GET_RSP = TX_XDM_GET_BASE + HTTP_RSP;
+  const int RX_XDM_GET_ERR = TX_XDM_GET_BASE + HTTP_ERR;
+
+  const int ENUM_START = DNS_BASE + 0;
+  const int ENUM_MATCH = DNS_BASE + 1;
+  const int ENUM_INCOMPLETE = DNS_BASE + 2;
+  const int ENUM_COMPLETE = DNS_BASE + 3;
+  const int TX_ENUM_REQ = DNS_BASE + 4;
+  const int RX_ENUM_RSP = DNS_BASE + 5;
+  const int RX_ENUM_ERR = DNS_BASE + 6;
+
+} // namespace SASEvent
+
+#endif
