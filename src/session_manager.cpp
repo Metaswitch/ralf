@@ -145,7 +145,7 @@ void SessionManager::on_ccf_response (bool accepted, uint32_t interim_interval, 
                                "/call-id/"+msg->call_id,
                                create_opaque_data(msg),
                                fake_trail);
-        };
+      };
 
       std::string timer_id;
 
@@ -165,7 +165,9 @@ void SessionManager::on_ccf_response (bool accepted, uint32_t interim_interval, 
       delete sess;
     }
 
-  } else {
+  }
+  else
+  {
     LOG_WARNING("Session for %s received error from CDF", msg->call_id.c_str());
     if ((msg->record_type.compare("INTERIM") == 0))
     {
@@ -199,7 +201,6 @@ void SessionManager::on_ccf_response (bool accepted, uint32_t interim_interval, 
         }
       }
     }
-
   }
 
   // Everything is finished and we're the last holder of the Message object - delete it.
