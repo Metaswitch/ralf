@@ -25,9 +25,3 @@
 [submodule "modules/sas-client"]
 	path = modules/sas-client
 	url = https://github.com/Metaswitch/sas-client.git
-[submodule "modules/jsoncpp-upstream"]
-	path = modules/jsoncpp-upstream
-	url = https://github.com/Metaswitch/jsoncpp-upstream
-[submodule "modules/jsoncpp"]
-	path = modules/jsoncpp
-	url = https://github.com/Metaswitch/jsoncpp-upstream
