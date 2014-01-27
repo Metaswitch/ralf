@@ -3,7 +3,7 @@
 *.substvars
 /changelog
 /files
-/homestead-dbg/
-/homestead-libs/
-/homestead-libs-dbg/
-/homestead/
+/ralf-dbg/
+/ralf-libs/
+/ralf-libs-dbg/
+/ralf/
