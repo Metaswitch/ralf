@@ -19,6 +19,9 @@ TARGET_SOURCES := accesslogger.cpp \
                   sessionstore.cpp \
                   session_manager.cpp \
                   peer_message_sender.cpp \
+                  diameterstack.cpp \
+                  rf.cpp \
+                  ralf_transaction.cpp \
                   message.cpp \
                   httpstack.cpp \
                   handlers.cpp \
