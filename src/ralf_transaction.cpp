@@ -36,7 +36,7 @@
 
 void RalfTransaction::on_timeout()
 {
-  _sm->on_ccf_response(false, 0, "", 0);
+  _sm->on_ccf_response(false, 0, "", 0, _msg);
   delete this;
 }
 
