@@ -35,6 +35,7 @@
  */
 
 #include "rf.h"
+#include "log.h"
 
 namespace Rf {
 
@@ -44,6 +45,9 @@ Dictionary::Dictionary() :
 {
 }
 
+// Create an ACR message from a JSON descriptor.  Most AVPs are auto-created from the
+// contents parameter which should be a JSON object with keys named after AVPs.  For example
+// this object could be the "event" part of the original HTTP request received by Ralf.
 AccountingChargingRequest::AccountingChargingRequest(const Dictionary* dict,
                                                      const std::string& dest_host,
                                                      const uint32_t& record_number,
@@ -61,6 +65,12 @@ AccountingChargingRequest::AccountingChargingRequest(const Dictionary* dict,
   add(Diameter::AVP("Destination-Host").val_str(dest_host));
   add(Diameter::AVP("Accounting-Record-Number").val_i32(record_number));
 
+  if (contents.GetType() != rapidjson::kObjectType)
+  {
+    LOG_ERROR("Cannot build ACR from JSON type %d", contents.GetType());
+    return;
+  }
+
   // Fill in the dynamic fields
   for (rapidjson::Value::ConstMemberIterator it = contents.MemberBegin();
        it != contents.MemberEnd();
@@ -74,34 +84,15 @@ AccountingChargingRequest::AccountingChargingRequest(const Dictionary* dict,
       LOG_ERROR("Invalid format (true/false) in JSON block, ignoring");
       continue;
     case rapidjson::kStringType:
-      add(Diameter::AVP(it->name.GetString()).val_str(it->value.GetString()));
-      break;
     case rapidjson::kNumberType:
-      add(Diameter::AVP(it->name.GetString()).val_u32(it->value.GetUint()));
-      break;
     case rapidjson::kArrayType:
       for (rapidjson::Value::ConstValueIterator ary_it = it->value.Begin();
-           ary_it != it->value.End();
-           ary_it++)
+           ary_it !=  it->value.End();
+           ++ary_it)
       {
-        switch (ary_it->GetType())
-        {
-        case rapidjson::kNullType:
-        case rapidjson::kTrueType:
-        case rapidjson::kFalseType:
-        case rapidjson::kObjectType:
-        case rapidjson::kArrayType:
-          LOG_ERROR("Invalid format for body of repeated AVP, ignoring");
-          continue;
-        case rapidjson::kNumberType:
-          add(Diameter::AVP(it->name.GetString()).val_u32(ary_it->GetUint()));
-          break;
-        case rapidjson::kStringType:
-          add(Diameter::AVP(it->name.GetString()).val_str(ary_it->GetString()));
-          break;
-        }
+        add(Diameter::AVP(it->name.GetString()).val_json(ary_it));
       }
-      break;
+      break; 
     case rapidjson::kObjectType:
       add(Diameter::AVP(it->name.GetString()).val_json(it->value));
       break;
