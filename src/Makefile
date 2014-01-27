@@ -17,6 +17,8 @@ TARGET_SOURCES := accesslogger.cpp \
                   memcachedstoreview.cpp \
                   signalhandler.cpp \
                   sessionstore.cpp \
+                  diameterstack.cpp \
+                  rf.cpp \
                   message.cpp \
                   httpstack.cpp \
                   handlers.cpp \
@@ -82,6 +84,8 @@ LDFLAGS += -lzmq \
            -levent_pthreads \
            -lmemcached \
            -levent \
+           -lfdcore \
+           -lfdproto \
            -lpthread
 
 # Test build uses just-built libraries, which may not be installed
