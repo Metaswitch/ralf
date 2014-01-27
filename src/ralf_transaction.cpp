@@ -47,12 +47,11 @@ void RalfTransaction::on_response(Diameter::Message& rsp)
   int interim_interval = 0;
   std::string session_id;
 
-  Diameter::Dictionary::AVP interval("Acct-Interim-Interval");
   rsp.result_code(&result_code);
   rsp.get_str_from_avp(Diameter::Dictionary::SESSION_ID, &session_id);
-  rsp.get_i32_from_avp(interval, &interim_interval);
+  rsp.get_i32_from_avp(Diameter::Dictionary::ACCT_INTERIM_INTERVAL, &interim_interval);
 
-  if (result_code = 2001)
+  if (result_code == 2001)
   {
     _sm->on_ccf_response(true, interim_interval, session_id, result_code, _msg);
   }

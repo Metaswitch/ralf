@@ -41,7 +41,6 @@ class RalfTransaction: Diameter::Transaction
   void on_response(Diameter::Message& rsp);
   void on_timeout();
   void RalfTransaction(SessionManager* sm, Message* msg): _sm(sm), _msg(msg) {};
-  ;
 
 private:
   SessionManager* _sm;
