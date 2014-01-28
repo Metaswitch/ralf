@@ -45,6 +45,7 @@
 #include "httpstack.h"
 #include "handlers.hpp"
 #include "logger.h"
+#include "rf.h"
 
 struct options
 {
@@ -191,7 +192,7 @@ int main(int argc, char**argv)
   struct options options;
   options.diameter_conf = "ralf.conf";
   options.http_address = "0.0.0.0";
-  options.http_port = 8888;
+  options.http_port = 9888;
   options.http_threads = 1;
   options.dest_realm = "dest-realm.unknown";
   options.dest_host = "dest-host.unknown";
@@ -227,22 +228,20 @@ int main(int argc, char**argv)
 
   LOG_STATUS("Log level set to %d", options.log_level);
 
-  /*
   Diameter::Stack* diameter_stack = Diameter::Stack::get_instance();
-  Cx::Dictionary* dict = NULL;
+  Rf::Dictionary* dict = NULL;
   try
   {
     diameter_stack->initialize();
     diameter_stack->configure(options.diameter_conf);
-    dict = new Cx::Dictionary();
-    diameter_stack->advertize_application(dict->CX);
+    dict = new Rf::Dictionary();
+    diameter_stack->advertize_application(dict->RF);
     diameter_stack->start();
   }
   catch (Diameter::Stack::Exception& e)
   {
     fprintf(stderr, "Caught Diameter::Stack::Exception - %s - %d\n", e._func, e._rc);
   }
-  */
 
   MemcachedStore* mstore = new MemcachedStore(false, "./cluster_settings");
   SessionStore* store = new SessionStore(mstore);
