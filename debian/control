@@ -11,7 +11,7 @@ Homepage: http://projectclearwater.org/
 
 Package: ralf
 Architecture: any
-Depends: clearwater-infrastructure, clearwater-tcp-scalability, clearwater-log-cleanup, ralf-libs
+Depends: clearwater-infrastructure, clearwater-tcp-scalability, clearwater-log-cleanup, ralf-libs, chronos, libsctp1, libzmq3, clearwater-memcached
 Suggests: ralf-dbg
 Description: ralf, the Clearwater CTF
 
