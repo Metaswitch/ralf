@@ -51,12 +51,13 @@
  *
  *   No action should be taken after any of the above happens, as the this pointer becomes invalid.
  */
-PeerMessageSender::PeerMessageSender(Message* msg, SessionManager* sm)
+PeerMessageSender::PeerMessageSender(Message* msg, SessionManager* sm, Rf::Dictionary* dict)
 {
   _which = PRIMARY_CCF;
   _msg = msg;
   _ccfs = msg->ccfs;
   _sm = sm;
+  _dict = dict;
 }
 
 /* Sends the message to the primary given CCF or, if it can't connect to that CCF, to the backup CCF.
@@ -115,9 +116,8 @@ void PeerMessageSender::int_send_msg()
 {
   std::string ccf = _ccfs[_which];
   LOG_DEBUG("Sending message to %s (number %d)", ccf.c_str(), _which);
-  Rf::Dictionary dict;
-  RalfTransaction* tsx = new RalfTransaction(&dict, _sm, _msg);
-  Rf::AccountingChargingRequest acr(&dict, ccf, _msg->accounting_record_number, _msg->received_json->FindMember("event")->value);
+  RalfTransaction* tsx = new RalfTransaction(_dict, _sm, _msg);
+  Rf::AccountingChargingRequest acr(_dict, ccf, _msg->accounting_record_number, _msg->received_json->FindMember("event")->value);
   acr.send(tsx);
   delete this;
 }

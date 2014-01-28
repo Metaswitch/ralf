@@ -230,23 +230,17 @@ int main(int argc, char**argv)
 
   Diameter::Stack* diameter_stack = Diameter::Stack::get_instance();
   Rf::Dictionary* dict = NULL;
-  try
-  {
-    diameter_stack->initialize();
-    diameter_stack->configure(options.diameter_conf);
-    dict = new Rf::Dictionary();
-    diameter_stack->advertize_application(dict->RF);
-    diameter_stack->start();
-  }
-  catch (Diameter::Stack::Exception& e)
-  {
-    fprintf(stderr, "Caught Diameter::Stack::Exception - %s - %d\n", e._func, e._rc);
-  }
+  diameter_stack->initialize();
+  diameter_stack->configure(options.diameter_conf);
+  dict = new Rf::Dictionary();
+  diameter_stack->advertize_application(dict->RF);
+  diameter_stack->start();
+
 
   MemcachedStore* mstore = new MemcachedStore(false, "./cluster_settings");
   SessionStore* store = new SessionStore(mstore);
   BillingControllerConfig* cfg = new BillingControllerConfig();
-  cfg->mgr = new SessionManager(store);
+  cfg->mgr = new SessionManager(store, dict);
 
   HttpStack* http_stack = HttpStack::get_instance();
   HttpStack::HandlerFactory<PingHandler> ping_handler_factory;

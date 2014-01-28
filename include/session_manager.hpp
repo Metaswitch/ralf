@@ -39,11 +39,12 @@
 #include "message.hpp"
 #include "sessionstore.h"
 #include "chronosconnection.h"
+#include "rf.h"
 
 class SessionManager
 {
 public:
-  SessionManager(SessionStore* store): _store(store) {_timer_conn = new ChronosConnection("localhost:7253");};
+  SessionManager(SessionStore* store, Rf::Dictionary* dict): _store(store), _dict(dict) {_timer_conn = new ChronosConnection("localhost:7253");};
   ~SessionManager() {delete _timer_conn;};
   void handle(Message* msg);
   void on_ccf_response (bool accepted, uint32_t interim_interval, std::string session_id, int rc, Message* msg);
@@ -52,6 +53,7 @@ private:
   SessionStore* _store;
   std::string create_opaque_data(Message* msg);
   ChronosConnection* _timer_conn;
+  Rf::Dictionary* _dict;
 };
 
 

@@ -103,7 +103,7 @@ void SessionManager::handle(Message* msg)
   };
 
   // go to the Diameter stack
-  PeerMessageSender* pm = new PeerMessageSender(msg, this); // self-deleting
+  PeerMessageSender* pm = new PeerMessageSender(msg, this, _dict); // self-deleting
   pm->send();
 
 }

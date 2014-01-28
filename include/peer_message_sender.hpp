@@ -39,6 +39,7 @@
 #include <freeDiameter/freeDiameter-host.h>
 #include <freeDiameter/libfdcore.h>
 
+#include "rf.h"
 #include "message.hpp"
 #include "session_manager.hpp"
 
@@ -48,7 +49,7 @@
 class PeerMessageSender
 {
 public:
-  PeerMessageSender(Message* msg, SessionManager* sm);
+  PeerMessageSender(Message* msg, SessionManager* sm, Rf::Dictionary* dict);
   void send();
 
 private:
@@ -59,6 +60,7 @@ private:
   int _which;
   std::vector<std::string> _ccfs;
   SessionManager* _sm;
+  Rf::Dictionary* _dict;
 };
 
 #endif /* PEER_MESSAGE_SENDER_HPP_ */
