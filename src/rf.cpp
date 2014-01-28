@@ -40,6 +40,7 @@
 namespace Rf {
 
 Dictionary::Dictionary() :
+  RF("Rf"),
   ACCOUNTING_CHARGING_REQUEST("Accounting-Charging-Request"),
   ACCOUNTING_CHARGING_RESPONSE("Accounting-Charging-Response")
 {
