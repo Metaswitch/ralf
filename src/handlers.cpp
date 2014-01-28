@@ -125,6 +125,7 @@ Message* BillingControllerHandler::parse_body()
         LOG_ERROR("JSON contains a 'ccf' array but not all the elements are strings");
         return NULL;
       }
+      LOG_DEBUG("Adding CCF %s", (*body)["peers"]["ccf"][i].GetString());
       ccfs.push_back((*body)["peers"]["ccf"][i].GetString());
     }
   }

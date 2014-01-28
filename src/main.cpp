@@ -190,7 +190,7 @@ int main(int argc, char**argv)
   signal(SIGTERM, terminate_handler);
 
   struct options options;
-  options.diameter_conf = "ralf.conf";
+  options.diameter_conf = "/var/lib/ralf/ralf.conf";
   options.http_address = "0.0.0.0";
   options.http_port = 9888;
   options.http_threads = 1;

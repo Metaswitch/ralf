@@ -71,9 +71,9 @@ void PeerMessageSender::send()
 
   // Check for an existing connection
   peer_hdr* peer = NULL;
-  char* diam_id = strdup(ccf.c_str());
+  DiamId_t diam_id = strdup(ccf.c_str());
   int rc = fd_peer_getbyid(diam_id, (long unsigned int) ccf.length(), 0, &peer);
-  free(diam_id);
+  LOG_DEBUG("Checking connection to %s", diam_id);
 
   if (rc == 0 && peer != NULL)
   {
@@ -84,12 +84,14 @@ void PeerMessageSender::send()
   {
     // We don't have an existing connection - try and establish one
     peer_info myinfo;
-    myinfo.pi_diamid = strdup(ccf.c_str());
+    myinfo.pi_diamid = diam_id;
     myinfo.pi_diamidlen = (long unsigned int) ccf.length();
+    myinfo.config.pic_realm = "example.com";
     myinfo.config.pic_lft = 120;
     myinfo.config.pic_flags.exp = PI_EXP_INACTIVE;
+    fd_list_init(&myinfo.pi_endpoints, NULL);
 
-    LOG_DEBUG("Connecting to %s (number %d)", ccf.c_str(), _which);
+    LOG_DEBUG("Connecting to %s (number %d)", myinfo.pi_diamid, _which);
     int rc = fd_peer_add(&myinfo, "PeerMessageSender::send", PeerMessageSender::fd_add_cb, this);
     if (rc == EEXIST)
     {
@@ -98,7 +100,7 @@ void PeerMessageSender::send()
     }
     else if (rc != 0)
     {
-      LOG_ERROR("fd_peer_add failed to add peer %s, rc %d", ccf.c_str(), rc);
+      LOG_ERROR("fd_peer_add failed to add peer %s, rc %d", myinfo.pi_diamid, rc);
       _sm->on_ccf_response(false, 0, "", 0, _msg);
       delete this;
     }
