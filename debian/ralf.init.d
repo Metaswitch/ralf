@@ -80,25 +80,27 @@ log_directory=/var/log/$NAME
 #
 get_settings()
 {
-        # Set up defaults and then pull in the settings for this node.
-        . /etc/clearwater/config
+  # Set up defaults and then pull in the settings for this node.
+  . /etc/clearwater/config
 
-        # Set up a default cluster_settings file if it does not exist.
-        [ -f /etc/clearwater/cluster_settings ] || echo "servers=$local_ip:11211" > /etc/clearwater/cluster_settings
+  # Set up a default cluster_settings file if it does not exist.
+  [ -f /etc/clearwater/cluster_settings ] || echo "servers=$local_ip:11211" > /etc/clearwater/cluster_settings
 
+  # If the remote cluster settings file exists then start sprout with geo-redundancy enabled
+  [ -f /etc/clearwater/remote_cluster_settings ] && remote_memstore_arg="--remote-memstore /etc/clearwater/remote_cluster_settings"
 
-        # Set up defaults for user settings then pull in any overrides.
-        log_level=2
-        [ -r /etc/clearwater/user_settings ] && . /etc/clearwater/user_settings
+  # Set up defaults for user settings then pull in any overrides.
+  log_level=2
+  [ -r /etc/clearwater/user_settings ] && . /etc/clearwater/user_settings
 
-        # Work out which features are enabled.
-        if [ -d /etc/clearwater/features.d ]
-        then
-          for file in $(find /etc/clearwater/features.d -type f)
-          do
-            [ -r $file ] && . $file
-          done
-        fi
+  # Work out which features are enabled.
+  if [ -d /etc/clearwater/features.d ]
+  then
+    for file in $(find /etc/clearwater/features.d -type f)
+    do
+      [ -r $file ] && . $file
+    done
+  fi
 }
 
 #
