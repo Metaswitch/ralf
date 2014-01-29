@@ -61,20 +61,23 @@ TEST_F(SessionManagerTest, SimpleTest)
   SessionStore::Session* sess = NULL;
 
   Message* start_msg = new Message("CALL_ID_ONE", NULL, "START");
+  start_msg->ccfs.push_back("10.0.0.1");
   Message* interim_msg = new Message("CALL_ID_ONE", NULL, "INTERIM");
   Message* stop_msg = new Message("CALL_ID_ONE", NULL, "STOP");
 
   mgr->handle(start_msg);
 
   sess = store->get_session_data("CALL_ID_ONE");
-  ASSERT_EQ(1u, sess->acct_record_number);
+  ASSERT_NE((SessionStore::Session*)NULL, sess);
+  EXPECT_EQ(1u, sess->acct_record_number);
   delete sess;
   sess = NULL;
 
   mgr->handle(interim_msg);
 
   sess = store->get_session_data("CALL_ID_ONE");
-  ASSERT_EQ(2u, sess->acct_record_number);
+  ASSERT_NE((SessionStore::Session*)NULL, sess);
+  EXPECT_EQ(2u, sess->acct_record_number);
   delete sess;
   sess = NULL;
 
@@ -95,7 +98,6 @@ TEST_F(SessionManagerTest, NewCallTest)
   SessionStore::Session* sess = NULL;
 
   Message* start_msg = new Message("CALL_ID_TWO", NULL, "START");
-  Message* interim_msg = new Message("CALL_ID_TWO", NULL, "INTERIM");
   Message* stop_msg = new Message("CALL_ID_TWO", NULL, "STOP");
   Message* start_msg_2 = new Message("CALL_ID_TWO", NULL, "START");
 
@@ -110,7 +112,6 @@ TEST_F(SessionManagerTest, NewCallTest)
   mgr->handle(start_msg_2);
 
   sess = store->get_session_data("CALL_ID_TWO");
-  printf("%ld\n", sess);
   ASSERT_EQ(1u, sess->acct_record_number);
   delete sess;
   sess = NULL;
