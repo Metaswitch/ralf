@@ -36,13 +36,13 @@
 
 . /etc/clearwater/config
 
-# Set up the monit configuration for homestead with the right IP addresses and ports
+# Set up the monit configuration for ralf with the right IP addresses and ports
 cat > /etc/monit/conf.d/ralf.monit <<EOF
 # Poll every 10 seconds
 set daemon 10
 
 # Monitor the server's PID file and check its public interfaces.
-check process homestead pidfile /var/run/homestead.pid
+check process ralf pidfile /var/run/ralf.pid
   start program = "/etc/init.d/ralf start"
   stop program = "/etc/init.d/ralf stop"
 #  if failed host $local_ip port 80 type TCP protocol http

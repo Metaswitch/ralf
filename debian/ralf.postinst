@@ -86,6 +86,7 @@ case "$1" in
         setup_logging
         [ ! -x /usr/share/clearwater/bin/clearwater-logging-update ] || /usr/share/clearwater/bin/clearwater-logging-update
         add_section /etc/security/limits.conf ralf /etc/security/limits.conf.ralf
+
         for SCRIPT in $(ls -1 /usr/share/clearwater/infrastructure/scripts/$NAME* 2>/dev/null)
         do
             $SCRIPT
