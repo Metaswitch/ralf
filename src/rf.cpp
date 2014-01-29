@@ -86,6 +86,9 @@ AccountingChargingRequest::AccountingChargingRequest(const Dictionary* dict,
       continue;
     case rapidjson::kStringType:
     case rapidjson::kNumberType:
+    case rapidjson::kObjectType:
+      add(Diameter::AVP(it->name.GetString()).val_json(it->value));
+      break;
     case rapidjson::kArrayType:
       for (rapidjson::Value::ConstValueIterator ary_it = it->value.Begin();
            ary_it !=  it->value.End();
@@ -94,9 +97,6 @@ AccountingChargingRequest::AccountingChargingRequest(const Dictionary* dict,
         add(Diameter::AVP(it->name.GetString()).val_json(ary_it));
       }
       break; 
-    case rapidjson::kObjectType:
-      add(Diameter::AVP(it->name.GetString()).val_json(it->value));
-      break;
     }
   }   
 }
