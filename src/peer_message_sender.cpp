@@ -85,9 +85,11 @@ void PeerMessageSender::send()
   {
     // We don't have an existing connection - try and establish one
     peer_info myinfo;
+    memset(&myinfo, 0, sizeof(myinfo));
     myinfo.pi_diamid = diam_id;
     myinfo.pi_diamidlen = (long unsigned int) ccf.length();
-    myinfo.config.pic_realm = "example.com";
+    myinfo.config.pic_realm = (char*)"example.com";
+    myinfo.config.pic_port = 3868;
     myinfo.config.pic_lft = 120;
     myinfo.config.pic_flags.exp = PI_EXP_INACTIVE;
     fd_list_init(&myinfo.pi_endpoints, NULL);
@@ -137,8 +139,15 @@ void PeerMessageSender::fd_add_cb(struct peer_info* peer, void* thisptr)
 void PeerMessageSender::fd_add_cb(struct peer_info* peer)
 {
   peer_hdr* hdr = NULL;
-  int rc = fd_peer_getbyid(peer->pi_diamid, peer->pi_diamidlen, 0, &hdr);
-  if ((rc == 0) && (hdr != NULL) && (fd_peer_get_state(hdr) == STATE_OPEN))
+  int get_peer_rc = -1;
+
+  // Get the peer's state by looking up the ID.
+  if (peer)
+  {
+    get_peer_rc = fd_peer_getbyid(peer->pi_diamid, peer->pi_diamidlen, 0, &hdr);
+  }
+
+  if ((get_peer_rc == 0) && (hdr != NULL) && (fd_peer_get_state(hdr) == STATE_OPEN))
   {
     // Connection succeeded, so send our message to this CCF.
     int_send_msg();
