@@ -57,8 +57,9 @@ Realm = "$(echo $hs_hostname | sed -e 's/:[^:]*$//g')";
 TLS_Cred = "/var/lib/ralf/cert.pem", "/var/lib/ralf/privkey.pem";
 TLS_CA = "/var/lib/ralf/ca.pem";
 
-# Limit the number of SCTP streams
-SCTP_streams = 3;
+# Use TCP
+Prefer_TCP;
+No_SCTP;
 
 
 # -------- Extensions ---------

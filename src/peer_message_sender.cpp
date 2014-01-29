@@ -92,6 +92,7 @@ void PeerMessageSender::send()
     myinfo.config.pic_port = 3868;
     myinfo.config.pic_lft = 120;
     myinfo.config.pic_flags.exp = PI_EXP_INACTIVE;
+    myinfo.config.pic_flags.sec = PI_SEC_NONE;
     fd_list_init(&myinfo.pi_endpoints, NULL);
 
     LOG_DEBUG("Connecting to %s (number %d)", myinfo.pi_diamid, _which);
