@@ -60,10 +60,10 @@ TEST_F(SessionManagerTest, SimpleTest)
   SessionManager* mgr = new SessionManager(store);
   SessionStore::Session* sess = NULL;
 
-  Message* start_msg = new Message("CALL_ID_ONE", NULL, "START");
+  Message* start_msg = new Message("CALL_ID_ONE", NULL, Rf::AccountingRecordType(2), 300);
   start_msg->ccfs.push_back("10.0.0.1");
-  Message* interim_msg = new Message("CALL_ID_ONE", NULL, "INTERIM");
-  Message* stop_msg = new Message("CALL_ID_ONE", NULL, "STOP");
+  Message* interim_msg = new Message("CALL_ID_ONE", NULL, Rf::AccountingRecordType(3), 300);
+  Message* stop_msg = new Message("CALL_ID_ONE", NULL, Rf::AccountingRecordType(4), 300);
 
   mgr->handle(start_msg);
 
@@ -97,9 +97,9 @@ TEST_F(SessionManagerTest, NewCallTest)
   SessionManager* mgr = new SessionManager(store);
   SessionStore::Session* sess = NULL;
 
-  Message* start_msg = new Message("CALL_ID_TWO", NULL, "START");
-  Message* stop_msg = new Message("CALL_ID_TWO", NULL, "STOP");
-  Message* start_msg_2 = new Message("CALL_ID_TWO", NULL, "START");
+  Message* start_msg = new Message("CALL_ID_TWO", NULL, Rf::AccountingRecordType(2), 300);
+  Message* stop_msg = new Message("CALL_ID_TWO", NULL, Rf::AccountingRecordType(4), 300);
+  Message* start_msg_2 = new Message("CALL_ID_TWO", NULL, Rf::AccountingRecordType(2), 300);
 
   mgr->handle(start_msg);
 
@@ -128,7 +128,7 @@ TEST_F(SessionManagerTest, UnknownCallTest)
   SessionManager* mgr = new SessionManager(store);
   SessionStore::Session* sess = NULL;
 
-  Message* interim_msg = new Message("CALL_ID_THREE", NULL, "INTERIM");
+  Message* interim_msg = new Message("CALL_ID_THREE", NULL, Rf::AccountingRecordType(3), 300);
 
   mgr->handle(interim_msg);
   sess = store->get_session_data("CALL_ID_THREE");

@@ -47,6 +47,19 @@
 
 namespace Rf {
 
+class AccountingRecordType {
+public:
+  AccountingRecordType(int type): _type(type) {};
+  bool isValid() {return ((_type <= 4) && (_type >= 1));};
+  bool isEvent() {return (_type == 1);}
+  bool isStart() {return (_type == 2);}
+  bool isInterim() {return (_type == 3);}
+  bool isStop() {return (_type == 4);}
+
+private:
+  uint32_t _type;
+};
+
 class Dictionary : public Diameter::Dictionary
 {
 public:

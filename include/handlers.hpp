@@ -60,8 +60,8 @@ class BillingControllerHandler : public HttpStack::Handler
 public:
   BillingControllerHandler(HttpStack::Request& req, const BillingControllerConfig* cfg) :  HttpStack::Handler(req),  _sess_mgr(cfg->mgr) {};
   void run();
+  static Message* parse_body(std::string timer_param, std::string reqbody);
 private:
-  Message* parse_body();
   inline std::string call_id() {return _req.file();};
   SessionManager* _sess_mgr;
 };

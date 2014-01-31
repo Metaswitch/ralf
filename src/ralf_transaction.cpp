@@ -39,7 +39,6 @@
 void RalfTransaction::on_timeout()
 {
   _sm->on_ccf_response(false, 0, "", 0, _msg);
-  delete this;
 }
 
 // Handles the Accounting-Control-Answer from the CCF, parsing out the data the SessionManager needs.
@@ -49,9 +48,9 @@ void RalfTransaction::on_response(Diameter::Message& rsp)
   int interim_interval = 0;
   std::string session_id;
 
-  rsp.result_code(&result_code);
-  rsp.get_str_from_avp(_dict->SESSION_ID, &session_id);
-  rsp.get_i32_from_avp(_dict->ACCT_INTERIM_INTERVAL, &interim_interval);
+  rsp.result_code(result_code);
+  rsp.get_str_from_avp(_dict->SESSION_ID, session_id);
+  rsp.get_i32_from_avp(_dict->ACCT_INTERIM_INTERVAL, interim_interval);
 
   if (result_code == 2001)
   {
@@ -61,5 +60,4 @@ void RalfTransaction::on_response(Diameter::Message& rsp)
   {
     _sm->on_ccf_response(false, interim_interval, session_id, result_code, _msg);
   }
-  delete this;
 }
