@@ -79,6 +79,7 @@ void PeerMessageSender::send()
   if (rc == 0 && peer != NULL)
   {
     // We have an existing connection.
+    free(diam_id);
     int_send_msg();
   }
   else
@@ -120,7 +121,7 @@ void PeerMessageSender::int_send_msg()
   std::string ccf = _ccfs[_which];
   LOG_DEBUG("Sending message to %s (number %d)", ccf.c_str(), _which);
   RalfTransaction* tsx = new RalfTransaction(_dict, _sm, _msg);
-  Rf::AccountingChargingRequest acr(_dict, ccf, _msg->accounting_record_number, _msg->received_json->FindMember("event")->value);
+  Rf::AccountingRequest acr(_dict, ccf, _msg->accounting_record_number, _msg->received_json->FindMember("event")->value);
   acr.send(tsx);
   delete this;
 }

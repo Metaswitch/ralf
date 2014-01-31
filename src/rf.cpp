@@ -41,22 +41,21 @@ namespace Rf {
 
 Dictionary::Dictionary() :
   RF("Rf"),
-  ACCOUNTING_CHARGING_REQUEST("3GPP/Accounting-Control-Request"),
-  ACCOUNTING_CHARGING_RESPONSE("3GPP/Accounting-Control-Answer")
+  ACCOUNTING_REQUEST("3GPP/Accounting-Control-Request"),
+  ACCOUNTING_RESPONSE("3GPP/Accounting-Control-Answer")
 {
 }
 
 // Create an ACR message from a JSON descriptor.  Most AVPs are auto-created from the
 // contents parameter which should be a JSON object with keys named after AVPs.  For example
 // this object could be the "event" part of the original HTTP request received by Ralf.
-AccountingChargingRequest::AccountingChargingRequest(const Dictionary* dict,
-                                                     const std::string& dest_host,
-                                                     const uint32_t& record_number,
-                                                     const rapidjson::Value& contents) :
-                                                     Diameter::Message(dict,
-                                                                       dict->ACCOUNTING_CHARGING_REQUEST)
+AccountingRequest::AccountingRequest(const Dictionary* dict,
+                                     const std::string& dest_host,
+                                     const uint32_t& record_number,
+                                     const rapidjson::Value& contents) :
+  Diameter::Message(dict, dict->ACCOUNTING_REQUEST)
 {
-  LOG_DEBUG("Building an Accounting-Charging=Request");
+  LOG_DEBUG("Building an Accounting-Request");
 
   // Fill in the default fields
   add_new_session_id();
@@ -101,16 +100,16 @@ AccountingChargingRequest::AccountingChargingRequest(const Dictionary* dict,
   }   
 }
 
-AccountingChargingRequest::~AccountingChargingRequest()
+AccountingRequest::~AccountingRequest()
 {
 }
 
-AccountingChargingResponse::AccountingChargingResponse(const Dictionary* dict) :
-                                                       Diameter::Message(dict, dict->ACCOUNTING_CHARGING_RESPONSE)
+AccountingResponse::AccountingResponse(const Dictionary* dict) :
+    Diameter::Message(dict, dict->ACCOUNTING_RESPONSE)
 {
 }
 
-AccountingChargingResponse::~AccountingChargingResponse()
+AccountingResponse::~AccountingResponse()
 {
 }
 

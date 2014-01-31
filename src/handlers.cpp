@@ -42,6 +42,8 @@
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
 
+//LCOV_EXCL_START
+// We don't want to actually run the handlers
 void PingHandler::run()
 {
   _req.add_content("OK");
@@ -56,7 +58,7 @@ void BillingControllerHandler::run()
     _req.send_reply(405);
     return;
   }
-  Message* msg = parse_body(_req.param("timer-interim"), _req.body());
+  Message* msg = parse_body(call_id(), _req.param("timer-interim"), _req.body());
   if (msg == NULL)
   {
     _req.send_reply(400);
@@ -66,8 +68,9 @@ void BillingControllerHandler::run()
   _sess_mgr->handle(msg);
   delete this;
 }
+//LCOV_EXCL_STOP
 
-Message* BillingControllerHandler::parse_body(std::string timer_param, std::string reqbody)
+Message* BillingControllerHandler::parse_body(std::string call_id, std::string timer_param, std::string reqbody)
 {
   bool timer_interim = false;
   if (timer_param.compare("true") == 0) {
@@ -96,15 +99,6 @@ Message* BillingControllerHandler::parse_body(std::string timer_param, std::stri
     LOG_WARNING("Accounting-Record-Type not available in JSON");
     return NULL;
   }
-
-  // Verify that there is an Accounting-Record-Type and it is one of
-  // the four valid types
-  if ((*body)["event"].HasMember("Acct-Interim-Interval") &&
-        ((*body)["event"]["Acct-Interim-Interval"].IsInt()))
-  {
-    session_refresh_time = (*body)["event"]["Acct-Interim-Interval"].GetInt();
-  }
-
   Rf::AccountingRecordType record_type((*body)["event"]["Accounting-Record-Type"].GetInt());
   if (!record_type.isValid())
   {
@@ -112,8 +106,16 @@ Message* BillingControllerHandler::parse_body(std::string timer_param, std::stri
     return NULL;
   }
 
+  // Get the Acct-Interim-Interval if present
+  if ((*body)["event"].HasMember("Acct-Interim-Interval") &&
+        ((*body)["event"]["Acct-Interim-Interval"].IsInt()))
+  {
+    session_refresh_time = (*body)["event"]["Acct-Interim-Interval"].GetInt();
+  }
+
   // If we have a START or EVENT Accounting-Record-Type, we must have
   // a list of CCFs to use as peers.
+
   if (record_type.isStart() || record_type.isEvent())
   {
     if (!((body->HasMember("peers")) && (*body)["peers"].IsObject()))
@@ -139,7 +141,7 @@ Message* BillingControllerHandler::parse_body(std::string timer_param, std::stri
     }
   }
 
-  Message* msg = new Message(call_id(), body, record_type, session_refresh_time, timer_interim);
+  Message* msg = new Message(call_id, body, record_type, session_refresh_time, timer_interim);
   if (!ccfs.empty())
   {
     msg->ccfs = ccfs;

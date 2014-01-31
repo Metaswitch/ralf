@@ -38,7 +38,9 @@ TARGET_SOURCES_BUILD := main.cpp
 
 TARGET_SOURCES_TEST := test_main.cpp \
                        test_sessionstore.cpp \
-                       test_session_manager.cpp
+                       test_session_manager.cpp \
+                       test_rf.cpp \
+                       test_handlers.cpp
 
 TARGET_EXTRA_OBJS_TEST := gmock-all.o \
                           gtest-all.o

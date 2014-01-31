@@ -91,8 +91,7 @@ bool SessionStore::delete_session_data(const std::string& call_id)
   LOG_DEBUG("Deleting session data for %s",
             call_id.c_str());
 
-  Store::Status status = _store->delete_data("session",
-                                          call_id);
+  Store::Status status = _store->delete_data("session", call_id);
   LOG_DEBUG("Store returned %d", status);
 
   return (status = Store::Status::OK);

@@ -28,3 +28,6 @@
 [submodule "modules/jsoncpp"]
 	path = modules/jsoncpp
 	url = git@github.com:Metaswitch/jsoncpp-upstream.git
+[submodule "modules/gcovr"]
+	path = modules/gcovr
+	url = https://github.com/Metaswitch/gcovr-upstream

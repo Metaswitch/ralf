@@ -65,25 +65,25 @@ class Dictionary : public Diameter::Dictionary
 public:
   Dictionary();
   const Diameter::Dictionary::Application RF;
-  const Diameter::Dictionary::Message ACCOUNTING_CHARGING_REQUEST;
-  const Diameter::Dictionary::Message ACCOUNTING_CHARGING_RESPONSE;
+  const Diameter::Dictionary::Message ACCOUNTING_REQUEST;
+  const Diameter::Dictionary::Message ACCOUNTING_RESPONSE;
 };
 
-class AccountingChargingRequest : public Diameter::Message
+class AccountingRequest : public Diameter::Message
 {
 public:
-  AccountingChargingRequest(const Dictionary* dict,
-                            const std::string& dest_host,
-                            const uint32_t& record_number,
-                            const rapidjson::Value& contents);
-  ~AccountingChargingRequest();
+  AccountingRequest(const Dictionary* dict,
+                    const std::string& dest_host,
+                    const uint32_t& record_number,
+                    const rapidjson::Value& contents);
+  ~AccountingRequest();
 };
 
-class AccountingChargingResponse : public Diameter::Message
+class AccountingResponse : public Diameter::Message
 {
 public:
-  AccountingChargingResponse(const Dictionary* dict);
-  ~AccountingChargingResponse();
+  AccountingResponse(const Dictionary* dict);
+  ~AccountingResponse();
 };
 
 }
