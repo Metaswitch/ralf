@@ -42,6 +42,8 @@
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
 
+//LCOV_EXCL_START
+// We don't want to actually run the handlers
 void PingHandler::run()
 {
   _req.add_content("OK");
@@ -56,23 +58,29 @@ void BillingControllerHandler::run()
     _req.send_reply(405);
     return;
   }
-  Message* msg = parse_body();
+  Message* msg = parse_body(call_id(), _req.param("timer-interim"), _req.body());
   if (msg == NULL)
   {
     _req.send_reply(400);
     return;
   }
   _req.send_reply(200);
-  //SessionManager->handle(msg);
+  _sess_mgr->handle(msg);
   delete this;
 }
+//LCOV_EXCL_STOP
 
-Message* BillingControllerHandler::parse_body()
+Message* BillingControllerHandler::parse_body(std::string call_id, std::string timer_param, std::string reqbody)
 {
+  bool timer_interim = false;
+  if (timer_param.compare("true") == 0) {
+    timer_interim = true;
+  }
   rapidjson::Document* body = new rapidjson::Document();
-  std::string bodys = _req.body();
+  std::string bodys = reqbody;
   body->Parse<0>(bodys.c_str());
   std::vector<std::string> ccfs;
+  uint32_t session_refresh_time = 0;
 
   // Verify that the body is correct JSON with an "event" element
   if (!(*body).IsObject() ||
@@ -86,26 +94,29 @@ Message* BillingControllerHandler::parse_body()
   // Verify that there is an Accounting-Record-Type and it is one of
   // the four valid types
   if (!((*body)["event"].HasMember("Accounting-Record-Type") &&
-        ((*body)["event"]["Accounting-Record-Type"].IsString())))
+        ((*body)["event"]["Accounting-Record-Type"].IsInt())))
   {
     LOG_WARNING("Accounting-Record-Type not available in JSON");
     return NULL;
   }
-
-  std::string record_type = (*body)["event"]["Accounting-Record-Type"].GetString();
-  if (!((record_type.compare("START") == 0) ||
-        (record_type.compare("INTERIM") == 0) ||
-        (record_type.compare("STOP") == 0) ||
-        (record_type.compare("EVENT") == 0)))
+  Rf::AccountingRecordType record_type((*body)["event"]["Accounting-Record-Type"].GetInt());
+  if (!record_type.isValid())
   {
     LOG_ERROR("Accounting-Record-Type was not one of START/INTERIM/STOP/EVENT");
     return NULL;
   }
 
+  // Get the Acct-Interim-Interval if present
+  if ((*body)["event"].HasMember("Acct-Interim-Interval") &&
+        ((*body)["event"]["Acct-Interim-Interval"].IsInt()))
+  {
+    session_refresh_time = (*body)["event"]["Acct-Interim-Interval"].GetInt();
+  }
+
   // If we have a START or EVENT Accounting-Record-Type, we must have
   // a list of CCFs to use as peers.
-  if ((record_type.compare("START") == 0) ||
-      (record_type.compare("EVENT") == 0))
+
+  if (record_type.isStart() || record_type.isEvent())
   {
     if (!((body->HasMember("peers")) && (*body)["peers"].IsObject()))
     {
@@ -125,11 +136,12 @@ Message* BillingControllerHandler::parse_body()
         LOG_ERROR("JSON contains a 'ccf' array but not all the elements are strings");
         return NULL;
       }
+      LOG_DEBUG("Adding CCF %s", (*body)["peers"]["ccf"][i].GetString());
       ccfs.push_back((*body)["peers"]["ccf"][i].GetString());
     }
   }
 
-  Message* msg = new Message(call_id(), body);
+  Message* msg = new Message(call_id, body, record_type, session_refresh_time, timer_interim);
   if (!ccfs.empty())
   {
     msg->ccfs = ccfs;

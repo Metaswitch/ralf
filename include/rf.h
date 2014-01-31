@@ -1,5 +1,5 @@
 /**
- * @file sessionstore.h Definitions of interfaces for the session store.
+ * @file rf.h Class definition wrapping Rf
  *
  * Project Clearwater - IMS in the Cloud
  * Copyright (C) 2013  Metaswitch Networks Ltd
@@ -34,71 +34,58 @@
  * as those licenses appear in the file LICENSE-OPENSSL.
  */
 
-#ifndef SESSION_STORE_H__
-#define SESSION_STORE_H__
+#ifndef RF_H__
+#define RF_H__
 
+#include <freeDiameter/freeDiameter-host.h>
+#include <freeDiameter/libfdcore.h>
+#include <rapidjson/document.h>
 #include <string>
-#include <vector>
 
-#include "store.h"
+#include "diameterstack.h"
+#include "log.h"
 
-class SessionStore
-{
+namespace Rf {
+
+class AccountingRecordType {
 public:
-  
-  class Session
-  {
-  public:
-    // The DIAMETER session ID for this call.
-    // e.g. 1234567890;example.com;1234567890
-    std::string session_id;
-
-    // The CCF/ECF addresses for this session in priority order.
-    // e.g. 10.0.0.1
-    std::vector<std::string> ccf;
-    std::vector<std::string> ecf;
-
-    // The accounting record number for the next ACR sent.
-    uint32_t acct_record_number;
-
-    // The timer ID for Chronos (if applicable)
-    std::string timer_id;
-
-    // The session refresh time for this session as specified in the SIP
-    // session expiry header.
-    uint32_t session_refresh_time;
-
-    // The interim interval time for this session as specified in the Diameter Acct-Interim-Interval AVP.
-    uint32_t interim_interval;
-
-  private:
-    // CAS value for this Session.  Used to guarantee consistency
-    // between memcached instances.
-    uint64_t _cas;
-
-    // The SessionStore will set/read the _cas value but no-one else
-    // should.
-    friend class SessionStore;
-  };
-
-  SessionStore(Store *);
-  ~SessionStore();
-
-  // Retrieve session state for a given Call-ID.
-  Session* get_session_data(const std::string& call_id);
-
-  // Save the session object back into the store (this may fail due to CAS atomicity
-  // checking)
-  bool set_session_data(const std::string& call_id, Session* data);
-  bool delete_session_data(const std::string& call_id);
+  AccountingRecordType(int type): _type(type) {};
+  bool isValid() {return ((_type <= 4) && (_type >= 1));};
+  bool isEvent() {return (_type == 1);}
+  bool isStart() {return (_type == 2);}
+  bool isInterim() {return (_type == 3);}
+  bool isStop() {return (_type == 4);}
 
 private:
-  // Serialise a session to a string, ready to store in the DB.
-  std::string serialize_session(Session *data);
-
-  Session* deserialize_session(const std::string& s);
-
-  Store* _store;
+  uint32_t _type;
 };
+
+class Dictionary : public Diameter::Dictionary
+{
+public:
+  Dictionary();
+  const Diameter::Dictionary::Application RF;
+  const Diameter::Dictionary::Message ACCOUNTING_REQUEST;
+  const Diameter::Dictionary::Message ACCOUNTING_RESPONSE;
+};
+
+class AccountingRequest : public Diameter::Message
+{
+public:
+  AccountingRequest(const Dictionary* dict,
+                    const std::string& dest_host,
+                    const uint32_t& record_number,
+                    const rapidjson::Value& contents);
+  ~AccountingRequest();
+};
+
+class AccountingResponse : public Diameter::Message
+{
+public:
+  AccountingResponse(const Dictionary* dict);
+  ~AccountingResponse();
+};
+
+}
 
 #endif

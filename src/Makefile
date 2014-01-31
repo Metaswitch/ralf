@@ -17,16 +17,30 @@ TARGET_SOURCES := accesslogger.cpp \
                   memcachedstoreview.cpp \
                   signalhandler.cpp \
                   sessionstore.cpp \
+                  session_manager.cpp \
+                  peer_message_sender.cpp \
+                  diameterstack.cpp \
+                  rf.cpp \
+                  ralf_transaction.cpp \
                   message.cpp \
                   httpstack.cpp \
                   handlers.cpp \
                   logger.cpp \
+                  httpconnection.cpp \
+                  chronosconnection.cpp \
+                  load_monitor.cpp \
+                  statistic.cpp \
+                  utils.cpp \
+                  zmq_lvc.cpp \
                   log.cpp
 
 TARGET_SOURCES_BUILD := main.cpp
 
 TARGET_SOURCES_TEST := test_main.cpp \
                        test_sessionstore.cpp \
+                       test_session_manager.cpp \
+                       test_rf.cpp \
+                       test_handlers.cpp
 
 TARGET_EXTRA_OBJS_TEST := gmock-all.o \
                           gtest-all.o
@@ -53,6 +67,8 @@ CPPFLAGS += -Wno-write-strings \
 CPPFLAGS += -I${ROOT}/include \
             -I${ROOT}/usr/include \
             -I${ROOT}/modules/cpp-common/include \
+            -I${ROOT}/modules/sas-client/include \
+            -I${ROOT}/modules/jsoncpp/include \
             -I${ROOT}/modules/rapidjson/include
 
 # Add modules/cpp-common/src as a VPATH to pull in required common modules
@@ -82,6 +98,11 @@ LDFLAGS += -lzmq \
            -levent_pthreads \
            -lmemcached \
            -levent \
+           -lfdcore \
+           -lfdproto \
+           -ljsoncpp \
+           -lsas \
+           -lcurl \
            -lpthread
 
 # Test build uses just-built libraries, which may not be installed

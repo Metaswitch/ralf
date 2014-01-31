@@ -38,10 +38,11 @@
 #include <vector>
 #include <string>
 #include "rapidjson/document.h"
+#include "rf.h"
 
 struct Message
 {
-    Message(const std::string& call_id, rapidjson::Document* body);
+    Message(const std::string& call_id, rapidjson::Document* body, Rf::AccountingRecordType record_type, uint32_t session_refresh_time, bool timer_interim=false);
     ~Message();
 
     /* The Call-ID and JSON document are known by the controller when
@@ -49,6 +50,8 @@ struct Message
        shouldn't be modified thereafter. */
     std::string call_id;
     rapidjson::Document* received_json;
+    Rf::AccountingRecordType record_type;
+    bool timer_interim;
 
     /* The CCFs and ECFs may come from the controller (on initial
        messages) or from the database store (on subsequent ones). */
@@ -58,7 +61,11 @@ struct Message
     /* Session ID and accounting record number are always filled in by
        the session manager. */
     std::string session_id;
-    long accounting_record_number;
+    uint32_t accounting_record_number;
+    std::string timer_id;
+
+    uint32_t interim_interval;
+    uint32_t session_refresh_time;
 };
 
 #endif

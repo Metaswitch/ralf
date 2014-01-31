@@ -38,10 +38,17 @@
 
 /* Constructor of Message. Takes ownership of the passed-in
    rapidjson::Document pointer. */
-Message::Message(const std::string& call_id, rapidjson::Document* body)
+Message::Message(const std::string& call_id,
+                 rapidjson::Document* body,
+                 Rf::AccountingRecordType record_type,
+                 uint32_t session_refresh_time,
+                 bool timer_interim):
+                 call_id(call_id),
+                 received_json(body),
+                 record_type(record_type),
+                 session_refresh_time(session_refresh_time),
+                 timer_interim(timer_interim)
 {
-    this->call_id = call_id;
-    this->received_json = body;
 };
 
 /* Deletes the enclosed rapidjson::Document. */

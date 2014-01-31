@@ -1,0 +1,34 @@
+Source: ralf
+Section: network
+Priority: optional
+# This field must stay as 'Project Clearwater Maintainers', as
+# clearwater-infrastructure explicitly checks for packages of this name when
+# updating
+Maintainer: Project Clearwater Maintainers <maintainers@projectclearwater.org>
+Build-Depends: debhelper (>= 8.0.0)
+Standards-Version: 3.9.2
+Homepage: http://projectclearwater.org/
+
+Package: ralf
+Architecture: any
+Depends: clearwater-infrastructure, clearwater-tcp-scalability, clearwater-log-cleanup, ralf-libs, chronos, libsctp1, libzmq3, clearwater-memcached
+Suggests: ralf-dbg
+Description: ralf, the Clearwater CTF
+
+Package: ralf-dbg
+Architecture: any
+Section: debug
+Priority: extra
+Depends: ralf (= ${binary:Version}), gdb
+Description: Debugging symbols for ralf
+
+Package: ralf-libs
+Architecture: any
+Description: Libraries for ralf, the Clearwater CTF
+
+Package: ralf-libs-dbg
+Architecture: any
+Section: debug
+Priority: extra
+Depends: ralf-libs (= ${binary:Version}), gdb
+Description: Debugging symbols for ralf's libraries

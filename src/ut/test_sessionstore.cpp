@@ -81,3 +81,33 @@ TEST_F(SessionStoreTest, SimpleTest)
   delete store;
   delete memstore;
 }
+
+TEST_F(SessionStoreTest, DeletionTest)
+{
+  LocalStore* memstore = new LocalStore();
+  SessionStore* store = new SessionStore(memstore);
+  SessionStore::Session* session = new SessionStore::Session();
+  session->session_id = "session_id";
+  session->ccf.push_back("ccf1");
+  session->ccf.push_back("ccf2");
+  session->acct_record_number = 2;
+  session->timer_id = "timer_id";
+  session->session_refresh_time = 5 * 60;
+
+  // Save the session in the store
+  bool rc = store->set_session_data("call_id", session);
+  EXPECT_EQ(true, rc);
+  delete session;
+  session = NULL;
+
+
+  store->delete_session_data("call_id");
+
+  // Retrieve the session again.
+  session = store->get_session_data("call_id");
+  EXPECT_EQ(NULL, session);
+
+  delete session;
+  delete store;
+  delete memstore;
+}

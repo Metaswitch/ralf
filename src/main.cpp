@@ -39,11 +39,13 @@
 #include <semaphore.h>
 #include <strings.h>
 
+#include "memcachedstore.h"
 #include "accesslogger.h"
 #include "log.h"
 #include "httpstack.h"
 #include "handlers.hpp"
 #include "logger.h"
+#include "rf.h"
 
 struct options
 {
@@ -188,9 +190,9 @@ int main(int argc, char**argv)
   signal(SIGTERM, terminate_handler);
 
   struct options options;
-  options.diameter_conf = "ralf.conf";
+  options.diameter_conf = "/var/lib/ralf/ralf.conf";
   options.http_address = "0.0.0.0";
-  options.http_port = 8888;
+  options.http_port = 9888;
   options.http_threads = 1;
   options.dest_realm = "dest-realm.unknown";
   options.dest_host = "dest-host.unknown";
@@ -226,27 +228,23 @@ int main(int argc, char**argv)
 
   LOG_STATUS("Log level set to %d", options.log_level);
 
-  /*
   Diameter::Stack* diameter_stack = Diameter::Stack::get_instance();
-  Cx::Dictionary* dict = NULL;
-  try
-  {
-    diameter_stack->initialize();
-    diameter_stack->configure(options.diameter_conf);
-    dict = new Cx::Dictionary();
-    diameter_stack->advertize_application(dict->CX);
-    diameter_stack->start();
-  }
-  catch (Diameter::Stack::Exception& e)
-  {
-    fprintf(stderr, "Caught Diameter::Stack::Exception - %s - %d\n", e._func, e._rc);
-  }
-  */
+  Rf::Dictionary* dict = NULL;
+  diameter_stack->initialize();
+  diameter_stack->configure(options.diameter_conf);
+  dict = new Rf::Dictionary();
+  diameter_stack->advertize_application(dict->RF);
+  diameter_stack->start();
 
+
+  MemcachedStore* mstore = new MemcachedStore(false, "./cluster_settings");
+  SessionStore* store = new SessionStore(mstore);
+  BillingControllerConfig* cfg = new BillingControllerConfig();
+  cfg->mgr = new SessionManager(store, dict);
 
   HttpStack* http_stack = HttpStack::get_instance();
   HttpStack::HandlerFactory<PingHandler> ping_handler_factory;
-  HttpStack::HandlerFactory<BillingControllerHandler> billing_handler_factory;
+  HttpStack::ConfiguredHandlerFactory<BillingControllerHandler, BillingControllerConfig> billing_handler_factory(cfg);
   try
   {
     http_stack->initialize();

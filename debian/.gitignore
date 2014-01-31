@@ -1,0 +1,9 @@
+*.debhelper
+*.debhelper.log
+*.substvars
+/changelog
+/files
+/ralf-dbg/
+/ralf-libs/
+/ralf-libs-dbg/
+/ralf/

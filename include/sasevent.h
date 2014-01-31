@@ -1,5 +1,5 @@
 /**
- * @file sessionstore.h Definitions of interfaces for the session store.
+ * @file sasevent.h
  *
  * Project Clearwater - IMS in the Cloud
  * Copyright (C) 2013  Metaswitch Networks Ltd
@@ -34,71 +34,45 @@
  * as those licenses appear in the file LICENSE-OPENSSL.
  */
 
-#ifndef SESSION_STORE_H__
-#define SESSION_STORE_H__
+#ifndef SASEVENT_H__
+#define SASEVENT_H__
 
 #include <string>
-#include <vector>
 
-#include "store.h"
+namespace SASEvent {
 
-class SessionStore
-{
-public:
-  
-  class Session
-  {
-  public:
-    // The DIAMETER session ID for this call.
-    // e.g. 1234567890;example.com;1234567890
-    std::string session_id;
+  const std::string CURRENT_RESOURCE_BUNDLE = "org.projectclearwater.sprout.20131107";
 
-    // The CCF/ECF addresses for this session in priority order.
-    // e.g. 10.0.0.1
-    std::vector<std::string> ccf;
-    std::vector<std::string> ecf;
+  const int SIP_BASE = 0x010000;
+  const int HTTP_BASE = 0x020000;
+  const int DNS_BASE = 0x030000;
 
-    // The accounting record number for the next ACR sent.
-    uint32_t acct_record_number;
+  const int HTTP_REQ = 0;
+  const int HTTP_RSP = 1;
+  const int HTTP_ERR = 2;
 
-    // The timer ID for Chronos (if applicable)
-    std::string timer_id;
+  const int RX_SIP_MSG = SIP_BASE + 0;
+  const int TX_SIP_MSG = SIP_BASE + 1;
 
-    // The session refresh time for this session as specified in the SIP
-    // session expiry header.
-    uint32_t session_refresh_time;
+  const int TX_HSS_BASE = HTTP_BASE + 0x00;
+  const int TX_HSS_REQ = TX_HSS_BASE + HTTP_REQ;
+  const int RX_HSS_RSP = TX_HSS_BASE + HTTP_RSP;
+  const int RX_HSS_ERR = TX_HSS_BASE + HTTP_ERR;
 
-    // The interim interval time for this session as specified in the Diameter Acct-Interim-Interval AVP.
-    uint32_t interim_interval;
+  const int TX_XDM_BASE = HTTP_BASE + 0x40;
+  const int TX_XDM_GET_BASE = TX_XDM_BASE;
+  const int TX_XDM_GET_REQ = TX_XDM_GET_BASE + HTTP_REQ;
+  const int RX_XDM_GET_RSP = TX_XDM_GET_BASE + HTTP_RSP;
+  const int RX_XDM_GET_ERR = TX_XDM_GET_BASE + HTTP_ERR;
 
-  private:
-    // CAS value for this Session.  Used to guarantee consistency
-    // between memcached instances.
-    uint64_t _cas;
+  const int ENUM_START = DNS_BASE + 0;
+  const int ENUM_MATCH = DNS_BASE + 1;
+  const int ENUM_INCOMPLETE = DNS_BASE + 2;
+  const int ENUM_COMPLETE = DNS_BASE + 3;
+  const int TX_ENUM_REQ = DNS_BASE + 4;
+  const int RX_ENUM_RSP = DNS_BASE + 5;
+  const int RX_ENUM_ERR = DNS_BASE + 6;
 
-    // The SessionStore will set/read the _cas value but no-one else
-    // should.
-    friend class SessionStore;
-  };
-
-  SessionStore(Store *);
-  ~SessionStore();
-
-  // Retrieve session state for a given Call-ID.
-  Session* get_session_data(const std::string& call_id);
-
-  // Save the session object back into the store (this may fail due to CAS atomicity
-  // checking)
-  bool set_session_data(const std::string& call_id, Session* data);
-  bool delete_session_data(const std::string& call_id);
-
-private:
-  // Serialise a session to a string, ready to store in the DB.
-  std::string serialize_session(Session *data);
-
-  Session* deserialize_session(const std::string& s);
-
-  Store* _store;
-};
+} // namespace SASEvent
 
 #endif
