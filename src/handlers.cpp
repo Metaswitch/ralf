@@ -88,6 +88,7 @@ Message* BillingControllerHandler::parse_body(std::string call_id, std::string t
       !(*body)["event"].IsObject())
   {
     LOG_WARNING("JSON document was either not valid or did not have an 'event' key");
+    delete body;
     return NULL;
   }
 
@@ -97,12 +98,14 @@ Message* BillingControllerHandler::parse_body(std::string call_id, std::string t
         ((*body)["event"]["Accounting-Record-Type"].IsInt())))
   {
     LOG_WARNING("Accounting-Record-Type not available in JSON");
+    delete body;
     return NULL;
   }
   Rf::AccountingRecordType record_type((*body)["event"]["Accounting-Record-Type"].GetInt());
   if (!record_type.isValid())
   {
     LOG_ERROR("Accounting-Record-Type was not one of START/INTERIM/STOP/EVENT");
+    delete body;
     return NULL;
   }
 
@@ -121,11 +124,13 @@ Message* BillingControllerHandler::parse_body(std::string call_id, std::string t
     if (!((body->HasMember("peers")) && (*body)["peers"].IsObject()))
     {
       LOG_ERROR("JSON lacked a 'peers' object (mandatory for START/EVENT)");
+      delete body;
       return NULL;
     }
     if (!((*body)["peers"].HasMember("ccf")) ||(!(*body)["peers"]["ccf"].IsArray()) || ((*body)["peers"]["ccf"].Size() == 0))
     {
       LOG_ERROR("JSON lacked a 'ccf' array, or the array was empty (mandatory for START/EVENT)");
+      delete body;
       return NULL;
     }
 
@@ -134,6 +139,7 @@ Message* BillingControllerHandler::parse_body(std::string call_id, std::string t
       if (!(*body)["peers"]["ccf"][i].IsString())
       {
         LOG_ERROR("JSON contains a 'ccf' array but not all the elements are strings");
+        delete body;
         return NULL;
       }
       LOG_DEBUG("Adding CCF %s", (*body)["peers"]["ccf"][i].GetString());
