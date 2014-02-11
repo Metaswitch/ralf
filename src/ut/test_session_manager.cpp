@@ -44,6 +44,7 @@
 #include "peer_message_sender.hpp"
 #include "peer_message_sender_factory.hpp"
 
+// Simulates a request to a CDF that returns successfully
 class DummyPeerMessageSender : public PeerMessageSender
 {
 public:
@@ -54,6 +55,7 @@ class DummyPeerMessageSenderFactory : public PeerMessageSenderFactory {
   PeerMessageSender* newSender() {return new DummyPeerMessageSender();}
 };
 
+// Simulates a request to a CDF that returns a 5001 error
 class DummyErrorPeerMessageSender : public PeerMessageSender
 {
 public:
@@ -64,6 +66,7 @@ class DummyErrorPeerMessageSenderFactory : public PeerMessageSenderFactory {
   PeerMessageSender* newSender() {return new DummyErrorPeerMessageSender();}
 };
 
+// Simulates a request to a CDF that returns a 5002 (session unknown) error, which is handled specially
 class DummyUnknownErrorPeerMessageSender : public PeerMessageSender
 {
 public:
@@ -101,6 +104,7 @@ TEST_F(SessionManagerTest, SimpleTest)
   Message* interim_msg = new Message("CALL_ID_ONE", NULL, Rf::AccountingRecordType(3), 0);
   Message* stop_msg = new Message("CALL_ID_ONE", NULL, Rf::AccountingRecordType(4), 0);
 
+  // START should put a session in the store
   mgr->handle(start_msg);
 
   sess = store->get_session_data("CALL_ID_ONE");
@@ -109,6 +113,7 @@ TEST_F(SessionManagerTest, SimpleTest)
   delete sess;
   sess = NULL;
 
+  // INTERIM should keep that session in the store
   mgr->handle(interim_msg);
 
   sess = store->get_session_data("CALL_ID_ONE");
@@ -117,6 +122,7 @@ TEST_F(SessionManagerTest, SimpleTest)
   delete sess;
   sess = NULL;
 
+  // STOP should remove the session from the store
   mgr->handle(stop_msg);
 
   sess = store->get_session_data("CALL_ID_ONE");
@@ -127,7 +133,7 @@ TEST_F(SessionManagerTest, SimpleTest)
   delete memstore;
 }
 
-TEST_F(SessionManagerTest, TimeUpdateTestTest)
+TEST_F(SessionManagerTest, TimeUpdateTest)
 {
   LocalStore* memstore = new LocalStore();
   SessionStore* store = new SessionStore(memstore);
@@ -150,6 +156,7 @@ TEST_F(SessionManagerTest, TimeUpdateTestTest)
 
   mgr->handle(interim_msg);
 
+  // An INTERIM message which increases the session refresh interval should be accepted
   sess = store->get_session_data("CALL_ID_ONE");
   ASSERT_NE((SessionStore::Session*)NULL, sess);
   EXPECT_EQ(2u, sess->acct_record_number);
@@ -188,6 +195,7 @@ TEST_F(SessionManagerTest, NewCallTest)
 
   mgr->handle(start_msg_2);
 
+  // Re-using call-IDs should just work
   sess = store->get_session_data("CALL_ID_TWO");
   ASSERT_EQ(1u, sess->acct_record_number);
   delete sess;
@@ -208,6 +216,7 @@ TEST_F(SessionManagerTest, UnknownCallTest)
 
   Message* interim_msg = new Message("CALL_ID_THREE", NULL, Rf::AccountingRecordType(3), 300);
 
+  // If we receive an INTERIM for a call not in the store, we should ignore it
   mgr->handle(interim_msg);
   sess = store->get_session_data("CALL_ID_THREE");
   ASSERT_EQ(NULL, sess);
@@ -227,6 +236,7 @@ TEST_F(SessionManagerTest, CDFFailureTest)
   Message* start_msg = new Message("CALL_ID_FOUR", NULL, Rf::AccountingRecordType(2), 300);
   Message* interim_msg = new Message("CALL_ID_FOUR", NULL, Rf::AccountingRecordType(3), 300);
 
+  // When a START message fails, we should not store the session or handle any subsequent messages
   mgr->handle(start_msg);
   sess = store->get_session_data("CALL_ID_FOUR");
   ASSERT_EQ(NULL, sess);
@@ -259,6 +269,7 @@ TEST_F(SessionManagerTest, CDFInterimFailureTest)
   delete sess;
   sess = NULL;
 
+  // When an INTERIM message fails with an error other than 5002 "Session unknown", we should still keep the session
   fail_mgr->handle(interim_msg);
   sess = store->get_session_data("CALL_ID_FOUR");
   ASSERT_NE((SessionStore::Session*)NULL, sess);
@@ -290,6 +301,7 @@ TEST_F(SessionManagerTest, CDFInterimUnknownTest)
   delete sess;
   sess = NULL;
 
+  // When an INTERIM message fails with a 5002 "Session unknown" error, we should delete the session
   fail_mgr->handle(interim_msg);
   sess = store->get_session_data("CALL_ID_FOUR");
   ASSERT_EQ(NULL, sess);
