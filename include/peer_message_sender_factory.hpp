@@ -39,6 +39,7 @@
 #include "peer_message_sender.hpp"
 
 class PeerMessageSenderFactory {
+public:
   virtual PeerMessageSender* newSender() {return new PeerMessageSender();}
 };
 
