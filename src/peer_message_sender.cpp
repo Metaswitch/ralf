@@ -51,13 +51,9 @@
  *
  *   No action should be taken after any of the above happens, as the this pointer becomes invalid.
  */
-PeerMessageSender::PeerMessageSender(Message* msg, SessionManager* sm, Rf::Dictionary* dict)
+PeerMessageSender::PeerMessageSender()
 {
   _which = PRIMARY_CCF;
-  _msg = msg;
-  _ccfs = msg->ccfs;
-  _sm = sm;
-  _dict = dict;
 }
 
 /* Sends the message to the primary given CCF or, if it can't connect to that CCF, to the backup CCF.
@@ -66,8 +62,16 @@ PeerMessageSender::PeerMessageSender(Message* msg, SessionManager* sm, Rf::Dicti
  *
  * If the call to fd_peer_add fails (e.g. with ENOMEM), calls back into the SessionManager then deletes this PeerMessageSender.
  *  */
-void PeerMessageSender::send()
+void PeerMessageSender::send(Message* msg, SessionManager* sm, Rf::Dictionary* dict)
 {
+  _msg = msg;
+  _ccfs = msg->ccfs;
+  _sm = sm;
+  _dict = dict;
+  send();
+}
+
+void PeerMessageSender::send() {
   std::string ccf = _ccfs[_which];
 
   // Check for an existing connection

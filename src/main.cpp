@@ -46,6 +46,8 @@
 #include "handlers.hpp"
 #include "logger.h"
 #include "rf.h"
+#include "peer_message_sender_factory.hpp"
+
 
 struct options
 {
@@ -240,7 +242,8 @@ int main(int argc, char**argv)
   MemcachedStore* mstore = new MemcachedStore(false, "./cluster_settings");
   SessionStore* store = new SessionStore(mstore);
   BillingControllerConfig* cfg = new BillingControllerConfig();
-  cfg->mgr = new SessionManager(store, dict);
+  PeerMessageSenderFactory* factory = new PeerMessageSenderFactory();
+  cfg->mgr = new SessionManager(store, dict, factory);
 
   HttpStack* http_stack = HttpStack::get_instance();
   HttpStack::HandlerFactory<PingHandler> ping_handler_factory;
