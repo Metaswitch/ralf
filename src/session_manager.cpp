@@ -43,7 +43,7 @@
 #include "log.h"
 #include "peer_message_sender.hpp"
 #include "sas.h"
-
+#include "peer_message_sender_factory.hpp"
 
 void SessionManager::handle(Message* msg)
 {
@@ -72,7 +72,7 @@ void SessionManager::handle(Message* msg)
       if (!success)
       {
         // Someone has written conflicting data since we read this, so start processing this message again
-        return this->handle(msg);
+        return this->handle(msg);  // LCOV_EXCL_LINE - no conflicts in UT
       }
     }
     else if  (msg->record_type.isStop())
@@ -109,9 +109,8 @@ void SessionManager::handle(Message* msg)
   };
 
   // go to the Diameter stack
-  PeerMessageSender* pm = new PeerMessageSender(msg, this, _dict); // self-deleting
-  pm->send();
-
+  PeerMessageSender* pm = _factory->newSender(); // self-deleting
+  pm->send(msg, this, _dict);
 }
 
 std::string SessionManager::create_opaque_data(Message* msg)

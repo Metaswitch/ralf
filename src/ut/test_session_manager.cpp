@@ -41,33 +41,65 @@
 #include "sessionstore.h"
 #include "session_manager.hpp"
 
+#include "peer_message_sender.hpp"
+#include "peer_message_sender_factory.hpp"
+
+class DummyPeerMessageSender : public PeerMessageSender
+{
+public:
+  void send(Message* msg, SessionManager* sm, Rf::Dictionary* dict) {sm->on_ccf_response(true, 100, "test_session_id", 2001, msg);};
+};
+
+class DummyPeerMessageSenderFactory : public PeerMessageSenderFactory {
+  PeerMessageSender* newSender() {return new DummyPeerMessageSender();}
+};
+
+class DummyErrorPeerMessageSender : public PeerMessageSender
+{
+public:
+  void send(Message* msg, SessionManager* sm, Rf::Dictionary* dict) {sm->on_ccf_response(false, 0, "test_session_id", 5001, msg);};
+};
+
+class DummyErrorPeerMessageSenderFactory : public PeerMessageSenderFactory {
+  PeerMessageSender* newSender() {return new DummyErrorPeerMessageSender();}
+};
+
+class DummyUnknownErrorPeerMessageSender : public PeerMessageSender
+{
+public:
+  void send(Message* msg, SessionManager* sm, Rf::Dictionary* dict) {sm->on_ccf_response(false, 100, "test_session_id", 5002, msg);};
+};
+
+class DummyUnknownErrorPeerMessageSenderFactory : public PeerMessageSenderFactory {
+  PeerMessageSender* newSender() {return new DummyUnknownErrorPeerMessageSender();}
+};
 
 class SessionManagerTest : public ::testing::Test
 {
   SessionManagerTest()
   {
-   _dict = new Rf::Dictionary();
+   _dict = NULL;
   }
 
   virtual ~SessionManagerTest()
   {
-    delete _dict;
   }
 
   Rf::Dictionary* _dict;;
 };
 
-TEST_F(SessionManagerTest, DISABLED_SimpleTest)
+TEST_F(SessionManagerTest, SimpleTest)
 {
   LocalStore* memstore = new LocalStore();
   SessionStore* store = new SessionStore(memstore);
-  SessionManager* mgr = new SessionManager(store, _dict);
+  DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory();
+  SessionManager* mgr = new SessionManager(store, _dict, factory);
   SessionStore::Session* sess = NULL;
 
   Message* start_msg = new Message("CALL_ID_ONE", NULL, Rf::AccountingRecordType(2), 300);
   start_msg->ccfs.push_back("10.0.0.1");
-  Message* interim_msg = new Message("CALL_ID_ONE", NULL, Rf::AccountingRecordType(3), 300);
-  Message* stop_msg = new Message("CALL_ID_ONE", NULL, Rf::AccountingRecordType(4), 300);
+  Message* interim_msg = new Message("CALL_ID_ONE", NULL, Rf::AccountingRecordType(3), 0);
+  Message* stop_msg = new Message("CALL_ID_ONE", NULL, Rf::AccountingRecordType(4), 0);
 
   mgr->handle(start_msg);
 
@@ -90,15 +122,56 @@ TEST_F(SessionManagerTest, DISABLED_SimpleTest)
   sess = store->get_session_data("CALL_ID_ONE");
   ASSERT_EQ(NULL, sess);
 
+  delete factory;
   delete store;
   delete memstore;
 }
 
-TEST_F(SessionManagerTest, DISABLED_NewCallTest)
+TEST_F(SessionManagerTest, TimeUpdateTestTest)
 {
   LocalStore* memstore = new LocalStore();
   SessionStore* store = new SessionStore(memstore);
-  SessionManager* mgr = new SessionManager(store, _dict);
+  DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory();
+  SessionManager* mgr = new SessionManager(store, _dict, factory);
+  SessionStore::Session* sess = NULL;
+
+  Message* start_msg = new Message("CALL_ID_ONE", NULL, Rf::AccountingRecordType(2), 300);
+  start_msg->ccfs.push_back("10.0.0.1");
+  Message* interim_msg = new Message("CALL_ID_ONE", NULL, Rf::AccountingRecordType(3), 600);
+  Message* stop_msg = new Message("CALL_ID_ONE", NULL, Rf::AccountingRecordType(4), 0);
+
+  mgr->handle(start_msg);
+
+  sess = store->get_session_data("CALL_ID_ONE");
+  ASSERT_NE((SessionStore::Session*)NULL, sess);
+  EXPECT_EQ(1u, sess->acct_record_number);
+  delete sess;
+  sess = NULL;
+
+  mgr->handle(interim_msg);
+
+  sess = store->get_session_data("CALL_ID_ONE");
+  ASSERT_NE((SessionStore::Session*)NULL, sess);
+  EXPECT_EQ(2u, sess->acct_record_number);
+  delete sess;
+  sess = NULL;
+
+  mgr->handle(stop_msg);
+
+  sess = store->get_session_data("CALL_ID_ONE");
+  ASSERT_EQ(NULL, sess);
+
+  delete factory;
+  delete store;
+  delete memstore;
+}
+
+TEST_F(SessionManagerTest, NewCallTest)
+{
+  LocalStore* memstore = new LocalStore();
+  SessionStore* store = new SessionStore(memstore);
+  DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory();
+  SessionManager* mgr = new SessionManager(store, _dict, factory);
   SessionStore::Session* sess = NULL;
 
   Message* start_msg = new Message("CALL_ID_TWO", NULL, Rf::AccountingRecordType(2), 300);
@@ -125,17 +198,100 @@ TEST_F(SessionManagerTest, DISABLED_NewCallTest)
   delete memstore;
 }
 
-TEST_F(SessionManagerTest, DISABLED_UnknownCallTest)
+TEST_F(SessionManagerTest, UnknownCallTest)
 {
   LocalStore* memstore = new LocalStore();
   SessionStore* store = new SessionStore(memstore);
-  SessionManager* mgr = new SessionManager(store, _dict);
+  DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory();
+  SessionManager* mgr = new SessionManager(store, _dict, factory);
   SessionStore::Session* sess = NULL;
 
   Message* interim_msg = new Message("CALL_ID_THREE", NULL, Rf::AccountingRecordType(3), 300);
 
   mgr->handle(interim_msg);
   sess = store->get_session_data("CALL_ID_THREE");
+  ASSERT_EQ(NULL, sess);
+
+  delete store;
+  delete memstore;
+}
+
+TEST_F(SessionManagerTest, CDFFailureTest)
+{
+  LocalStore* memstore = new LocalStore();
+  SessionStore* store = new SessionStore(memstore);
+  DummyErrorPeerMessageSenderFactory* factory = new DummyErrorPeerMessageSenderFactory();
+  SessionManager* mgr = new SessionManager(store, _dict, factory);
+  SessionStore::Session* sess = NULL;
+
+  Message* start_msg = new Message("CALL_ID_FOUR", NULL, Rf::AccountingRecordType(2), 300);
+  Message* interim_msg = new Message("CALL_ID_FOUR", NULL, Rf::AccountingRecordType(3), 300);
+
+  mgr->handle(start_msg);
+  sess = store->get_session_data("CALL_ID_FOUR");
+  ASSERT_EQ(NULL, sess);
+
+  mgr->handle(interim_msg);
+  sess = store->get_session_data("CALL_ID_FOUR");
+  ASSERT_EQ(NULL, sess);
+
+  delete store;
+  delete memstore;
+}
+
+TEST_F(SessionManagerTest, CDFInterimFailureTest)
+{
+  LocalStore* memstore = new LocalStore();
+  SessionStore* store = new SessionStore(memstore);
+  DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory();
+  SessionManager* mgr = new SessionManager(store, _dict, factory);
+  DummyErrorPeerMessageSenderFactory* fail_factory = new DummyErrorPeerMessageSenderFactory();
+  SessionManager* fail_mgr = new SessionManager(store, _dict, fail_factory);
+  SessionStore::Session* sess = NULL;
+
+  Message* start_msg = new Message("CALL_ID_FOUR", NULL, Rf::AccountingRecordType(2), 300);
+  Message* interim_msg = new Message("CALL_ID_FOUR", NULL, Rf::AccountingRecordType(3), 300);
+
+  mgr->handle(start_msg);
+  sess = store->get_session_data("CALL_ID_FOUR");
+  ASSERT_NE((SessionStore::Session*)NULL, sess);
+  EXPECT_EQ(1u, sess->acct_record_number);
+  delete sess;
+  sess = NULL;
+
+  fail_mgr->handle(interim_msg);
+  sess = store->get_session_data("CALL_ID_FOUR");
+  ASSERT_NE((SessionStore::Session*)NULL, sess);
+  EXPECT_EQ(2u, sess->acct_record_number);
+  delete sess;
+  sess = NULL;
+
+  delete store;
+  delete memstore;
+}
+
+TEST_F(SessionManagerTest, CDFInterimUnknownTest)
+{
+  LocalStore* memstore = new LocalStore();
+  SessionStore* store = new SessionStore(memstore);
+  DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory();
+  SessionManager* mgr = new SessionManager(store, _dict, factory);
+  DummyUnknownErrorPeerMessageSenderFactory* fail_factory = new DummyUnknownErrorPeerMessageSenderFactory();
+  SessionManager* fail_mgr = new SessionManager(store, _dict, fail_factory);
+  SessionStore::Session* sess = NULL;
+
+  Message* start_msg = new Message("CALL_ID_FOUR", NULL, Rf::AccountingRecordType(2), 300);
+  Message* interim_msg = new Message("CALL_ID_FOUR", NULL, Rf::AccountingRecordType(3), 300);
+
+  mgr->handle(start_msg);
+  sess = store->get_session_data("CALL_ID_FOUR");
+  ASSERT_NE((SessionStore::Session*)NULL, sess);
+  EXPECT_EQ(1u, sess->acct_record_number);
+  delete sess;
+  sess = NULL;
+
+  fail_mgr->handle(interim_msg);
+  sess = store->get_session_data("CALL_ID_FOUR");
   ASSERT_EQ(NULL, sess);
 
   delete store;

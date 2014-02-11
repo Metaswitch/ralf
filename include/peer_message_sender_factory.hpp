@@ -1,5 +1,5 @@
 /**
- * @file peer_message_sender.hpp
+ * @file peer_message_sender_factory.cpp
  *
  * Project Clearwater - IMS in the Cloud
  * Copyright (C) 2014  Metaswitch Networks Ltd
@@ -33,35 +33,14 @@
  * under which the OpenSSL Project distributes the OpenSSL toolkit software,
  * as those licenses appear in the file LICENSE-OPENSSL.
  */
-#ifndef PEER_MESSAGE_SENDER_HPP_
-#define PEER_MESSAGE_SENDER_HPP_
+#ifndef PEER_MESSAGE_SENDER_FACTORY_CPP_
+#define PEER_MESSAGE_SENDER_FACTORY_CPP_
 
-#include <freeDiameter/freeDiameter-host.h>
-#include <freeDiameter/libfdcore.h>
+#include "peer_message_sender.hpp"
 
-#include "rf.h"
-#include "message.hpp"
-#include "session_manager.hpp"
-
-// A PeerMessageSender is responsible for ensuring that a connection is open
-// to either the primary or backup CCF, and once a connection has been opened,
-// sending the message to it.
-class PeerMessageSender
-{
-public:
-  PeerMessageSender();
-  virtual void send(Message* msg, SessionManager* sm, Rf::Dictionary* dict);
-
-private:
-  void send();
-  static void fd_add_cb(peer_info* peer, void* this_ptr);
-  void fd_add_cb(peer_info* peer);
-  void int_send_msg();
-  Message* _msg;
-  int _which;
-  std::vector<std::string> _ccfs;
-  SessionManager* _sm;
-  Rf::Dictionary* _dict;
+class PeerMessageSenderFactory {
+  virtual PeerMessageSender* newSender() {return new PeerMessageSender();}
 };
 
-#endif /* PEER_MESSAGE_SENDER_HPP_ */
+
+#endif /* PEER_MESSAGE_SENDER_FACTORY_CPP_ */
