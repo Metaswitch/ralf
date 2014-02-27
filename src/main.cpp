@@ -40,6 +40,7 @@
 #include <strings.h>
 
 #include "memcachedstore.h"
+#include "chronosconnection.h"
 #include "accesslogger.h"
 #include "log.h"
 #include "httpstack.h"
@@ -243,7 +244,8 @@ int main(int argc, char**argv)
   SessionStore* store = new SessionStore(mstore);
   BillingControllerConfig* cfg = new BillingControllerConfig();
   PeerMessageSenderFactory* factory = new PeerMessageSenderFactory();
-  cfg->mgr = new SessionManager(store, dict, factory);
+  ChronosConnection* timer_conn = new ChronosConnection("localhost:7253");
+  cfg->mgr = new SessionManager(store, dict, factory, timer_conn);
 
   HttpStack* http_stack = HttpStack::get_instance();
   HttpStack::HandlerFactory<PingHandler> ping_handler_factory;

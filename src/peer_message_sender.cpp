@@ -56,6 +56,10 @@ PeerMessageSender::PeerMessageSender()
   _which = PRIMARY_CCF;
 }
 
+PeerMessageSender::~PeerMessageSender()
+{
+}
+
 /* Sends the message to the primary given CCF or, if it can't connect to that CCF, to the backup CCF.
  *
  * Does not retry on errors - only on failed connections.

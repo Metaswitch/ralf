@@ -94,7 +94,7 @@ void SessionManager::handle(Message* msg)
       msg->session_refresh_time = sess->session_refresh_time;
     }
     msg->interim_interval = sess->interim_interval;
-
+    delete sess; sess = NULL;
   }
   else
   {

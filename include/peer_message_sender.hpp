@@ -50,6 +50,7 @@ class PeerMessageSender
 {
 public:
   PeerMessageSender();
+  virtual ~PeerMessageSender();
   virtual void send(Message* msg, SessionManager* sm, Rf::Dictionary* dict);
 
 private:
