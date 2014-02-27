@@ -50,10 +50,11 @@ Dictionary::Dictionary() :
 // contents parameter which should be a JSON object with keys named after AVPs.  For example
 // this object could be the "event" part of the original HTTP request received by Ralf.
 AccountingRequest::AccountingRequest(const Dictionary* dict,
+                                     Diameter::Stack* diameter_stack,
                                      const std::string& dest_host,
                                      const uint32_t& record_number,
                                      const rapidjson::Value& contents) :
-  Diameter::Message(dict, dict->ACCOUNTING_REQUEST)
+  Diameter::Message(dict, dict->ACCOUNTING_REQUEST, diameter_stack)
 {
   LOG_DEBUG("Building an Accounting-Request");
 
@@ -104,8 +105,9 @@ AccountingRequest::~AccountingRequest()
 {
 }
 
-AccountingResponse::AccountingResponse(const Dictionary* dict) :
-    Diameter::Message(dict, dict->ACCOUNTING_RESPONSE)
+AccountingResponse::AccountingResponse(const Dictionary* dict,
+                                       Diameter::Stack* diameter_stack) :
+    Diameter::Message(dict, dict->ACCOUNTING_RESPONSE, diameter_stack)
 {
 }
 

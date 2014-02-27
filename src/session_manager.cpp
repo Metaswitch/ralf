@@ -63,7 +63,6 @@ void SessionManager::handle(Message* msg)
       return;
     }
 
-
     if (msg->record_type.isInterim())
     {
       sess->acct_record_number += 1;
@@ -110,7 +109,7 @@ void SessionManager::handle(Message* msg)
 
   // go to the Diameter stack
   PeerMessageSender* pm = _factory->newSender(); // self-deleting
-  pm->send(msg, this, _dict);
+  pm->send(msg, this, _dict, _diameter_stack);
 }
 
 std::string SessionManager::create_opaque_data(Message* msg)

@@ -66,12 +66,13 @@ PeerMessageSender::~PeerMessageSender()
  *
  * If the call to fd_peer_add fails (e.g. with ENOMEM), calls back into the SessionManager then deletes this PeerMessageSender.
  *  */
-void PeerMessageSender::send(Message* msg, SessionManager* sm, Rf::Dictionary* dict)
+void PeerMessageSender::send(Message* msg, SessionManager* sm, Rf::Dictionary* dict, Diameter::Stack* diameter_stack)
 {
   _msg = msg;
   _ccfs = msg->ccfs;
   _sm = sm;
   _dict = dict;
+  _diameter_stack = diameter_stack;
   send();
 }
 
@@ -129,7 +130,7 @@ void PeerMessageSender::int_send_msg()
   std::string ccf = _ccfs[_which];
   LOG_DEBUG("Sending message to %s (number %d)", ccf.c_str(), _which);
   RalfTransaction* tsx = new RalfTransaction(_dict, _sm, _msg);
-  Rf::AccountingRequest acr(_dict, ccf, _msg->accounting_record_number, _msg->received_json->FindMember("event")->value);
+  Rf::AccountingRequest acr(_dict, _diameter_stack, ccf, _msg->accounting_record_number, _msg->received_json->FindMember("event")->value);
   acr.send(tsx);
   delete this;
 }

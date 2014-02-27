@@ -51,7 +51,7 @@ class PeerMessageSender
 public:
   PeerMessageSender();
   virtual ~PeerMessageSender();
-  virtual void send(Message* msg, SessionManager* sm, Rf::Dictionary* dict);
+  virtual void send(Message* msg, SessionManager* sm, Rf::Dictionary* dict, Diameter::Stack* diameter_stack);
 
 private:
   void send();
@@ -63,6 +63,7 @@ private:
   std::vector<std::string> _ccfs;
   SessionManager* _sm;
   Rf::Dictionary* _dict;
+  Diameter::Stack* _diameter_stack;
 };
 
 #endif /* PEER_MESSAGE_SENDER_HPP_ */

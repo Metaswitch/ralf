@@ -49,7 +49,6 @@
 #include "rf.h"
 #include "peer_message_sender_factory.hpp"
 
-
 struct options
 {
   std::string diameter_conf;
@@ -222,7 +221,6 @@ int main(int argc, char**argv)
     Log::setLogger(new Logger(options.log_directory, prog_name));
   }
 
-
   AccessLogger* access_logger = NULL;
   if (options.access_log_enabled)
   {
@@ -239,13 +237,12 @@ int main(int argc, char**argv)
   diameter_stack->advertize_application(dict->RF);
   diameter_stack->start();
 
-
   MemcachedStore* mstore = new MemcachedStore(false, "./cluster_settings");
   SessionStore* store = new SessionStore(mstore);
   BillingControllerConfig* cfg = new BillingControllerConfig();
   PeerMessageSenderFactory* factory = new PeerMessageSenderFactory();
   ChronosConnection* timer_conn = new ChronosConnection("localhost:7253");
-  cfg->mgr = new SessionManager(store, dict, factory, timer_conn);
+  cfg->mgr = new SessionManager(store, dict, factory, timer_conn, diameter_stack);
 
   HttpStack* http_stack = HttpStack::get_instance();
   HttpStack::HandlerFactory<PingHandler> ping_handler_factory;
