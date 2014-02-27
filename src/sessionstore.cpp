@@ -85,7 +85,6 @@ bool SessionStore::set_session_data(const std::string& call_id, Session* session
   return (status = Store::Status::OK);
 }
 
-
 bool SessionStore::delete_session_data(const std::string& call_id)
 {
   LOG_DEBUG("Deleting session data for %s",

@@ -82,6 +82,7 @@ class SessionManagerTest : public ::testing::Test
   SessionManagerTest()
   {
    _dict = NULL;
+   _diameter_stack = NULL;
   }
 
   virtual ~SessionManagerTest()
@@ -89,6 +90,7 @@ class SessionManagerTest : public ::testing::Test
   }
 
   Rf::Dictionary* _dict;;
+  Diameter::Stack* _diameter_stack;
 };
 
 TEST_F(SessionManagerTest, SimpleTest)
@@ -96,7 +98,7 @@ TEST_F(SessionManagerTest, SimpleTest)
   LocalStore* memstore = new LocalStore();
   SessionStore* store = new SessionStore(memstore);
   DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory();
-  SessionManager* mgr = new SessionManager(store, _dict, factory);
+  SessionManager* mgr = new SessionManager(store, _dict, factory, _diameter_stack);
   SessionStore::Session* sess = NULL;
 
   Message* start_msg = new Message("CALL_ID_ONE", NULL, Rf::AccountingRecordType(2), 300);
@@ -138,7 +140,7 @@ TEST_F(SessionManagerTest, TimeUpdateTest)
   LocalStore* memstore = new LocalStore();
   SessionStore* store = new SessionStore(memstore);
   DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory();
-  SessionManager* mgr = new SessionManager(store, _dict, factory);
+  SessionManager* mgr = new SessionManager(store, _dict, factory, _diameter_stack);
   SessionStore::Session* sess = NULL;
 
   Message* start_msg = new Message("CALL_ID_ONE", NULL, Rf::AccountingRecordType(2), 300);
@@ -178,7 +180,7 @@ TEST_F(SessionManagerTest, NewCallTest)
   LocalStore* memstore = new LocalStore();
   SessionStore* store = new SessionStore(memstore);
   DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory();
-  SessionManager* mgr = new SessionManager(store, _dict, factory);
+  SessionManager* mgr = new SessionManager(store, _dict, factory, _diameter_stack);
   SessionStore::Session* sess = NULL;
 
   Message* start_msg = new Message("CALL_ID_TWO", NULL, Rf::AccountingRecordType(2), 300);
@@ -211,7 +213,7 @@ TEST_F(SessionManagerTest, UnknownCallTest)
   LocalStore* memstore = new LocalStore();
   SessionStore* store = new SessionStore(memstore);
   DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory();
-  SessionManager* mgr = new SessionManager(store, _dict, factory);
+  SessionManager* mgr = new SessionManager(store, _dict, factory, _diameter_stack);
   SessionStore::Session* sess = NULL;
 
   Message* interim_msg = new Message("CALL_ID_THREE", NULL, Rf::AccountingRecordType(3), 300);
@@ -230,7 +232,7 @@ TEST_F(SessionManagerTest, CDFFailureTest)
   LocalStore* memstore = new LocalStore();
   SessionStore* store = new SessionStore(memstore);
   DummyErrorPeerMessageSenderFactory* factory = new DummyErrorPeerMessageSenderFactory();
-  SessionManager* mgr = new SessionManager(store, _dict, factory);
+  SessionManager* mgr = new SessionManager(store, _dict, factory, _diameter_stack);
   SessionStore::Session* sess = NULL;
 
   Message* start_msg = new Message("CALL_ID_FOUR", NULL, Rf::AccountingRecordType(2), 300);
@@ -254,9 +256,9 @@ TEST_F(SessionManagerTest, CDFInterimFailureTest)
   LocalStore* memstore = new LocalStore();
   SessionStore* store = new SessionStore(memstore);
   DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory();
-  SessionManager* mgr = new SessionManager(store, _dict, factory);
+  SessionManager* mgr = new SessionManager(store, _dict, factory, _diameter_stack);
   DummyErrorPeerMessageSenderFactory* fail_factory = new DummyErrorPeerMessageSenderFactory();
-  SessionManager* fail_mgr = new SessionManager(store, _dict, fail_factory);
+  SessionManager* fail_mgr = new SessionManager(store, _dict, fail_factory, _diameter_stack);
   SessionStore::Session* sess = NULL;
 
   Message* start_msg = new Message("CALL_ID_FOUR", NULL, Rf::AccountingRecordType(2), 300);
@@ -286,9 +288,9 @@ TEST_F(SessionManagerTest, CDFInterimUnknownTest)
   LocalStore* memstore = new LocalStore();
   SessionStore* store = new SessionStore(memstore);
   DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory();
-  SessionManager* mgr = new SessionManager(store, _dict, factory);
+  SessionManager* mgr = new SessionManager(store, _dict, factory, _diameter_stack);
   DummyUnknownErrorPeerMessageSenderFactory* fail_factory = new DummyUnknownErrorPeerMessageSenderFactory();
-  SessionManager* fail_mgr = new SessionManager(store, _dict, fail_factory);
+  SessionManager* fail_mgr = new SessionManager(store, _dict, fail_factory, _diameter_stack);
   SessionStore::Session* sess = NULL;
 
   Message* start_msg = new Message("CALL_ID_FOUR", NULL, Rf::AccountingRecordType(2), 300);
