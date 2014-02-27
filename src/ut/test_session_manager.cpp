@@ -40,6 +40,7 @@
 #include "localstore.h"
 #include "sessionstore.h"
 #include "session_manager.hpp"
+#include "mock_chronos_connection.h"
 
 #include "peer_message_sender.hpp"
 #include "peer_message_sender_factory.hpp"
@@ -48,7 +49,11 @@
 class DummyPeerMessageSender : public PeerMessageSender
 {
 public:
-  void send(Message* msg, SessionManager* sm, Rf::Dictionary* dict) {sm->on_ccf_response(true, 100, "test_session_id", 2001, msg);};
+  void send(Message* msg, SessionManager* sm, Rf::Dictionary* dict, Diameter::Stack* diameter_stack)
+  {
+    sm->on_ccf_response(true, 100, "test_session_id", 2001, msg);
+    delete this;
+  };
 };
 
 class DummyPeerMessageSenderFactory : public PeerMessageSenderFactory {
@@ -59,7 +64,11 @@ class DummyPeerMessageSenderFactory : public PeerMessageSenderFactory {
 class DummyErrorPeerMessageSender : public PeerMessageSender
 {
 public:
-  void send(Message* msg, SessionManager* sm, Rf::Dictionary* dict) {sm->on_ccf_response(false, 0, "test_session_id", 5001, msg);};
+  void send(Message* msg, SessionManager* sm, Rf::Dictionary* dict, Diameter::Stack* diameter_stack)
+  {
+    sm->on_ccf_response(false, 0, "test_session_id", 5001, msg);
+    delete this;
+  };
 };
 
 class DummyErrorPeerMessageSenderFactory : public PeerMessageSenderFactory {
@@ -70,7 +79,11 @@ class DummyErrorPeerMessageSenderFactory : public PeerMessageSenderFactory {
 class DummyUnknownErrorPeerMessageSender : public PeerMessageSender
 {
 public:
-  void send(Message* msg, SessionManager* sm, Rf::Dictionary* dict) {sm->on_ccf_response(false, 100, "test_session_id", 5002, msg);};
+  void send(Message* msg, SessionManager* sm, Rf::Dictionary* dict, Diameter::Stack* diameter_stack)
+  {
+    sm->on_ccf_response(false, 100, "test_session_id", 5002, msg);
+    delete this;
+  };
 };
 
 class DummyUnknownErrorPeerMessageSenderFactory : public PeerMessageSenderFactory {
@@ -98,7 +111,8 @@ TEST_F(SessionManagerTest, SimpleTest)
   LocalStore* memstore = new LocalStore();
   SessionStore* store = new SessionStore(memstore);
   DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory();
-  SessionManager* mgr = new SessionManager(store, _dict, factory, _diameter_stack);
+  MockChronosConnection* fake_chronos = new MockChronosConnection("http://localhost:1234");
+  SessionManager* mgr = new SessionManager(store, _dict, factory, fake_chronos, _diameter_stack);
   SessionStore::Session* sess = NULL;
 
   Message* start_msg = new Message("CALL_ID_ONE", NULL, Rf::AccountingRecordType(2), 300);
@@ -130,7 +144,9 @@ TEST_F(SessionManagerTest, SimpleTest)
   sess = store->get_session_data("CALL_ID_ONE");
   ASSERT_EQ(NULL, sess);
 
+  delete mgr;
   delete factory;
+  delete fake_chronos;
   delete store;
   delete memstore;
 }
@@ -140,7 +156,8 @@ TEST_F(SessionManagerTest, TimeUpdateTest)
   LocalStore* memstore = new LocalStore();
   SessionStore* store = new SessionStore(memstore);
   DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory();
-  SessionManager* mgr = new SessionManager(store, _dict, factory, _diameter_stack);
+  MockChronosConnection* fake_chronos = new MockChronosConnection("http://localhost:1234");
+  SessionManager* mgr = new SessionManager(store, _dict, factory, fake_chronos, _diameter_stack);
   SessionStore::Session* sess = NULL;
 
   Message* start_msg = new Message("CALL_ID_ONE", NULL, Rf::AccountingRecordType(2), 300);
@@ -170,7 +187,9 @@ TEST_F(SessionManagerTest, TimeUpdateTest)
   sess = store->get_session_data("CALL_ID_ONE");
   ASSERT_EQ(NULL, sess);
 
+  delete mgr;
   delete factory;
+  delete fake_chronos;
   delete store;
   delete memstore;
 }
@@ -180,7 +199,8 @@ TEST_F(SessionManagerTest, NewCallTest)
   LocalStore* memstore = new LocalStore();
   SessionStore* store = new SessionStore(memstore);
   DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory();
-  SessionManager* mgr = new SessionManager(store, _dict, factory, _diameter_stack);
+  MockChronosConnection* fake_chronos = new MockChronosConnection("http://localhost:1234");
+  SessionManager* mgr = new SessionManager(store, _dict, factory, fake_chronos, _diameter_stack);
   SessionStore::Session* sess = NULL;
 
   Message* start_msg = new Message("CALL_ID_TWO", NULL, Rf::AccountingRecordType(2), 300);
@@ -203,7 +223,9 @@ TEST_F(SessionManagerTest, NewCallTest)
   delete sess;
   sess = NULL;
 
-
+  delete mgr;
+  delete factory;
+  delete fake_chronos;
   delete store;
   delete memstore;
 }
@@ -213,7 +235,8 @@ TEST_F(SessionManagerTest, UnknownCallTest)
   LocalStore* memstore = new LocalStore();
   SessionStore* store = new SessionStore(memstore);
   DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory();
-  SessionManager* mgr = new SessionManager(store, _dict, factory, _diameter_stack);
+  MockChronosConnection* fake_chronos = new MockChronosConnection("http://localhost:1234");
+  SessionManager* mgr = new SessionManager(store, _dict, factory, fake_chronos, _diameter_stack);
   SessionStore::Session* sess = NULL;
 
   Message* interim_msg = new Message("CALL_ID_THREE", NULL, Rf::AccountingRecordType(3), 300);
@@ -223,6 +246,9 @@ TEST_F(SessionManagerTest, UnknownCallTest)
   sess = store->get_session_data("CALL_ID_THREE");
   ASSERT_EQ(NULL, sess);
 
+  delete mgr;
+  delete factory;
+  delete fake_chronos;
   delete store;
   delete memstore;
 }
@@ -232,7 +258,8 @@ TEST_F(SessionManagerTest, CDFFailureTest)
   LocalStore* memstore = new LocalStore();
   SessionStore* store = new SessionStore(memstore);
   DummyErrorPeerMessageSenderFactory* factory = new DummyErrorPeerMessageSenderFactory();
-  SessionManager* mgr = new SessionManager(store, _dict, factory, _diameter_stack);
+  MockChronosConnection* fake_chronos = new MockChronosConnection("http://localhost:1234");
+  SessionManager* mgr = new SessionManager(store, _dict, factory, fake_chronos, _diameter_stack);
   SessionStore::Session* sess = NULL;
 
   Message* start_msg = new Message("CALL_ID_FOUR", NULL, Rf::AccountingRecordType(2), 300);
@@ -247,6 +274,9 @@ TEST_F(SessionManagerTest, CDFFailureTest)
   sess = store->get_session_data("CALL_ID_FOUR");
   ASSERT_EQ(NULL, sess);
 
+  delete mgr;
+  delete factory;
+  delete fake_chronos;
   delete store;
   delete memstore;
 }
@@ -256,9 +286,10 @@ TEST_F(SessionManagerTest, CDFInterimFailureTest)
   LocalStore* memstore = new LocalStore();
   SessionStore* store = new SessionStore(memstore);
   DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory();
-  SessionManager* mgr = new SessionManager(store, _dict, factory, _diameter_stack);
+  MockChronosConnection* fake_chronos = new MockChronosConnection("http://localhost:1234");
+  SessionManager* mgr = new SessionManager(store, _dict, factory, fake_chronos, _diameter_stack);
   DummyErrorPeerMessageSenderFactory* fail_factory = new DummyErrorPeerMessageSenderFactory();
-  SessionManager* fail_mgr = new SessionManager(store, _dict, fail_factory, _diameter_stack);
+  SessionManager* fail_mgr = new SessionManager(store, _dict, fail_factory, fake_chronos, _diameter_stack);
   SessionStore::Session* sess = NULL;
 
   Message* start_msg = new Message("CALL_ID_FOUR", NULL, Rf::AccountingRecordType(2), 300);
@@ -279,6 +310,11 @@ TEST_F(SessionManagerTest, CDFInterimFailureTest)
   delete sess;
   sess = NULL;
 
+  delete mgr;
+  delete factory;
+  delete fail_mgr;
+  delete fail_factory;
+  delete fake_chronos;
   delete store;
   delete memstore;
 }
@@ -288,9 +324,10 @@ TEST_F(SessionManagerTest, CDFInterimUnknownTest)
   LocalStore* memstore = new LocalStore();
   SessionStore* store = new SessionStore(memstore);
   DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory();
-  SessionManager* mgr = new SessionManager(store, _dict, factory, _diameter_stack);
+  MockChronosConnection* fake_chronos = new MockChronosConnection("http://localhost:1234");
+  SessionManager* mgr = new SessionManager(store, _dict, factory, fake_chronos, _diameter_stack);
   DummyUnknownErrorPeerMessageSenderFactory* fail_factory = new DummyUnknownErrorPeerMessageSenderFactory();
-  SessionManager* fail_mgr = new SessionManager(store, _dict, fail_factory, _diameter_stack);
+  SessionManager* fail_mgr = new SessionManager(store, _dict, fail_factory, fake_chronos, _diameter_stack);
   SessionStore::Session* sess = NULL;
 
   Message* start_msg = new Message("CALL_ID_FOUR", NULL, Rf::AccountingRecordType(2), 300);
@@ -308,6 +345,11 @@ TEST_F(SessionManagerTest, CDFInterimUnknownTest)
   sess = store->get_session_data("CALL_ID_FOUR");
   ASSERT_EQ(NULL, sess);
 
+  delete mgr;
+  delete factory;
+  delete fail_mgr;
+  delete fail_factory;
+  delete fake_chronos;
   delete store;
   delete memstore;
 }

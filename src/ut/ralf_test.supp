@@ -1,0 +1,9 @@
+{
+  "Ignore gnutls_global_init leaks"
+  Memcheck:Leak
+  ...
+  fun:gnutls_global_init
+  fun:Curl_gtls_init
+  fun:curl_global_init
+  ...
+}

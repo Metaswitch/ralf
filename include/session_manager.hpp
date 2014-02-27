@@ -46,14 +46,23 @@ class PeerMessageSenderFactory;
 class SessionManager
 {
 public:
-  SessionManager(SessionStore* store, Rf::Dictionary* dict, PeerMessageSenderFactory* factory, Diameter::Stack* diameter_stack): _store(store), _dict(dict), _factory(factory), _diameter_stack(diameter_stack) {_timer_conn = new ChronosConnection("localhost:7253");};
-  ~SessionManager() {delete _timer_conn;};
+  SessionManager(SessionStore* store,
+                 Rf::Dictionary* dict,
+                 PeerMessageSenderFactory* factory,
+                 ChronosConnection* timer_conn,
+                 Diameter::Stack* diameter_stack): _store(store),
+                                                   _timer_conn(timer_conn),
+                                                   _dict(dict),
+                                                   _factory(factory),
+                                                   _diameter_stack(diameter_stack) {};
+  ~SessionManager() {};
   void handle(Message* msg);
   void on_ccf_response (bool accepted, uint32_t interim_interval, std::string session_id, int rc, Message* msg);
 
 private:
-  SessionStore* _store;
   std::string create_opaque_data(Message* msg);
+
+  SessionStore* _store;
   ChronosConnection* _timer_conn;
   Rf::Dictionary* _dict;
   PeerMessageSenderFactory* _factory;
