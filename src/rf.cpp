@@ -87,14 +87,14 @@ AccountingRequest::AccountingRequest(const Dictionary* dict,
     case rapidjson::kStringType:
     case rapidjson::kNumberType:
     case rapidjson::kObjectType:
-      add(Diameter::AVP(it->name.GetString()).val_json(it->value));
+      add(Diameter::AVP(VENDORS, it->name.GetString()).val_json(VENDORS, it->value));
       break;
     case rapidjson::kArrayType:
       for (rapidjson::Value::ConstValueIterator ary_it = it->value.Begin();
            ary_it !=  it->value.End();
            ++ary_it)
       {
-        add(Diameter::AVP(it->name.GetString()).val_json(ary_it));
+        add(Diameter::AVP(VENDORS, it->name.GetString()).val_json(VENDORS, ary_it));
       }
       break; 
     }
