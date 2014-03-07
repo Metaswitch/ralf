@@ -66,7 +66,38 @@ private:
   Diameter::Stack* _real_stack;
   Rf::Dictionary* _dict;
 
+  Diameter::Message launder_message(const Diameter::Message& msg)
   {
+    struct msg* msg_to_build = msg.fd_msg();
+    uint8_t* buffer;
+    size_t len;
+    int rc = fd_msg_bufferize(msg_to_build, &buffer, &len);
+    if (rc != 0)
+    {
+      std::stringstream ss;
+      ss << "fd_msg_bufferize failed: " << rc;
+      throw new std::runtime_error(ss.str());
+    }
+
+    struct msg* parsed_msg = NULL;
+    rc = fd_msg_parse_buffer(&buffer, len, &parsed_msg);
+    if (rc != 0)
+    {
+      std::stringstream ss;
+      ss << "fd_msg_parse_buffer failed: " << rc;
+      throw new std::runtime_error(ss.str());
+    }
+
+    struct fd_pei error_info;
+    rc = fd_msg_parse_dict(parsed_msg, fd_g_config->cnf_dict, &error_info);
+    if (rc != 0)
+    {
+      std::stringstream ss;
+      ss << "fd_msg_parse_dict failed: " << rc << " - " << error_info.pei_errcode;
+      throw new std::runtime_error(ss.str());
+    }
+
+    return Diameter::Message(_dict, parsed_msg, _real_stack);
   }
 };
 
