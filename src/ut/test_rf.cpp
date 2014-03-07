@@ -101,18 +101,17 @@ private:
   }
 };
 
-TEST_F(RfTest, DISABLED_CreateMessageTest)
+TEST_F(RfTest, CreateMessageTest)
 {
-  Diameter::Stack* diameter_stack = Diameter::Stack::get_instance();
-  Rf::Dictionary* dict = new Rf::Dictionary();
-  diameter_stack->start();
   std::string body = "{\"peers\": {\"ccf\": [\"ec2-54-197-167-141.compute-1.amazonaws.com\"]}, \"event\": {\"Accounting-Record-Type\": 1, \"Acct-Interim-Interval\": 300}}";
   rapidjson::Document* body_doc = new rapidjson::Document();
   body_doc->Parse<0>(body.c_str());
   ASSERT_TRUE(body_doc->IsObject());
-  Rf::AccountingRequest* msg = new Rf::AccountingRequest(dict, diameter_stack, "example.com", 3u, body_doc->FindMember("event")->value);
-};
 
+  Rf::AccountingRequest acr = Rf::AccountingRequest(_dict, _real_stack, "example.com", 3u, body_doc->FindMember("event")->value);
+  Diameter::Message msg = launder_message(acr);
+  acr = Rf::AccountingRequest(msg);
+};
 
 TEST_F(RfTest, DISABLED_SuccessTransactionTest)
 {
