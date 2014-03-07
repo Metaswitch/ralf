@@ -47,6 +47,8 @@
 
 namespace Rf {
 
+const std::vector<std::string> VENDORS { "", "3GPP" };
+
 class AccountingRecordType {
 public:
   AccountingRecordType(int type): _type(type) {};
@@ -77,6 +79,7 @@ public:
                     const std::string& dest_host,
                     const uint32_t& record_number,
                     const rapidjson::Value& contents);
+  inline AccountingRequest(Diameter::Message& msg) : Diameter::Message(msg) {};
   ~AccountingRequest();
 };
 
@@ -84,6 +87,7 @@ class AccountingResponse : public Diameter::Message
 {
 public:
   AccountingResponse(const Dictionary* dict, Diameter::Stack* diameter_stack);
+  inline AccountingResponse(Diameter::Message& msg) : Diameter::Message(msg) {};
   ~AccountingResponse();
 };
 
