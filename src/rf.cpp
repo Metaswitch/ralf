@@ -40,9 +40,9 @@
 namespace Rf {
 
 Dictionary::Dictionary() :
-  RF("Rf"),
-  ACCOUNTING_REQUEST("3GPP/Accounting-Control-Request"),
-  ACCOUNTING_RESPONSE("3GPP/Accounting-Control-Answer")
+  RF("Diameter Base Accounting"),
+  ACCOUNTING_REQUEST("Accounting-Request"),
+  ACCOUNTING_RESPONSE("Accounting-Answer")
 {
 }
 
