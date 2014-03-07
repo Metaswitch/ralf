@@ -69,6 +69,10 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "test_utils.hpp"
+
+static const std::string UT_FILE(__FILE__);
+const std::string UT_DIR = UT_FILE.substr(0, UT_FILE.rfind("/"));
 
 int main(int argc, char** argv)
 {

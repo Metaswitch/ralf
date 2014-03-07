@@ -34,6 +34,8 @@
  * as those licenses appear in the file LICENSE-OPENSSL.
  */
 
+#include <stdexcept>
+
 #include "rf.h"
 #include "ralf_transaction.hpp"
 #include "message.hpp"
@@ -41,14 +43,29 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "rapidjson/rapidjson.h"
+#include "test_utils.hpp"
 
 class RfTest : public ::testing::Test
 {
-  RfTest()
+  void SetUp()
   {
+    _real_stack = Diameter::Stack::get_instance();
+    _real_stack->initialize();
+    _real_stack->configure(UT_DIR + "/diameterstack.conf");
+    _dict = new Rf::Dictionary();
   }
 
-  virtual ~RfTest()
+  void TearDown()
+  {
+    _real_stack->stop();
+    _real_stack->wait_stopped();
+    delete _dict;
+  }
+
+private:
+  Diameter::Stack* _real_stack;
+  Rf::Dictionary* _dict;
+
   {
   }
 };
