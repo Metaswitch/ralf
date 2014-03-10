@@ -63,8 +63,12 @@ AccountingRequest::AccountingRequest(const Dictionary* dict,
   add_origin();
 
   // Fill in contributed fields
-  add(Diameter::AVP("Destination-Host").val_str(dest_host));
-  add(Diameter::AVP("Accounting-Record-Number").val_i32(record_number));
+  Diameter::Dictionary::AVP dest_host_dict("Destination-Host");
+  Diameter::AVP dest_host_avp(dest_host_dict);
+  add(dest_host_avp.val_str(dest_host));
+  Diameter::Dictionary::AVP record_number_dict("Accounting-Record-Number");
+  Diameter::AVP record_number_avp(dest_host_dict);
+  add(record_number_avp.val_i32(record_number));
 
   if (contents.GetType() != rapidjson::kObjectType)
   {
@@ -87,14 +91,20 @@ AccountingRequest::AccountingRequest(const Dictionary* dict,
     case rapidjson::kStringType:
     case rapidjson::kNumberType:
     case rapidjson::kObjectType:
-      add(Diameter::AVP(VENDORS, it->name.GetString()).val_json(VENDORS, it->value));
+      {
+        Diameter::Dictionary::AVP new_dict(VENDORS, it->name.GetString());
+        Diameter::AVP avp(new_dict);
+        add(avp.val_json(VENDORS, new_dict, it->value));
+      }
       break;
     case rapidjson::kArrayType:
       for (rapidjson::Value::ConstValueIterator ary_it = it->value.Begin();
            ary_it !=  it->value.End();
            ++ary_it)
       {
-        add(Diameter::AVP(VENDORS, it->name.GetString()).val_json(VENDORS, ary_it));
+        Diameter::Dictionary::AVP new_dict(VENDORS, it->name.GetString());
+        Diameter::AVP avp(new_dict);
+        add(avp.val_json(VENDORS, new_dict, ary_it));
       }
       break; 
     }
