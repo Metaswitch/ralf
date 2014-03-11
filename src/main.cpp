@@ -192,7 +192,7 @@ int main(int argc, char**argv)
   struct options options;
   options.diameter_conf = "/var/lib/ralf/ralf.conf";
   options.http_address = "0.0.0.0";
-  options.http_port = 9888;
+  options.http_port = 10888;
   options.http_threads = 1;
   options.dest_realm = "dest-realm.unknown";
   options.dest_host = "dest-host.unknown";
