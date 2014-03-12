@@ -41,6 +41,7 @@ namespace Rf {
 
 Dictionary::Dictionary() :
   RF("Diameter Base Accounting"),
+  TGPP("3GPP"),
   ACCOUNTING_REQUEST("Accounting-Request"),
   ACCOUNTING_RESPONSE("Accounting-Answer")
 {

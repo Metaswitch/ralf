@@ -67,6 +67,7 @@ class Dictionary : public Diameter::Dictionary
 public:
   Dictionary();
   const Diameter::Dictionary::Application RF;
+  const Diameter::Dictionary::Vendor TGPP;
   const Diameter::Dictionary::Message ACCOUNTING_REQUEST;
   const Diameter::Dictionary::Message ACCOUNTING_RESPONSE;
 };
