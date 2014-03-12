@@ -67,8 +67,9 @@ AccountingRequest::AccountingRequest(const Dictionary* dict,
   Diameter::Dictionary::AVP dest_host_dict("Destination-Host");
   Diameter::AVP dest_host_avp(dest_host_dict);
   add(dest_host_avp.val_str(dest_host));
+
   Diameter::Dictionary::AVP record_number_dict("Accounting-Record-Number");
-  Diameter::AVP record_number_avp(dest_host_dict);
+  Diameter::AVP record_number_avp(record_number_dict);
   add(record_number_avp.val_i32(record_number));
 
   if (contents.GetType() != rapidjson::kObjectType)
@@ -120,6 +121,7 @@ AccountingResponse::AccountingResponse(const Dictionary* dict,
                                        Diameter::Stack* diameter_stack) :
     Diameter::Message(dict, dict->ACCOUNTING_RESPONSE, diameter_stack)
 {
+  LOG_DEBUG("Building an Accounting-Response");
 }
 
 AccountingResponse::~AccountingResponse()
