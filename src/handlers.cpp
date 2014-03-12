@@ -40,6 +40,7 @@
 
 #include "rapidjson/rapidjson.h"
 #include "rapidjson/writer.h"
+#include "rapidjson/prettywriter.h"
 #include "rapidjson/stringbuffer.h"
 
 //LCOV_EXCL_START
@@ -146,6 +147,11 @@ Message* BillingControllerHandler::parse_body(std::string call_id, std::string t
       ccfs.push_back((*body)["peers"]["ccf"][i].GetString());
     }
   }
+
+  rapidjson::StringBuffer s;
+  rapidjson::PrettyWriter<rapidjson::StringBuffer> w(s);
+  body->Accept(w);
+  LOG_DEBUG(s.GetString());
 
   Message* msg = new Message(call_id, body, record_type, session_refresh_time, timer_interim);
   if (!ccfs.empty())
