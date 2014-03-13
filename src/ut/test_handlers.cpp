@@ -52,66 +52,89 @@ class HandlerTest : public ::testing::Test
 
 TEST_F(HandlerTest, GoodJSONTest)
 {
-  std::string body = "{\"peers\": {\"ccf\": [\"ec2-54-197-167-141.compute-1.amazonaws.com\"]}, \"event\": {\"Accounting-Record-Type\": 1, \"Acct-Interim-Interval\": 300}}";
+  std::string body = "{\"peers\": {\"ccf\": [\"ec2-54-197-167-141.compute-1.amazonaws.com\"]}, \"event\": {\"Accounting-Record-Type\": 1, \"Acct-Interim-Interval\": 300, \"Service-Information\": {\"IMS-Information\": {\"Role-Of-Node\": 0, \"Node-Functionality\": 0}}}}";
   Message* msg = BillingControllerHandler::parse_body("abcd", "", body);
-  ASSERT_TRUE(msg->record_type.isEvent());
-  ASSERT_EQ(msg->ccfs.size(), 1);
-  ASSERT_EQ(msg->ccfs[0], "ec2-54-197-167-141.compute-1.amazonaws.com");
-  ASSERT_EQ(msg->session_refresh_time, 300);
-  ASSERT_EQ(msg->timer_interim, false);
+  ASSERT_NE((Message*)NULL, msg);
+  EXPECT_TRUE(msg->record_type.isEvent());
+  EXPECT_EQ(msg->ccfs.size(), 1);
+  EXPECT_EQ(msg->ccfs[0], "ec2-54-197-167-141.compute-1.amazonaws.com");
+  EXPECT_EQ(msg->session_refresh_time, 300);
+  EXPECT_EQ(msg->timer_interim, false);
   delete msg;
 };
 
 TEST_F(HandlerTest, TimerInterimTest)
 {
-  std::string body = "{\"peers\": {\"ccf\": [\"ec2-54-197-167-141.compute-1.amazonaws.com\"]}, \"event\": {\"Accounting-Record-Type\": 1, \"Acct-Interim-Interval\": 300}}";
+  std::string body = "{\"peers\": {\"ccf\": [\"ec2-54-197-167-141.compute-1.amazonaws.com\"]}, \"event\": {\"Accounting-Record-Type\": 1, \"Acct-Interim-Interval\": 300, \"Service-Information\": {\"IMS-Information\": {\"Role-Of-Node\": 0, \"Node-Functionality\": 0}}}}";
   Message* msg = BillingControllerHandler::parse_body("abcd", "true", body);
-  ASSERT_TRUE(msg->record_type.isEvent());
-  ASSERT_EQ(msg->ccfs.size(), 1);
-  ASSERT_EQ(msg->ccfs[0], "ec2-54-197-167-141.compute-1.amazonaws.com");
-  ASSERT_EQ(msg->session_refresh_time, 300);
-  ASSERT_EQ(msg->timer_interim, true);
+  ASSERT_NE((Message*)NULL, msg);
+  EXPECT_TRUE(msg->record_type.isEvent());
+  EXPECT_EQ(msg->ccfs.size(), 1);
+  EXPECT_EQ(msg->ccfs[0], "ec2-54-197-167-141.compute-1.amazonaws.com");
+  EXPECT_EQ(msg->session_refresh_time, 300);
+  EXPECT_EQ(msg->timer_interim, true);
   delete msg;
 };
 
 TEST_F(HandlerTest, BadJSONTest)
 {
-  std::string body = "Type\": 1, \"Acct-Interim-Interval\": 300}}";
+  std::string body = "Type\": 1, \"Acct-Interim-Interval\": 300, \"Service-Information\": {\"IMS-Information\": {\"Role-Of-Node\": 0, \"Node-Functionality\": 0}}}}";
   Message* msg = BillingControllerHandler::parse_body("abcd", "", body);
   ASSERT_EQ(NULL, msg);
 };
 
 TEST_F(HandlerTest, NoCCFsTest)
 {
-  std::string body = "{\"peers\": {\"ccf\": []}, \"event\": {\"Accounting-Record-Type\": 1, \"Acct-Interim-Interval\": 300}}";
+  std::string body = "{\"peers\": {\"ccf\": []}, \"event\": {\"Accounting-Record-Type\": 1, \"Acct-Interim-Interval\": 300, \"Service-Information\": {\"IMS-Information\": {\"Role-Of-Node\": 0, \"Node-Functionality\": 0}}}}";
   Message* msg = BillingControllerHandler::parse_body("abcd", "", body);
   ASSERT_EQ(NULL, msg);
 };
 
 TEST_F(HandlerTest, InvalidPeersTest)
 {
-  std::string body = "{\"peers\": {\"ccf\": [77]}, \"event\": {\"Accounting-Record-Type\": 1, \"Acct-Interim-Interval\": 300}}";
+  std::string body = "{\"peers\": {\"ccf\": [77]}, \"event\": {\"Accounting-Record-Type\": 1, \"Acct-Interim-Interval\": 300, \"Service-Information\": {\"IMS-Information\": {\"Role-Of-Node\": 0, \"Node-Functionality\": 0}}}}";
   Message* msg = BillingControllerHandler::parse_body("abcd", "", body);
   ASSERT_EQ(NULL, msg);
 };
 
 TEST_F(HandlerTest, NoPeerElementTest)
 {
-  std::string body = "{\"event\": {\"Accounting-Record-Type\": 1, \"Acct-Interim-Interval\": 300}}";
+  std::string body = "{\"event\": {\"Accounting-Record-Type\": 1, \"Acct-Interim-Interval\": 300, \"Service-Information\": {\"IMS-Information\": {\"Role-Of-Node\": 0, \"Node-Functionality\": 0}}}}";
   Message* msg = BillingControllerHandler::parse_body("abcd", "", body);
   ASSERT_EQ(NULL, msg);
 };
 
 TEST_F(HandlerTest, InvalidTypeTest)
 {
-  std::string body = "{\"peers\": {\"ccf\": [\"ec2-54-197-167-141.compute-1.amazonaws.com\"]}, \"event\": {\"Accounting-Record-Type\": 8, \"Acct-Interim-Interval\": 300}}";
+  std::string body = "{\"peers\": {\"ccf\": [\"ec2-54-197-167-141.compute-1.amazonaws.com\"]}, \"event\": {\"Accounting-Record-Type\": 8, \"Acct-Interim-Interval\": 300, \"Service-Information\": {\"IMS-Information\": {\"Role-Of-Node\": 0, \"Node-Functionality\": 0}}}}";
   Message* msg = BillingControllerHandler::parse_body("abcd", "", body);
   ASSERT_EQ(NULL, msg);
 };
 
 TEST_F(HandlerTest, NoTypeTest)
 {
+  std::string body = "{\"peers\": {\"ccf\": [\"ec2-54-197-167-141.compute-1.amazonaws.com\"]}, \"event\": {\"Acct-Interim-Interval\": 300, \"Service-Information\": {\"IMS-Information\": {\"Role-Of-Node\": 0, \"Node-Functionality\": 0}}}}";
+  Message* msg = BillingControllerHandler::parse_body("abcd", "", body);
+  ASSERT_EQ(NULL, msg);
+};
+
+TEST_F(HandlerTest, NoIMSInfoTest)
+{
   std::string body = "{\"peers\": {\"ccf\": [\"ec2-54-197-167-141.compute-1.amazonaws.com\"]}, \"event\": {\"Acct-Interim-Interval\": 300}}";
+  Message* msg = BillingControllerHandler::parse_body("abcd", "", body);
+  ASSERT_EQ(NULL, msg);
+};
+
+TEST_F(HandlerTest, NoRoleOfNodeTest)
+{
+  std::string body = "{\"peers\": {\"ccf\": [\"ec2-54-197-167-141.compute-1.amazonaws.com\"]}, \"event\": {\"Acct-Interim-Interval\": 300, \"Service-Information\": {\"IMS-Information\": {\"Node-Functionality\": 0}}}}";
+  Message* msg = BillingControllerHandler::parse_body("abcd", "", body);
+  ASSERT_EQ(NULL, msg);
+};
+
+TEST_F(HandlerTest, NoNodeFunctionalityTest)
+{
+  std::string body = "{\"peers\": {\"ccf\": [\"ec2-54-197-167-141.compute-1.amazonaws.com\"]}, \"event\": {\"Acct-Interim-Interval\": 300, \"Service-Information\": {\"IMS-Information\": {\"Role-Of-Node\": 0}}}}";
   Message* msg = BillingControllerHandler::parse_body("abcd", "", body);
   ASSERT_EQ(NULL, msg);
 };

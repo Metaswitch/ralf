@@ -82,6 +82,8 @@ Message* BillingControllerHandler::parse_body(std::string call_id, std::string t
   body->Parse<0>(bodys.c_str());
   std::vector<std::string> ccfs;
   uint32_t session_refresh_time = 0;
+  role_of_node_t role_of_node;
+  node_functionality_t node_functionality;
 
   // Verify that the body is correct JSON with an "event" element
   if (!(*body).IsObject() ||
@@ -91,6 +93,46 @@ Message* BillingControllerHandler::parse_body(std::string call_id, std::string t
     LOG_WARNING("JSON document was either not valid or did not have an 'event' key");
     delete body;
     return NULL;
+  }
+
+  // Verify the Role-Of-Node and Node-Functionality AVPs are present (we use these
+  // to distinguish devices in path for the same SIP call ID.
+  if ((!(*body)["event"].HasMember("Service-Information")) ||
+      (!(*body)["event"]["Service-Information"].IsObject()) ||
+      (!(*body)["event"]["Service-Information"].HasMember("IMS-Information")) ||
+      (!(*body)["event"]["Service-Information"]["IMS-Information"].IsObject()))
+  {
+    LOG_ERROR("IMS-Information not included in the event description");
+    delete body;
+    return NULL;
+  }
+  else
+  {
+    rapidjson::Value::Member* role_of_node_json = (*body)
+                                                  ["event"]
+                                                  ["Service-Information"]
+                                                  ["IMS-Information"].
+                                                  FindMember("Role-Of-Node");
+    if ((role_of_node_json == NULL) || !(role_of_node_json->value.IsInt()))
+    {
+      LOG_ERROR("No Role-Of-Node in IMS-Information");
+      delete body;
+      return NULL;
+    }
+    role_of_node = (role_of_node_t)role_of_node_json->value.GetInt();
+
+    rapidjson::Value::Member* node_function_json = (*body)
+                                                   ["event"]
+                                                   ["Service-Information"]
+                                                   ["IMS-Information"].
+                                                   FindMember("Node-Functionality");
+    if ((node_function_json == NULL) || !(node_function_json->value.IsInt()))
+    {
+      LOG_ERROR("No Node-Functionality in IMS-Information");
+      delete body;
+      return NULL;
+    }
+    node_functionality = (node_functionality_t)node_function_json->value.GetInt();
   }
 
   // Verify that there is an Accounting-Record-Type and it is one of
@@ -153,7 +195,13 @@ Message* BillingControllerHandler::parse_body(std::string call_id, std::string t
   body->Accept(w);
   LOG_DEBUG(s.GetString());
 
-  Message* msg = new Message(call_id, body, record_type, session_refresh_time, timer_interim);
+  Message* msg = new Message(call_id,
+                             role_of_node,
+                             node_functionality,
+                             body,
+                             record_type, 
+                             session_refresh_time,
+                             timer_interim);
   if (!ccfs.empty())
   {
     msg->ccfs = ccfs;
