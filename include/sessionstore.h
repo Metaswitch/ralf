@@ -41,6 +41,7 @@
 #include <vector>
 
 #include "store.h"
+#include "message.hpp"
 
 class SessionStore
 {
@@ -85,18 +86,28 @@ public:
   ~SessionStore();
 
   // Retrieve session state for a given Call-ID.
-  Session* get_session_data(const std::string& call_id);
+  Session* get_session_data(const std::string& call_id,
+                            const role_of_node_t role,
+                            const node_functionality_t function);
 
   // Save the session object back into the store (this may fail due to CAS atomicity
   // checking)
-  bool set_session_data(const std::string& call_id, Session* data);
-  bool delete_session_data(const std::string& call_id);
+  bool set_session_data(const std::string& call_id,
+                        const role_of_node_t role,
+                        const node_functionality_t function,
+                        Session* data);
+  bool delete_session_data(const std::string& call_id,
+                           const role_of_node_t role,
+                           const node_functionality_t function);
 
 private:
   // Serialise a session to a string, ready to store in the DB.
   std::string serialize_session(Session *data);
-
   Session* deserialize_session(const std::string& s);
+
+  std::string create_key(const std::string& call_id,
+                         const role_of_node_t role,
+                         const node_functionality_t function);
 
   Store* _store;
 };
