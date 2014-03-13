@@ -53,7 +53,9 @@ void SessionManager::handle(Message* msg)
   if (msg->record_type.isInterim() || msg->record_type.isStop())
   {
     // This relates to an existing session
-    sess = _store->get_session_data(msg->call_id);
+    sess = _store->get_session_data(msg->call_id,
+                                    msg->role,
+                                    msg->function);
 
     if (sess == NULL)
     {
@@ -67,7 +69,10 @@ void SessionManager::handle(Message* msg)
     {
       sess->acct_record_number += 1;
       // Update the store with the incremented accounting record number
-      bool success = _store->set_session_data(msg->call_id, sess);
+      bool success = _store->set_session_data(msg->call_id,
+                                              msg->role,
+                                              msg->function,
+                                              sess);
       if (!success)
       {
         // Someone has written conflicting data since we read this, so start processing this message again
@@ -77,7 +82,9 @@ void SessionManager::handle(Message* msg)
     else if  (msg->record_type.isStop())
     {
       // Delete the session from the store and cancel the timer
-      _store->delete_session_data(msg->call_id);
+      _store->delete_session_data(msg->call_id,
+                                  msg->role,
+                                  msg->function);
       LOG_INFO("Received STOP for session %s, deleting session and timer using timer ID %s", msg->call_id.c_str(), sess->timer_id.c_str());
 
       _timer_conn->send_delete(sess->timer_id,
@@ -164,7 +171,10 @@ void SessionManager::on_ccf_response (bool accepted, uint32_t interim_interval, 
       sess->session_refresh_time = msg->session_refresh_time;
 
       // Do this unconditionally - if it fails, this processing has already been done elsewhere
-      _store->set_session_data(msg->call_id, sess);
+      _store->set_session_data(msg->call_id,
+                               msg->role,
+                               msg->function,
+                               sess);
       delete sess;
     }
 
@@ -179,7 +189,9 @@ void SessionManager::on_ccf_response (bool accepted, uint32_t interim_interval, 
         // 5002 means the CDF has no record of this session. It's pointless to send any
         // more messages - delete the session from the store.
         LOG_INFO("Session for %s received 5002 error from CDF, deleting", msg->call_id.c_str());
-        _store->delete_session_data(msg->call_id);
+        _store->delete_session_data(msg->call_id,
+                                    msg->role,
+                                    msg->function);
       }
       else if (!msg->timer_interim)
       {
