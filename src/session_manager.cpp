@@ -44,6 +44,9 @@
 #include "peer_message_sender.hpp"
 #include "sas.h"
 #include "peer_message_sender_factory.hpp"
+#include "rapidjson/document.h"
+#include "rapidjson/stringbuffer.h"
+#include "rapidjson/writer.h"
 
 void SessionManager::handle(Message* msg)
 {
@@ -122,7 +125,36 @@ void SessionManager::handle(Message* msg)
 std::string SessionManager::create_opaque_data(Message* msg)
 {
   // Some RapidJSON parsing code goes here to determine the "opaque data".
-  return "{\"event\": {\"Accounting-Record-Type\": 3}}"; // interim
+  using namespace rapidjson;
+
+  // Create the doc object so we can share the allocator during construction
+  // of the child objects.  This prevents huge numbers of re-allocs.
+  Document doc;
+  doc.SetObject();
+
+  // The IMS-Information object
+  Value ims_info(kObjectType);
+  ims_info.AddMember("Role-Of-Node", msg->role, doc.GetAllocator());
+  ims_info.AddMember("Node-Functionality", msg->function, doc.GetAllocator());
+
+  // The Service-Information object
+  Value service_info(kObjectType);
+  service_info.AddMember("IMS-Information", ims_info, doc.GetAllocator());
+
+  // Create the top-level event object.
+  Value event(kObjectType);
+  event.AddMember("Service-Information", service_info, doc.GetAllocator());
+  event.AddMember("Accounting-Record-Type", 3, doc.GetAllocator()); // 3 is INTERIM.
+
+  // Finally create the document.
+  doc.AddMember("event", event, doc.GetAllocator());
+
+  // And print to a string
+  StringBuffer s;
+  Writer<StringBuffer> w(s);
+  doc.Accept(w);
+
+  return s.GetString();
 }
 
 void SessionManager::on_ccf_response (bool accepted, uint32_t interim_interval, std::string session_id, int rc, Message* msg)
