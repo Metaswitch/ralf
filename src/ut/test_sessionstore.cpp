@@ -64,18 +64,18 @@ TEST_F(SessionStoreTest, SimpleTest)
   session->session_refresh_time = 5 * 60;
 
   // Save the session in the store
-  bool rc = store->set_session_data("call_id", session);
+  bool rc = store->set_session_data("call_id", ORIGINATING, SCSCF, session);
   EXPECT_EQ(true, rc);
   delete session;
   session = NULL;
 
   // Retrieve the session again.
-  session = store->get_session_data("call_id");
+  session = store->get_session_data("call_id", ORIGINATING, SCSCF);
   EXPECT_EQ("session_id", session->session_id);
-  EXPECT_EQ(2, session->acct_record_number);
+  EXPECT_EQ(2u, session->acct_record_number);
   EXPECT_EQ("timer_id", session->timer_id);
-  EXPECT_EQ(5 * 60, session->session_refresh_time);
-  EXPECT_EQ(2, session->ccf.size());
+  EXPECT_EQ(5u * 60, session->session_refresh_time);
+  EXPECT_EQ(2u, session->ccf.size());
 
   delete session;
   delete store;
@@ -95,16 +95,15 @@ TEST_F(SessionStoreTest, DeletionTest)
   session->session_refresh_time = 5 * 60;
 
   // Save the session in the store
-  bool rc = store->set_session_data("call_id", session);
+  bool rc = store->set_session_data("call_id", ORIGINATING, SCSCF, session);
   EXPECT_EQ(true, rc);
   delete session;
   session = NULL;
 
-
-  store->delete_session_data("call_id");
+  store->delete_session_data("call_id", ORIGINATING, SCSCF);
 
   // Retrieve the session again.
-  session = store->get_session_data("call_id");
+  session = store->get_session_data("call_id", ORIGINATING, SCSCF);
   EXPECT_EQ(NULL, session);
 
   delete session;
