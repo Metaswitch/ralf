@@ -53,15 +53,13 @@ SessionStore::Session* SessionStore::get_session_data(const std::string& call_id
                                                       const role_of_node_t role,
                                                       const node_functionality_t function)
 {
-  LOG_DEBUG("Retrieving session data for %s%d%d",
-            call_id.c_str(),
-            role,
-            function);
+  std::string key = create_key(call_id, role, function);
+  LOG_DEBUG("Retrieving session data for %s",
+            key.c_str());
   Session* rc = NULL;
 
   std::string data;
   uint64_t cas;
-  std::string key = create_key(call_id, role, function);
   Store::Status status = _store->get_data("session", key, data, cas);
 
   if (status == Store::Status::OK && !data.empty())
@@ -79,14 +77,12 @@ bool SessionStore::set_session_data(const std::string& call_id,
                                     const node_functionality_t function,
                                     Session* session)
 {
-  LOG_DEBUG("Saving session data for %s%d%d, CAS = %ld",
-            call_id.c_str(),
-            role,
-            function,
+  std::string key = create_key(call_id, role, function);
+  LOG_DEBUG("Saving session data for %s, CAS = %ld",
+            key.c_str(),
             session->_cas);
 
   std::string data = serialize_session(session);
-  std::string key = create_key(call_id, role, function);
 
   Store::Status status = _store->set_data("session",
                                           key,
@@ -102,12 +98,9 @@ bool SessionStore::delete_session_data(const std::string& call_id,
                                        const role_of_node_t role,
                                        const node_functionality_t function)
 {
-  LOG_DEBUG("Deleting session data for %s%u%u",
-            call_id.c_str(),
-            role,
-            function);
-
   std::string key = create_key(call_id, role, function);
+  LOG_DEBUG("Deleting session data for %s",
+            key.c_str());
 
   Store::Status status = _store->delete_data("session", key);
   LOG_DEBUG("Store returned %d", status);
