@@ -153,8 +153,11 @@ std::string SessionManager::create_opaque_data(Message* msg)
   StringBuffer s;
   Writer<StringBuffer> w(s);
   doc.Accept(w);
+  std::string body = s.GetString();
 
-  return s.GetString();
+  LOG_DEBUG("Built INTERIM request body: %s", body.c_str());
+
+  return body;
 }
 
 void SessionManager::on_ccf_response (bool accepted, uint32_t interim_interval, std::string session_id, int rc, Message* msg)
