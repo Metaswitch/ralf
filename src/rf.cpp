@@ -100,13 +100,13 @@ AccountingRequest::AccountingRequest(const Dictionary* dict,
       }
       break;
     case rapidjson::kArrayType:
-      for (rapidjson::Value::ConstValueIterator ary_it = it->value.Begin();
-           ary_it !=  it->value.End();
-           ++ary_it)
+      for (rapidjson::Value::ConstValueIterator array_iter = it->value.Begin();
+           array_iter !=  it->value.End();
+           ++array_iter)
       {
         Diameter::Dictionary::AVP new_dict(VENDORS, it->name.GetString());
         Diameter::AVP avp(new_dict);
-        add(avp.val_json(VENDORS, new_dict, ary_it));
+        add(avp.val_json(VENDORS, new_dict, array_iter));
       }
       break; 
     }
