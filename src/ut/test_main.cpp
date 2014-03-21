@@ -71,6 +71,7 @@
 #include "gtest/gtest.h"
 #include "test_utils.hpp"
 
+// Calculate our current directory so we can load config files from it.
 static const std::string UT_FILE(__FILE__);
 const std::string UT_DIR = UT_FILE.substr(0, UT_FILE.rfind("/"));
 
