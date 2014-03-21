@@ -190,10 +190,15 @@ Message* BillingControllerHandler::parse_body(std::string call_id, std::string t
     }
   }
 
-  rapidjson::StringBuffer s;
-  rapidjson::PrettyWriter<rapidjson::StringBuffer> w(s);
-  body->Accept(w);
-  LOG_DEBUG(s.GetString());
+  if (Log::enabled(Log::DEBUG_LEVEL))
+  {
+    // LCOV_EXCL_START - Debug logging is not enabled in UT
+    rapidjson::StringBuffer s;
+    rapidjson::PrettyWriter<rapidjson::StringBuffer> w(s);
+    body->Accept(w);
+    LOG_DEBUG("Handling request, body:\n%s", s.GetString());
+    // LCOV_EXCL_STOP
+  }
 
   Message* msg = new Message(call_id,
                              role_of_node,

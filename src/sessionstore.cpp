@@ -54,8 +54,7 @@ SessionStore::Session* SessionStore::get_session_data(const std::string& call_id
                                                       const node_functionality_t function)
 {
   std::string key = create_key(call_id, role, function);
-  LOG_DEBUG("Retrieving session data for %s",
-            key.c_str());
+  LOG_DEBUG("Retrieving session data for %s", key.c_str());
   Session* rc = NULL;
 
   std::string data;
@@ -78,9 +77,7 @@ bool SessionStore::set_session_data(const std::string& call_id,
                                     Session* session)
 {
   std::string key = create_key(call_id, role, function);
-  LOG_DEBUG("Saving session data for %s, CAS = %ld",
-            key.c_str(),
-            session->_cas);
+  LOG_DEBUG("Saving session data for %s, CAS = %ld", key.c_str(), session->_cas);
 
   std::string data = serialize_session(session);
 
@@ -99,8 +96,7 @@ bool SessionStore::delete_session_data(const std::string& call_id,
                                        const node_functionality_t function)
 {
   std::string key = create_key(call_id, role, function);
-  LOG_DEBUG("Deleting session data for %s",
-            key.c_str());
+  LOG_DEBUG("Deleting session data for %s", key.c_str());
 
   Store::Status status = _store->delete_data("session", key);
   LOG_DEBUG("Store returned %d", status);
