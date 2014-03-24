@@ -83,32 +83,39 @@ AccountingRequest::AccountingRequest(const Dictionary* dict,
        it != contents.MemberEnd();
        ++it)
   {
-    switch (it->value.GetType())
+    try
     {
-    case rapidjson::kFalseType:
-    case rapidjson::kTrueType:
-    case rapidjson::kNullType:
-      LOG_ERROR("Invalid format (true/false) in JSON block, ignoring");
-      continue;
-    case rapidjson::kStringType:
-    case rapidjson::kNumberType:
-    case rapidjson::kObjectType:
+      switch (it->value.GetType())
       {
-        Diameter::Dictionary::AVP new_dict(VENDORS, it->name.GetString());
-        Diameter::AVP avp(new_dict);
-        add(avp.val_json(VENDORS, new_dict, it->value));
+      case rapidjson::kFalseType:
+      case rapidjson::kTrueType:
+      case rapidjson::kNullType:
+        LOG_ERROR("Invalid format (true/false) in JSON block, ignoring");
+        continue;
+      case rapidjson::kStringType:
+      case rapidjson::kNumberType:
+      case rapidjson::kObjectType:
+        {
+          Diameter::Dictionary::AVP new_dict(VENDORS, it->name.GetString());
+          Diameter::AVP avp(new_dict);
+          add(avp.val_json(VENDORS, new_dict, it->value));
+        }
+        break;
+      case rapidjson::kArrayType:
+        for (rapidjson::Value::ConstValueIterator array_iter = it->value.Begin();
+             array_iter !=  it->value.End();
+             ++array_iter)
+        {
+          Diameter::Dictionary::AVP new_dict(VENDORS, it->name.GetString());
+          Diameter::AVP avp(new_dict);
+          add(avp.val_json(VENDORS, new_dict, array_iter));
+        }
+        break;
       }
-      break;
-    case rapidjson::kArrayType:
-      for (rapidjson::Value::ConstValueIterator array_iter = it->value.Begin();
-           array_iter !=  it->value.End();
-           ++array_iter)
-      {
-        Diameter::Dictionary::AVP new_dict(VENDORS, it->name.GetString());
-        Diameter::AVP avp(new_dict);
-        add(avp.val_json(VENDORS, new_dict, array_iter));
-      }
-      break; 
+    }
+    catch (Diameter::Stack::Exception e)
+    {
+      LOG_WARNING("AVP %s not recognised, ignoring", it->value.GetString());
     }
   }   
 }
