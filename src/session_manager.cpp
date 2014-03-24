@@ -124,25 +124,22 @@ void SessionManager::handle(Message* msg)
 
 std::string SessionManager::create_opaque_data(Message* msg)
 {
-  // Some RapidJSON parsing code goes here to determine the "opaque data".
-  using namespace rapidjson;
-
   // Create the doc object so we can share the allocator during construction
   // of the child objects.  This prevents huge numbers of re-allocs.
-  Document doc;
+  rapidjson::Document doc;
   doc.SetObject();
 
   // The IMS-Information object
-  Value ims_info(kObjectType);
+  rapidjson::Value ims_info(rapidjson::kObjectType);
   ims_info.AddMember("Role-Of-Node", msg->role, doc.GetAllocator());
   ims_info.AddMember("Node-Functionality", msg->function, doc.GetAllocator());
 
   // The Service-Information object
-  Value service_info(kObjectType);
+  rapidjson::Value service_info(rapidjson::kObjectType);
   service_info.AddMember("IMS-Information", ims_info, doc.GetAllocator());
 
   // Create the top-level event object.
-  Value event(kObjectType);
+  rapidjson::Value event(rapidjson::kObjectType);
   event.AddMember("Service-Information", service_info, doc.GetAllocator());
   event.AddMember("Accounting-Record-Type", 3, doc.GetAllocator()); // 3 is INTERIM.
 
@@ -150,8 +147,8 @@ std::string SessionManager::create_opaque_data(Message* msg)
   doc.AddMember("event", event, doc.GetAllocator());
 
   // And print to a string
-  StringBuffer s;
-  Writer<StringBuffer> w(s);
+  rapidjson::StringBuffer s;
+  rapidjson::Writer<rapidjson::StringBuffer> w(s);
   doc.Accept(w);
   std::string body = s.GetString();
 
