@@ -48,7 +48,7 @@
 void PingHandler::run()
 {
   _req.add_content("OK");
-  _req.send_reply(200);
+  send_http_reply(200);
   delete this;
 }
 
@@ -56,16 +56,16 @@ void BillingControllerHandler::run()
 {
   if (_req.method() != htp_method_POST)
   {
-    _req.send_reply(405);
+    send_http_reply(405);
     return;
   }
   Message* msg = parse_body(call_id(), _req.param("timer-interim"), _req.body());
   if (msg == NULL)
   {
-    _req.send_reply(400);
+    send_http_reply(400);
     return;
   }
-  _req.send_reply(200);
+  send_http_reply(200);
   _sess_mgr->handle(msg);
   delete this;
 }
