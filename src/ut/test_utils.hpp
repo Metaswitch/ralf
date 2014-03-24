@@ -1,5 +1,5 @@
 /**
- * @file rf.h Class definition wrapping Rf
+ * @file test_utils.hpp Unit test utility functions header file
  *
  * Project Clearwater - IMS in the Cloud
  * Copyright (C) 2013  Metaswitch Networks Ltd
@@ -34,64 +34,12 @@
  * as those licenses appear in the file LICENSE-OPENSSL.
  */
 
-#ifndef RF_H__
-#define RF_H__
+#ifndef TEST_UTILS_H__
+#define TEST_UTILS_H__
 
-#include <freeDiameter/freeDiameter-host.h>
-#include <freeDiameter/libfdcore.h>
-#include <rapidjson/document.h>
 #include <string>
 
-#include "diameterstack.h"
-#include "log.h"
-
-namespace Rf {
-
-const std::vector<std::string> VENDORS { "", "3GPP" };
-
-class AccountingRecordType {
-public:
-  AccountingRecordType(int type): _type(type) {};
-  bool isValid() {return ((_type <= 4) && (_type >= 1));};
-  bool isEvent() {return (_type == 1);}
-  bool isStart() {return (_type == 2);}
-  bool isInterim() {return (_type == 3);}
-  bool isStop() {return (_type == 4);}
-
-private:
-  uint32_t _type;
-};
-
-class Dictionary : public Diameter::Dictionary
-{
-public:
-  Dictionary();
-  const Diameter::Dictionary::Application RF;
-  const Diameter::Dictionary::Vendor TGPP;
-  const Diameter::Dictionary::Message ACCOUNTING_REQUEST;
-  const Diameter::Dictionary::Message ACCOUNTING_RESPONSE;
-};
-
-class AccountingRequest : public Diameter::Message
-{
-public:
-  AccountingRequest(const Dictionary* dict,
-                    Diameter::Stack* diameter_stack,
-                    const std::string& dest_host,
-                    const uint32_t& record_number,
-                    const rapidjson::Value& contents);
-  inline AccountingRequest(Diameter::Message& msg) : Diameter::Message(msg) {};
-  ~AccountingRequest();
-};
-
-class AccountingResponse : public Diameter::Message
-{
-public:
-  AccountingResponse(const Dictionary* dict, Diameter::Stack* diameter_stack);
-  inline AccountingResponse(Diameter::Message& msg) : Diameter::Message(msg) {};
-  ~AccountingResponse();
-};
-
-}
+/// The directory that contains the unit tests.
+extern const std::string UT_DIR;
 
 #endif

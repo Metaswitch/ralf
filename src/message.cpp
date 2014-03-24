@@ -39,15 +39,19 @@
 /* Constructor of Message. Takes ownership of the passed-in
    rapidjson::Document pointer. */
 Message::Message(const std::string& call_id,
+                 role_of_node_t role,
+                 node_functionality_t function,
                  rapidjson::Document* body,
                  Rf::AccountingRecordType record_type,
                  uint32_t session_refresh_time,
                  bool timer_interim):
                  call_id(call_id),
+                 role(role),
+                 function(function),
                  received_json(body),
                  record_type(record_type),
-                 session_refresh_time(session_refresh_time),
-                 timer_interim(timer_interim)
+                 timer_interim(timer_interim),
+                 session_refresh_time(session_refresh_time)
 {
 };
 

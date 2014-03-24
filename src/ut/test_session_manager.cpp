@@ -115,15 +115,15 @@ TEST_F(SessionManagerTest, SimpleTest)
   SessionManager* mgr = new SessionManager(store, _dict, factory, fake_chronos, _diameter_stack);
   SessionStore::Session* sess = NULL;
 
-  Message* start_msg = new Message("CALL_ID_ONE", NULL, Rf::AccountingRecordType(2), 300);
+  Message* start_msg = new Message("CALL_ID_ONE", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(2), 300);
   start_msg->ccfs.push_back("10.0.0.1");
-  Message* interim_msg = new Message("CALL_ID_ONE", NULL, Rf::AccountingRecordType(3), 0);
-  Message* stop_msg = new Message("CALL_ID_ONE", NULL, Rf::AccountingRecordType(4), 0);
+  Message* interim_msg = new Message("CALL_ID_ONE", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(3), 0);
+  Message* stop_msg = new Message("CALL_ID_ONE", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(4), 0);
 
   // START should put a session in the store
   mgr->handle(start_msg);
 
-  sess = store->get_session_data("CALL_ID_ONE");
+  sess = store->get_session_data("CALL_ID_ONE", ORIGINATING, SCSCF);
   ASSERT_NE((SessionStore::Session*)NULL, sess);
   EXPECT_EQ(1u, sess->acct_record_number);
   delete sess;
@@ -132,7 +132,7 @@ TEST_F(SessionManagerTest, SimpleTest)
   // INTERIM should keep that session in the store
   mgr->handle(interim_msg);
 
-  sess = store->get_session_data("CALL_ID_ONE");
+  sess = store->get_session_data("CALL_ID_ONE", ORIGINATING, SCSCF);
   ASSERT_NE((SessionStore::Session*)NULL, sess);
   EXPECT_EQ(2u, sess->acct_record_number);
   delete sess;
@@ -141,7 +141,7 @@ TEST_F(SessionManagerTest, SimpleTest)
   // STOP should remove the session from the store
   mgr->handle(stop_msg);
 
-  sess = store->get_session_data("CALL_ID_ONE");
+  sess = store->get_session_data("CALL_ID_ONE", ORIGINATING, SCSCF);
   ASSERT_EQ(NULL, sess);
 
   delete mgr;
@@ -160,14 +160,14 @@ TEST_F(SessionManagerTest, TimeUpdateTest)
   SessionManager* mgr = new SessionManager(store, _dict, factory, fake_chronos, _diameter_stack);
   SessionStore::Session* sess = NULL;
 
-  Message* start_msg = new Message("CALL_ID_ONE", NULL, Rf::AccountingRecordType(2), 300);
+  Message* start_msg = new Message("CALL_ID_ONE", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(2), 300);
   start_msg->ccfs.push_back("10.0.0.1");
-  Message* interim_msg = new Message("CALL_ID_ONE", NULL, Rf::AccountingRecordType(3), 600);
-  Message* stop_msg = new Message("CALL_ID_ONE", NULL, Rf::AccountingRecordType(4), 0);
+  Message* interim_msg = new Message("CALL_ID_ONE", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(3), 600);
+  Message* stop_msg = new Message("CALL_ID_ONE", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(4), 0);
 
   mgr->handle(start_msg);
 
-  sess = store->get_session_data("CALL_ID_ONE");
+  sess = store->get_session_data("CALL_ID_ONE", ORIGINATING, SCSCF);
   ASSERT_NE((SessionStore::Session*)NULL, sess);
   EXPECT_EQ(1u, sess->acct_record_number);
   delete sess;
@@ -176,7 +176,7 @@ TEST_F(SessionManagerTest, TimeUpdateTest)
   mgr->handle(interim_msg);
 
   // An INTERIM message which increases the session refresh interval should be accepted
-  sess = store->get_session_data("CALL_ID_ONE");
+  sess = store->get_session_data("CALL_ID_ONE", ORIGINATING, SCSCF);
   ASSERT_NE((SessionStore::Session*)NULL, sess);
   EXPECT_EQ(2u, sess->acct_record_number);
   delete sess;
@@ -184,7 +184,7 @@ TEST_F(SessionManagerTest, TimeUpdateTest)
 
   mgr->handle(stop_msg);
 
-  sess = store->get_session_data("CALL_ID_ONE");
+  sess = store->get_session_data("CALL_ID_ONE", ORIGINATING, SCSCF);
   ASSERT_EQ(NULL, sess);
 
   delete mgr;
@@ -203,22 +203,22 @@ TEST_F(SessionManagerTest, NewCallTest)
   SessionManager* mgr = new SessionManager(store, _dict, factory, fake_chronos, _diameter_stack);
   SessionStore::Session* sess = NULL;
 
-  Message* start_msg = new Message("CALL_ID_TWO", NULL, Rf::AccountingRecordType(2), 300);
-  Message* stop_msg = new Message("CALL_ID_TWO", NULL, Rf::AccountingRecordType(4), 300);
-  Message* start_msg_2 = new Message("CALL_ID_TWO", NULL, Rf::AccountingRecordType(2), 300);
+  Message* start_msg = new Message("CALL_ID_TWO", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(2), 300);
+  Message* stop_msg = new Message("CALL_ID_TWO", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(4), 300);
+  Message* start_msg_2 = new Message("CALL_ID_TWO", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(2), 300);
 
   mgr->handle(start_msg);
 
-  sess = store->get_session_data("CALL_ID_TWO");
+  sess = store->get_session_data("CALL_ID_TWO", ORIGINATING, SCSCF);
   delete sess;
   mgr->handle(stop_msg);
-  sess = store->get_session_data("CALL_ID_TWO");
+  sess = store->get_session_data("CALL_ID_TWO", ORIGINATING, SCSCF);
   ASSERT_EQ(NULL, sess);
 
   mgr->handle(start_msg_2);
 
   // Re-using call-IDs should just work
-  sess = store->get_session_data("CALL_ID_TWO");
+  sess = store->get_session_data("CALL_ID_TWO", ORIGINATING, SCSCF);
   ASSERT_EQ(1u, sess->acct_record_number);
   delete sess;
   sess = NULL;
@@ -239,11 +239,11 @@ TEST_F(SessionManagerTest, UnknownCallTest)
   SessionManager* mgr = new SessionManager(store, _dict, factory, fake_chronos, _diameter_stack);
   SessionStore::Session* sess = NULL;
 
-  Message* interim_msg = new Message("CALL_ID_THREE", NULL, Rf::AccountingRecordType(3), 300);
+  Message* interim_msg = new Message("CALL_ID_THREE", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(3), 300);
 
   // If we receive an INTERIM for a call not in the store, we should ignore it
   mgr->handle(interim_msg);
-  sess = store->get_session_data("CALL_ID_THREE");
+  sess = store->get_session_data("CALL_ID_THREE", ORIGINATING, SCSCF);
   ASSERT_EQ(NULL, sess);
 
   delete mgr;
@@ -262,16 +262,16 @@ TEST_F(SessionManagerTest, CDFFailureTest)
   SessionManager* mgr = new SessionManager(store, _dict, factory, fake_chronos, _diameter_stack);
   SessionStore::Session* sess = NULL;
 
-  Message* start_msg = new Message("CALL_ID_FOUR", NULL, Rf::AccountingRecordType(2), 300);
-  Message* interim_msg = new Message("CALL_ID_FOUR", NULL, Rf::AccountingRecordType(3), 300);
+  Message* start_msg = new Message("CALL_ID_FOUR", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(2), 300);
+  Message* interim_msg = new Message("CALL_ID_FOUR", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(3), 300);
 
   // When a START message fails, we should not store the session or handle any subsequent messages
   mgr->handle(start_msg);
-  sess = store->get_session_data("CALL_ID_FOUR");
+  sess = store->get_session_data("CALL_ID_FOUR", ORIGINATING, SCSCF);
   ASSERT_EQ(NULL, sess);
 
   mgr->handle(interim_msg);
-  sess = store->get_session_data("CALL_ID_FOUR");
+  sess = store->get_session_data("CALL_ID_FOUR", ORIGINATING, SCSCF);
   ASSERT_EQ(NULL, sess);
 
   delete mgr;
@@ -292,11 +292,11 @@ TEST_F(SessionManagerTest, CDFInterimFailureTest)
   SessionManager* fail_mgr = new SessionManager(store, _dict, fail_factory, fake_chronos, _diameter_stack);
   SessionStore::Session* sess = NULL;
 
-  Message* start_msg = new Message("CALL_ID_FOUR", NULL, Rf::AccountingRecordType(2), 300);
-  Message* interim_msg = new Message("CALL_ID_FOUR", NULL, Rf::AccountingRecordType(3), 300);
+  Message* start_msg = new Message("CALL_ID_FOUR", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(2), 300);
+  Message* interim_msg = new Message("CALL_ID_FOUR", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(3), 300);
 
   mgr->handle(start_msg);
-  sess = store->get_session_data("CALL_ID_FOUR");
+  sess = store->get_session_data("CALL_ID_FOUR", ORIGINATING, SCSCF);
   ASSERT_NE((SessionStore::Session*)NULL, sess);
   EXPECT_EQ(1u, sess->acct_record_number);
   delete sess;
@@ -304,7 +304,7 @@ TEST_F(SessionManagerTest, CDFInterimFailureTest)
 
   // When an INTERIM message fails with an error other than 5002 "Session unknown", we should still keep the session
   fail_mgr->handle(interim_msg);
-  sess = store->get_session_data("CALL_ID_FOUR");
+  sess = store->get_session_data("CALL_ID_FOUR", ORIGINATING, SCSCF);
   ASSERT_NE((SessionStore::Session*)NULL, sess);
   EXPECT_EQ(2u, sess->acct_record_number);
   delete sess;
@@ -330,11 +330,11 @@ TEST_F(SessionManagerTest, CDFInterimUnknownTest)
   SessionManager* fail_mgr = new SessionManager(store, _dict, fail_factory, fake_chronos, _diameter_stack);
   SessionStore::Session* sess = NULL;
 
-  Message* start_msg = new Message("CALL_ID_FOUR", NULL, Rf::AccountingRecordType(2), 300);
-  Message* interim_msg = new Message("CALL_ID_FOUR", NULL, Rf::AccountingRecordType(3), 300);
+  Message* start_msg = new Message("CALL_ID_FOUR", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(2), 300);
+  Message* interim_msg = new Message("CALL_ID_FOUR", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(3), 300);
 
   mgr->handle(start_msg);
-  sess = store->get_session_data("CALL_ID_FOUR");
+  sess = store->get_session_data("CALL_ID_FOUR", ORIGINATING, SCSCF);
   ASSERT_NE((SessionStore::Session*)NULL, sess);
   EXPECT_EQ(1u, sess->acct_record_number);
   delete sess;
@@ -342,7 +342,7 @@ TEST_F(SessionManagerTest, CDFInterimUnknownTest)
 
   // When an INTERIM message fails with a 5002 "Session unknown" error, we should delete the session
   fail_mgr->handle(interim_msg);
-  sess = store->get_session_data("CALL_ID_FOUR");
+  sess = store->get_session_data("CALL_ID_FOUR", ORIGINATING, SCSCF);
   ASSERT_EQ(NULL, sess);
 
   delete mgr;
