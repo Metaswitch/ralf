@@ -39,6 +39,7 @@
 #include <string>
 #include "rapidjson/document.h"
 #include "rf.h"
+#include "sas.h"
 
 enum role_of_node_t
 {
@@ -71,9 +72,10 @@ struct Message
   Message(const std::string& call_id,
           role_of_node_t role,
           node_functionality_t function,
-          rapidjson::Document* body, 
+          rapidjson::Document* body,
           Rf::AccountingRecordType record_type,
-          uint32_t session_refresh_time, 
+          uint32_t session_refresh_time,
+          SAS::TrailId trail,
           bool timer_interim=false);
   ~Message();
 
@@ -101,6 +103,7 @@ struct Message
 
   uint32_t interim_interval;
   uint32_t session_refresh_time;
+  SAS::TrailId _trail;
 };
 
 #endif

@@ -45,6 +45,8 @@
 #include "peer_message_sender.hpp"
 #include "peer_message_sender_factory.hpp"
 
+const SAS::TrailId FAKE_TRAIL_ID = 0;
+
 // Simulates a request to a CDF that returns successfully
 class DummyPeerMessageSender : public PeerMessageSender
 {
@@ -115,10 +117,10 @@ TEST_F(SessionManagerTest, SimpleTest)
   SessionManager* mgr = new SessionManager(store, _dict, factory, fake_chronos, _diameter_stack);
   SessionStore::Session* sess = NULL;
 
-  Message* start_msg = new Message("CALL_ID_ONE", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(2), 300);
+  Message* start_msg = new Message("CALL_ID_ONE", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(2), 300, FAKE_TRAIL_ID);
   start_msg->ccfs.push_back("10.0.0.1");
-  Message* interim_msg = new Message("CALL_ID_ONE", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(3), 0);
-  Message* stop_msg = new Message("CALL_ID_ONE", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(4), 0);
+  Message* interim_msg = new Message("CALL_ID_ONE", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(3), 0, FAKE_TRAIL_ID);
+  Message* stop_msg = new Message("CALL_ID_ONE", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(4), 0, FAKE_TRAIL_ID);
 
   // START should put a session in the store
   mgr->handle(start_msg);
@@ -160,10 +162,10 @@ TEST_F(SessionManagerTest, TimeUpdateTest)
   SessionManager* mgr = new SessionManager(store, _dict, factory, fake_chronos, _diameter_stack);
   SessionStore::Session* sess = NULL;
 
-  Message* start_msg = new Message("CALL_ID_ONE", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(2), 300);
+  Message* start_msg = new Message("CALL_ID_ONE", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(2), 300, FAKE_TRAIL_ID);
   start_msg->ccfs.push_back("10.0.0.1");
-  Message* interim_msg = new Message("CALL_ID_ONE", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(3), 600);
-  Message* stop_msg = new Message("CALL_ID_ONE", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(4), 0);
+  Message* interim_msg = new Message("CALL_ID_ONE", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(3), 600, FAKE_TRAIL_ID);
+  Message* stop_msg = new Message("CALL_ID_ONE", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(4), 0, FAKE_TRAIL_ID);
 
   mgr->handle(start_msg);
 
@@ -203,9 +205,9 @@ TEST_F(SessionManagerTest, NewCallTest)
   SessionManager* mgr = new SessionManager(store, _dict, factory, fake_chronos, _diameter_stack);
   SessionStore::Session* sess = NULL;
 
-  Message* start_msg = new Message("CALL_ID_TWO", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(2), 300);
-  Message* stop_msg = new Message("CALL_ID_TWO", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(4), 300);
-  Message* start_msg_2 = new Message("CALL_ID_TWO", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(2), 300);
+  Message* start_msg = new Message("CALL_ID_TWO", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(2), 300, FAKE_TRAIL_ID);
+  Message* stop_msg = new Message("CALL_ID_TWO", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(4), 300, FAKE_TRAIL_ID);
+  Message* start_msg_2 = new Message("CALL_ID_TWO", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(2), 300, FAKE_TRAIL_ID);
 
   mgr->handle(start_msg);
 
@@ -239,7 +241,7 @@ TEST_F(SessionManagerTest, UnknownCallTest)
   SessionManager* mgr = new SessionManager(store, _dict, factory, fake_chronos, _diameter_stack);
   SessionStore::Session* sess = NULL;
 
-  Message* interim_msg = new Message("CALL_ID_THREE", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(3), 300);
+  Message* interim_msg = new Message("CALL_ID_THREE", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(3), 300, FAKE_TRAIL_ID);
 
   // If we receive an INTERIM for a call not in the store, we should ignore it
   mgr->handle(interim_msg);
@@ -262,8 +264,8 @@ TEST_F(SessionManagerTest, CDFFailureTest)
   SessionManager* mgr = new SessionManager(store, _dict, factory, fake_chronos, _diameter_stack);
   SessionStore::Session* sess = NULL;
 
-  Message* start_msg = new Message("CALL_ID_FOUR", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(2), 300);
-  Message* interim_msg = new Message("CALL_ID_FOUR", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(3), 300);
+  Message* start_msg = new Message("CALL_ID_FOUR", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(2), 300, FAKE_TRAIL_ID);
+  Message* interim_msg = new Message("CALL_ID_FOUR", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(3), 300, FAKE_TRAIL_ID);
 
   // When a START message fails, we should not store the session or handle any subsequent messages
   mgr->handle(start_msg);
@@ -292,8 +294,8 @@ TEST_F(SessionManagerTest, CDFInterimFailureTest)
   SessionManager* fail_mgr = new SessionManager(store, _dict, fail_factory, fake_chronos, _diameter_stack);
   SessionStore::Session* sess = NULL;
 
-  Message* start_msg = new Message("CALL_ID_FOUR", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(2), 300);
-  Message* interim_msg = new Message("CALL_ID_FOUR", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(3), 300);
+  Message* start_msg = new Message("CALL_ID_FOUR", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(2), 300, FAKE_TRAIL_ID);
+  Message* interim_msg = new Message("CALL_ID_FOUR", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(3), 300, FAKE_TRAIL_ID);
 
   mgr->handle(start_msg);
   sess = store->get_session_data("CALL_ID_FOUR", ORIGINATING, SCSCF);
@@ -330,8 +332,8 @@ TEST_F(SessionManagerTest, CDFInterimUnknownTest)
   SessionManager* fail_mgr = new SessionManager(store, _dict, fail_factory, fake_chronos, _diameter_stack);
   SessionStore::Session* sess = NULL;
 
-  Message* start_msg = new Message("CALL_ID_FOUR", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(2), 300);
-  Message* interim_msg = new Message("CALL_ID_FOUR", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(3), 300);
+  Message* start_msg = new Message("CALL_ID_FOUR", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(2), 300, FAKE_TRAIL_ID);
+  Message* interim_msg = new Message("CALL_ID_FOUR", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(3), 300, FAKE_TRAIL_ID);
 
   mgr->handle(start_msg);
   sess = store->get_session_data("CALL_ID_FOUR", ORIGINATING, SCSCF);

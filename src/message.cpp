@@ -44,16 +44,17 @@ Message::Message(const std::string& call_id,
                  rapidjson::Document* body,
                  Rf::AccountingRecordType record_type,
                  uint32_t session_refresh_time,
+                 SAS::TrailId trail,
                  bool timer_interim):
-                 call_id(call_id),
-                 role(role),
-                 function(function),
-                 received_json(body),
-                 record_type(record_type),
-                 timer_interim(timer_interim),
-                 session_refresh_time(session_refresh_time)
-{
-};
+  call_id(call_id),
+  role(role),
+  function(function),
+  received_json(body),
+  record_type(record_type),
+  timer_interim(timer_interim),
+  session_refresh_time(session_refresh_time),
+  _trail(trail)
+{};
 
 /* Deletes the enclosed rapidjson::Document. */
 Message::~Message()

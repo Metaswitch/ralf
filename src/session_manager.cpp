@@ -51,7 +51,6 @@
 void SessionManager::handle(Message* msg)
 {
   SessionStore::Session* sess = NULL;
-  SAS::TrailId fake_trail = 0;
 
   if (msg->record_type.isInterim() || msg->record_type.isStop())
   {
@@ -91,7 +90,7 @@ void SessionManager::handle(Message* msg)
       LOG_INFO("Received STOP for session %s, deleting session and timer using timer ID %s", msg->call_id.c_str(), sess->timer_id.c_str());
 
       _timer_conn->send_delete(sess->timer_id,
-                               fake_trail);
+                               msg->_trail);
     }
 
     msg->accounting_record_number = sess->acct_record_number;
@@ -159,7 +158,6 @@ std::string SessionManager::create_opaque_data(Message* msg)
 
 void SessionManager::on_ccf_response (bool accepted, uint32_t interim_interval, std::string session_id, int rc, Message* msg)
 {
-  SAS::TrailId fake_trail = 0;
   if (accepted)
   {
     if (msg->record_type.isInterim() &&
@@ -174,7 +172,7 @@ void SessionManager::on_ccf_response (bool accepted, uint32_t interim_interval, 
                             msg->session_refresh_time,
                             "http://localhost:9888/call-id/"+msg->call_id+"?timer-interim=true",
                             create_opaque_data(msg),
-                            fake_trail);
+                            msg->_trail);
     }
     else if (msg->record_type.isStart())
     {
@@ -187,7 +185,7 @@ void SessionManager::on_ccf_response (bool accepted, uint32_t interim_interval, 
                                msg->session_refresh_time, // repeat-for
                                "http://localhost:9888/call-id/"+msg->call_id+"?timer-interim=true",
                                create_opaque_data(msg),
-                               fake_trail);
+                               msg->_trail);
       };
 
       LOG_INFO("Writing session to store");
@@ -246,7 +244,7 @@ void SessionManager::on_ccf_response (bool accepted, uint32_t interim_interval, 
                                 msg->session_refresh_time,
                                 "http://localhost:9888/call-id/"+msg->call_id+"?timer-interim=true",
                                 create_opaque_data(msg),
-                                fake_trail);
+                                msg->_trail);
         }
       }
     }

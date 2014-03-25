@@ -59,7 +59,7 @@ void BillingControllerHandler::run()
     send_http_reply(405);
     return;
   }
-  Message* msg = parse_body(call_id(), _req.param("timer-interim"), _req.body());
+  Message* msg = parse_body(call_id(), _req.param("timer-interim"), _req.body(), trail());
   if (msg == NULL)
   {
     send_http_reply(400);
@@ -71,7 +71,7 @@ void BillingControllerHandler::run()
 }
 //LCOV_EXCL_STOP
 
-Message* BillingControllerHandler::parse_body(std::string call_id, std::string timer_param, std::string reqbody)
+Message* BillingControllerHandler::parse_body(std::string call_id, std::string timer_param, std::string reqbody, SAS::TrailId trail)
 {
   bool timer_interim = false;
   if (timer_param.compare("true") == 0) {
@@ -204,8 +204,9 @@ Message* BillingControllerHandler::parse_body(std::string call_id, std::string t
                              role_of_node,
                              node_functionality,
                              body,
-                             record_type, 
+                             record_type,
                              session_refresh_time,
+                             trail,
                              timer_interim);
   if (!ccfs.empty())
   {
