@@ -59,7 +59,7 @@ public:
 };
 
 class DummyPeerMessageSenderFactory : public PeerMessageSenderFactory {
-  PeerMessageSender* newSender() {return new DummyPeerMessageSender(0);}
+  PeerMessageSender* newSender(SAS::TrailId trail) {return new DummyPeerMessageSender(trail);}
 };
 
 // Simulates a request to a CDF that returns a 5001 error
@@ -76,7 +76,7 @@ public:
 };
 
 class DummyErrorPeerMessageSenderFactory : public PeerMessageSenderFactory {
-  PeerMessageSender* newSender() {return new DummyErrorPeerMessageSender(0);}
+  PeerMessageSender* newSender(SAS::TrailId trail) {return new DummyErrorPeerMessageSender(trail);}
 };
 
 // Simulates a request to a CDF that returns a 5002 (session unknown) error, which is handled specially
@@ -93,7 +93,7 @@ public:
 };
 
 class DummyUnknownErrorPeerMessageSenderFactory : public PeerMessageSenderFactory {
-  PeerMessageSender* newSender() {return new DummyUnknownErrorPeerMessageSender(0);}
+  PeerMessageSender* newSender(SAS::TrailId trail) {return new DummyUnknownErrorPeerMessageSender(trail);}
 };
 
 class SessionManagerTest : public ::testing::Test
