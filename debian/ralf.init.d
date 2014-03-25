@@ -81,6 +81,7 @@ log_directory=/var/log/$NAME
 get_settings()
 {
   # Set up defaults and then pull in the settings for this node.
+  sas_server=0.0.0.0
   . /etc/clearwater/config
 
   # Set up a default cluster_settings file if it does not exist.
@@ -125,7 +126,8 @@ do_start()
         get_settings
         DAEMON_ARGS="-a $log_directory
                      -F $log_directory
-                     -L $log_level"
+                     -L $log_level
+                     --sas $sas_server,$NAME@$public_hostname"
 
         start-stop-daemon --start --quiet --background --make-pidfile --pidfile $PIDFILE --exec $DAEMON --chuid $NAME --chdir $HOME -- $DAEMON_ARGS \
                 || return 2

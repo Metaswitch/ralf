@@ -43,11 +43,13 @@
 #include "chronosconnection.h"
 #include "accesslogger.h"
 #include "log.h"
+#include "utils.h"
 #include "httpstack.h"
 #include "handlers.hpp"
 #include "logger.h"
 #include "rf.h"
 #include "peer_message_sender_factory.hpp"
+#include "sas.h"
 
 struct options
 {
@@ -63,6 +65,8 @@ struct options
   bool log_to_file;
   std::string log_directory;
   int log_level;
+  std::string sas_server;
+  std::string sas_system_name;
 };
 
 void usage(void)
@@ -81,6 +85,10 @@ void usage(void)
        " -F, --log-file <directory>\n"
        "                            Log to file in specified directory\n"
        " -L, --log-level N          Set log level to N (default: 4)\n"
+       " -S, --sas <ipv4>,<system name>\n"
+       " Use specified host as Service Assurance Server and specified\n"
+       " system name to identify this system to SAS. If this option isn't\n"
+       " specified SAS is disabled\n"
        " -d, --daemon               Run as daemon\n"
        " -h, --help                 Show this help screen\n");
 }
@@ -95,6 +103,7 @@ int init_options(int argc, char**argv, struct options& options)
     {"dest-realm",        required_argument, NULL, 'D'},
     {"dest-host",         required_argument, NULL, 'd'},
     {"server-name",       required_argument, NULL, 's'},
+    {"sas",               required_argument, NULL, 'S'},
     {"access-log",        required_argument, NULL, 'a'},
     {"log-file",          required_argument, NULL, 'F'},
     {"log-level",         required_argument, NULL, 'L'},
@@ -104,7 +113,7 @@ int init_options(int argc, char**argv, struct options& options)
 
   int opt;
   int long_opt_ind;
-  while ((opt = getopt_long(argc, argv, "c:H:t:D:d:s:a:F:L:h", long_opt, &long_opt_ind)) != -1)
+  while ((opt = getopt_long(argc, argv, "c:H:t:D:d:s:a:F:L:h:S", long_opt, &long_opt_ind)) != -1)
   {
     switch (opt)
     {
@@ -116,6 +125,24 @@ int init_options(int argc, char**argv, struct options& options)
       options.http_address = std::string(optarg);
       // TODO: Parse optional HTTP port.
       break;
+
+    case 'S':
+    {
+      std::vector<std::string> sas_options;
+      Utils::split_string(std::string(optarg), ',', sas_options, 0, false);
+      if (sas_options.size() == 2)
+      {
+        options.sas_server = sas_options[0];
+        options.sas_system_name = sas_options[1];
+        fprintf(stdout, "SAS set to %s\n", options.sas_server.c_str());
+        fprintf(stdout, "System name is set to %s\n", options.sas_system_name.c_str());
+      }
+      else
+      {
+        fprintf(stdout, "Invalid --sas option, SAS disabled\n");
+      }
+    }
+    break;
 
     case 't':
       options.http_threads = atoi(optarg);
@@ -182,6 +209,42 @@ void exception_handler(int sig)
   abort();
 }
 
+// LCOV_EXCL_START
+void sas_write(SAS::log_level_t sas_level, const char *module, int line_number, const char *fmt, ...)
+{
+  int level;
+  va_list args;
+
+  switch (sas_level) {
+    case SAS::LOG_LEVEL_DEBUG:
+      level = Log::DEBUG_LEVEL;
+      break;
+    case SAS::LOG_LEVEL_VERBOSE:
+      level = Log::VERBOSE_LEVEL;
+      break;
+    case SAS::LOG_LEVEL_INFO:
+      level = Log::INFO_LEVEL;
+      break;
+    case SAS::LOG_LEVEL_STATUS:
+      level = Log::STATUS_LEVEL;
+      break;
+    case SAS::LOG_LEVEL_WARNING:
+      level = Log::WARNING_LEVEL;
+      break;
+    case SAS::LOG_LEVEL_ERROR:
+      level = Log::ERROR_LEVEL;
+      break;
+    default:
+      LOG_ERROR("Unknown SAS log level %d, treating as error level", sas_level);
+      level = Log::ERROR_LEVEL;
+    }
+
+  va_start(args, fmt);
+  Log::_write(level, module, line_number, fmt, args);
+  va_end(args);
+}
+// LCOV_EXCL_STOP
+
 int main(int argc, char**argv)
 {
   // Set up our exception signal handler for asserts and segfaults.
@@ -202,6 +265,8 @@ int main(int argc, char**argv)
   options.access_log_enabled = false;
   options.log_to_file = false;
   options.log_level = 0;
+  options.sas_server = "0.0.0.0";
+  options.sas_system_name = "";
 
   if (init_options(argc, argv, options) != 0)
   {
@@ -228,6 +293,16 @@ int main(int argc, char**argv)
   }
 
   LOG_STATUS("Log level set to %d", options.log_level);
+
+  if (options.sas_system_name == "")
+  {
+    options.sas_system_name = std::string(options.http_address + std::string(":") + std::to_string(options.http_port));
+  }
+  SAS::init(options.sas_system_name,
+            "ralf",
+            "org.projectclearwater.sprout.20131107",
+            options.sas_server,
+            sas_write);
 
   Diameter::Stack* diameter_stack = Diameter::Stack::get_instance();
   Rf::Dictionary* dict = NULL;
