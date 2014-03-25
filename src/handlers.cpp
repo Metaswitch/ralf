@@ -59,7 +59,16 @@ void BillingControllerHandler::run()
     send_http_reply(405);
     return;
   }
-  Message* msg = parse_body(call_id(), _req.param("timer-interim"), _req.body(), trail());
+
+  bool timer_interim = false;
+  if (_req.param("timer-interim") == "true")
+  {
+    timer_interim = true;
+    SAS::Marker cid_assoc(trail(), MARKER_ID_SIP_CALL_ID, 0);
+    SAS::report_marker(cid_assoc);
+  }
+
+  Message* msg = parse_body(call_id(), timer_interim, _req.body(), trail());
   if (msg == NULL)
   {
     send_http_reply(400);
@@ -71,12 +80,8 @@ void BillingControllerHandler::run()
 }
 //LCOV_EXCL_STOP
 
-Message* BillingControllerHandler::parse_body(std::string call_id, std::string timer_param, std::string reqbody, SAS::TrailId trail)
+Message* BillingControllerHandler::parse_body(std::string call_id, bool timer_interim, std::string reqbody, SAS::TrailId trail)
 {
-  bool timer_interim = false;
-  if (timer_param.compare("true") == 0) {
-    timer_interim = true;
-  }
   rapidjson::Document* body = new rapidjson::Document();
   std::string bodys = reqbody;
   body->Parse<0>(bodys.c_str());
