@@ -172,7 +172,7 @@ void SessionManager::on_ccf_response (bool accepted, uint32_t interim_interval, 
       _timer_conn->send_put(msg->timer_id,
                             interim_interval,
                             msg->session_refresh_time,
-                            "http://localhost:9888/call-id/"+msg->call_id+"?timer-interim=true",
+                            "/call-id/"+msg->call_id+"?timer-interim=true",
                             create_opaque_data(msg),
                             fake_trail);
     }
@@ -185,7 +185,7 @@ void SessionManager::on_ccf_response (bool accepted, uint32_t interim_interval, 
         _timer_conn->send_post(timer_id,  // Chronos returns a timer ID which is filled in to this parameter
                                interim_interval, // interval
                                msg->session_refresh_time, // repeat-for
-                               "http://localhost:9888/call-id/"+msg->call_id+"?timer-interim=true",
+                               "/call-id/"+msg->call_id+"?timer-interim=true",
                                create_opaque_data(msg),
                                fake_trail);
       };
@@ -244,7 +244,7 @@ void SessionManager::on_ccf_response (bool accepted, uint32_t interim_interval, 
           _timer_conn->send_put(msg->timer_id,
                                 interim_interval,
                                 msg->session_refresh_time,
-                                "http://localhost:9888/call-id/"+msg->call_id+"?timer-interim=true",
+                                "/call-id/"+msg->call_id+"?timer-interim=true",
                                 create_opaque_data(msg),
                                 fake_trail);
         }
