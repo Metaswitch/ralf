@@ -66,4 +66,13 @@ private:
   SessionManager* _sess_mgr;
 };
 
+class BillingControllerHandlerFactory :
+  public ConfiguredHandlerFactory<BillingControllerHandler, BillingControllerConfig>
+{
+public:
+  BillingControllerHandlerFactory(BillingControllerConfig* cfg);
+  virtual ~BillingControllerHandlerFactory();
+  virtual SASEvent::HttpLogLevel sas_log_level(HttpStack::Request& req);
+};
+
 #endif

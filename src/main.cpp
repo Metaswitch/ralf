@@ -246,7 +246,7 @@ int main(int argc, char**argv)
 
   HttpStack* http_stack = HttpStack::get_instance();
   HttpStack::HandlerFactory<PingHandler> ping_handler_factory;
-  HttpStack::ConfiguredHandlerFactory<BillingControllerHandler, BillingControllerConfig> billing_handler_factory(cfg);
+  BillingControllerHandlerFactory billing_handler_factory(cfg);
   try
   {
     http_stack->initialize();
