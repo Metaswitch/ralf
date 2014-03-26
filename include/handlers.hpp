@@ -43,6 +43,8 @@
 #include "message.hpp"
 #include "session_manager.hpp"
 
+const std::string TIMER_INTERIM_PARAM = "timer-interim";
+
 class PingHandler : public HttpStack::Handler
 {
 public:
@@ -67,12 +69,26 @@ private:
 };
 
 class BillingControllerHandlerFactory :
-  public ConfiguredHandlerFactory<BillingControllerHandler, BillingControllerConfig>
+  public HttpStack::ConfiguredHandlerFactory<BillingControllerHandler, BillingControllerConfig>
 {
 public:
-  BillingControllerHandlerFactory(BillingControllerConfig* cfg);
-  virtual ~BillingControllerHandlerFactory();
-  virtual SASEvent::HttpLogLevel sas_log_level(HttpStack::Request& req);
+  BillingControllerHandlerFactory(BillingControllerConfig* cfg) :
+    ConfiguredHandlerFactory<BillingControllerHandler, BillingControllerConfig>(cfg)
+  {}
+  virtual ~BillingControllerHandlerFactory() {}
+
+  SASEvent::HttpLogLevel sas_log_level(HttpStack::Request& req)
+  {
+    // Log timer pops from chronos at detail level rather than protocol.
+    if (req.param(TIMER_INTERIM_PARAM) == "true")
+    {
+      return SASEvent::HttpLogLevel::DETAIL;
+    }
+    else
+    {
+      return SASEvent::HttpLogLevel::PROTOCOL;
+    }
+  }
 };
 
 #endif

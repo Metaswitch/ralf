@@ -43,8 +43,6 @@
 #include "rapidjson/prettywriter.h"
 #include "rapidjson/stringbuffer.h"
 
-const std::string TIMER_INTERIM_PARAM = "timer-interim";
-
 //LCOV_EXCL_START
 // We don't want to actually run the handlers
 void PingHandler::run()
@@ -214,23 +212,4 @@ Message* BillingControllerHandler::parse_body(std::string call_id, std::string t
     msg->ccfs = ccfs;
   }
   return msg;
-}
-
-BillingControllerHandlerFactory(BillingControllerConfig* cfg) :
-  ConfiguredHandlerFactory<BillingControllerHandler, BillingControllerConfig>(cfg)
-{}
-
-~BillingControllerHandlerFactory() {}
-
-SASEvent::HttpLogLevel sas_log_level(HttpStack::Request& req)
-{
-  // Log timer pops from chronos at detail level rather than protocol.
-  if (req.param(TIMER_INTERIM_PARAM) == "true")
-  {
-    return SASEvent::HttpLogLevel::DETAIL;
-  }
-  else
-  {
-    return SASEvent::HttpLogLevel::PROTOCOL;
-  }
 }
