@@ -42,6 +42,7 @@
 #include "httpstack.h"
 #include "message.hpp"
 #include "session_manager.hpp"
+#include "sas.h"
 
 const std::string TIMER_INTERIM_PARAM = "timer-interim";
 
@@ -62,7 +63,7 @@ class BillingControllerHandler : public HttpStack::Handler
 public:
   BillingControllerHandler(HttpStack::Request& req, const BillingControllerConfig* cfg) :  HttpStack::Handler(req),  _sess_mgr(cfg->mgr) {};
   void run();
-  static Message* parse_body(std::string call_id, std::string timer_param, std::string reqbody);
+  static Message* parse_body(std::string call_id, bool timer_interim, std::string reqbody, SAS::TrailId trail);
 private:
   inline std::string call_id() {return _req.file();};
   SessionManager* _sess_mgr;
