@@ -51,7 +51,8 @@
  *
  *   No action should be taken after any of the above happens, as the this pointer becomes invalid.
  */
-PeerMessageSender::PeerMessageSender()
+PeerMessageSender::PeerMessageSender(SAS::TrailId trail) :
+  _trail(trail)
 {
   _which = PRIMARY_CCF;
 }
@@ -129,7 +130,7 @@ void PeerMessageSender::int_send_msg()
 {
   std::string ccf = _ccfs[_which];
   LOG_DEBUG("Sending message to %s (number %d)", ccf.c_str(), _which);
-  RalfTransaction* tsx = new RalfTransaction(_dict, _sm, _msg);
+  RalfTransaction* tsx = new RalfTransaction(_dict, _sm, _msg, _trail);
   Rf::AccountingRequest acr(_dict, _diameter_stack, ccf, _msg->accounting_record_number, _msg->received_json->FindMember("event")->value);
   acr.send(tsx);
   delete this;

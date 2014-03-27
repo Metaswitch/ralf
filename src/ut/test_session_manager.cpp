@@ -51,6 +51,8 @@ const SAS::TrailId FAKE_TRAIL_ID = 0;
 class DummyPeerMessageSender : public PeerMessageSender
 {
 public:
+  DummyPeerMessageSender(SAS::TrailId trail) : PeerMessageSender(trail) {}
+
   void send(Message* msg, SessionManager* sm, Rf::Dictionary* dict, Diameter::Stack* diameter_stack)
   {
     sm->on_ccf_response(true, 100, "test_session_id", 2001, msg);
@@ -59,13 +61,15 @@ public:
 };
 
 class DummyPeerMessageSenderFactory : public PeerMessageSenderFactory {
-  PeerMessageSender* newSender() {return new DummyPeerMessageSender();}
+  PeerMessageSender* newSender(SAS::TrailId trail) {return new DummyPeerMessageSender(trail);}
 };
 
 // Simulates a request to a CDF that returns a 5001 error
 class DummyErrorPeerMessageSender : public PeerMessageSender
 {
 public:
+  DummyErrorPeerMessageSender(SAS::TrailId trail) : PeerMessageSender(trail) {}
+
   void send(Message* msg, SessionManager* sm, Rf::Dictionary* dict, Diameter::Stack* diameter_stack)
   {
     sm->on_ccf_response(false, 0, "test_session_id", 5001, msg);
@@ -74,13 +78,15 @@ public:
 };
 
 class DummyErrorPeerMessageSenderFactory : public PeerMessageSenderFactory {
-  PeerMessageSender* newSender() {return new DummyErrorPeerMessageSender();}
+  PeerMessageSender* newSender(SAS::TrailId trail) {return new DummyErrorPeerMessageSender(trail);}
 };
 
 // Simulates a request to a CDF that returns a 5002 (session unknown) error, which is handled specially
 class DummyUnknownErrorPeerMessageSender : public PeerMessageSender
 {
 public:
+  DummyUnknownErrorPeerMessageSender(SAS::TrailId trail) : PeerMessageSender(trail) {}
+
   void send(Message* msg, SessionManager* sm, Rf::Dictionary* dict, Diameter::Stack* diameter_stack)
   {
     sm->on_ccf_response(false, 100, "test_session_id", 5002, msg);
@@ -89,7 +95,7 @@ public:
 };
 
 class DummyUnknownErrorPeerMessageSenderFactory : public PeerMessageSenderFactory {
-  PeerMessageSender* newSender() {return new DummyUnknownErrorPeerMessageSender();}
+  PeerMessageSender* newSender(SAS::TrailId trail) {return new DummyUnknownErrorPeerMessageSender(trail);}
 };
 
 class SessionManagerTest : public ::testing::Test

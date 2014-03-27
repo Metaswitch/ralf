@@ -44,6 +44,8 @@
 #include "session_manager.hpp"
 #include "sas.h"
 
+const std::string TIMER_INTERIM_PARAM = "timer-interim";
+
 class PingHandler : public HttpStack::Handler
 {
 public:
@@ -65,6 +67,29 @@ public:
 private:
   inline std::string call_id() {return _req.file();};
   SessionManager* _sess_mgr;
+};
+
+class BillingControllerHandlerFactory :
+  public HttpStack::ConfiguredHandlerFactory<BillingControllerHandler, BillingControllerConfig>
+{
+public:
+  BillingControllerHandlerFactory(BillingControllerConfig* cfg) :
+    ConfiguredHandlerFactory<BillingControllerHandler, BillingControllerConfig>(cfg)
+  {}
+  virtual ~BillingControllerHandlerFactory() {}
+
+  SASEvent::HttpLogLevel sas_log_level(HttpStack::Request& req)
+  {
+    // Log timer pops from chronos at detail level rather than protocol.
+    if (req.param(TIMER_INTERIM_PARAM) == "true")
+    {
+      return SASEvent::HttpLogLevel::DETAIL;
+    }
+    else
+    {
+      return SASEvent::HttpLogLevel::PROTOCOL;
+    }
+  }
 };
 
 #endif

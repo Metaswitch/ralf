@@ -61,7 +61,7 @@ void BillingControllerHandler::run()
   }
 
   bool timer_interim = false;
-  if (_req.param("timer-interim") == "true")
+  if (_req.param(TIMER_INTERIM_PARAM) == "true")
   {
     timer_interim = true;
     SAS::Marker cid_assoc(trail(), MARKER_ID_SIP_CALL_ID, 0);
@@ -69,6 +69,7 @@ void BillingControllerHandler::run()
   }
 
   Message* msg = parse_body(call_id(), timer_interim, _req.body(), trail());
+
   if (msg == NULL)
   {
     send_http_reply(400);

@@ -40,7 +40,10 @@
 
 class PeerMessageSenderFactory {
 public:
-  virtual PeerMessageSender* newSender() {return new PeerMessageSender();}
+  virtual PeerMessageSender* newSender(SAS::TrailId trail)
+  {
+    return new PeerMessageSender(trail);
+  }
 };
 
 
