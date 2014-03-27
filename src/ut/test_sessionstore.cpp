@@ -40,6 +40,8 @@
 #include "localstore.h"
 #include "sessionstore.h"
 
+static const SAS::TrailId FAKE_TRAIL = 0;
+
 class SessionStoreTest : public ::testing::Test
 {
   SessionStoreTest()
@@ -64,13 +66,13 @@ TEST_F(SessionStoreTest, SimpleTest)
   session->session_refresh_time = 5 * 60;
 
   // Save the session in the store
-  bool rc = store->set_session_data("call_id", ORIGINATING, SCSCF, session);
+  bool rc = store->set_session_data("call_id", ORIGINATING, SCSCF, session, FAKE_TRAIL);
   EXPECT_EQ(true, rc);
   delete session;
   session = NULL;
 
   // Retrieve the session again.
-  session = store->get_session_data("call_id", ORIGINATING, SCSCF);
+  session = store->get_session_data("call_id", ORIGINATING, SCSCF, FAKE_TRAIL);
   EXPECT_EQ("session_id", session->session_id);
   EXPECT_EQ(2u, session->acct_record_number);
   EXPECT_EQ("timer_id", session->timer_id);
@@ -95,15 +97,15 @@ TEST_F(SessionStoreTest, DeletionTest)
   session->session_refresh_time = 5 * 60;
 
   // Save the session in the store
-  bool rc = store->set_session_data("call_id", ORIGINATING, SCSCF, session);
+  bool rc = store->set_session_data("call_id", ORIGINATING, SCSCF, session, FAKE_TRAIL);
   EXPECT_EQ(true, rc);
   delete session;
   session = NULL;
 
-  store->delete_session_data("call_id", ORIGINATING, SCSCF);
+  store->delete_session_data("call_id", ORIGINATING, SCSCF, FAKE_TRAIL);
 
   // Retrieve the session again.
-  session = store->get_session_data("call_id", ORIGINATING, SCSCF);
+  session = store->get_session_data("call_id", ORIGINATING, SCSCF, FAKE_TRAIL);
   EXPECT_EQ(NULL, session);
 
   delete session;
