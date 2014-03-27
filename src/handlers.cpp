@@ -65,13 +65,20 @@ void BillingControllerHandler::run()
   {
     timer_interim = true;
     SAS::Marker cid_assoc(trail(), MARKER_ID_SIP_CALL_ID, 0);
+    cid_assoc.add_var_param(call_id());
     SAS::report_marker(cid_assoc);
+
+    SAS::Event timer_pop(trail(), SASEvent::INTERIM_TIMER_POPPED, 0);
+    SAS::report_event(timer_pop);
   }
 
   Message* msg = parse_body(call_id(), timer_interim, _req.body(), trail());
 
   if (msg == NULL)
   {
+    SAS::Event rejected(msg->trail, SASEvent::REQUEST_REJECTED, 0);
+    rejected.add_var_param("Invalid JSON");
+    SAS::report_event(rejected);
     send_http_reply(400);
     return;
   }
@@ -205,6 +212,10 @@ Message* BillingControllerHandler::parse_body(std::string call_id, bool timer_in
     LOG_DEBUG("Handling request, body:\n%s", s.GetString());
     // LCOV_EXCL_STOP
   }
+
+  SAS::Event incoming(trail, SASEvent::INCOMING_REQUEST, 0);
+  incoming.add_static_param(role_of_node);
+  SAS::report_event(incoming);
 
   Message* msg = new Message(call_id,
                              role_of_node,

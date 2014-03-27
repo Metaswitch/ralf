@@ -43,6 +43,7 @@
 #include "log.h"
 #include "peer_message_sender.hpp"
 #include "sas.h"
+#include "sasevent.h"
 #include "peer_message_sender_factory.hpp"
 #include "rapidjson/document.h"
 #include "rapidjson/stringbuffer.h"
@@ -69,6 +70,10 @@ void SessionManager::handle(Message* msg)
 
     if (msg->record_type.isInterim())
     {
+      SAS::Event continued_rf(msg->trail, SASEvent::CONTINUED_RF_SESSION, 0);
+      continued_rf.add_var_param(sess->session_id);
+      SAS::report_event(continued_rf);
+
       sess->acct_record_number += 1;
       // Update the store with the incremented accounting record number
       bool success = _store->set_session_data(msg->call_id,
@@ -83,6 +88,10 @@ void SessionManager::handle(Message* msg)
     }
     else if  (msg->record_type.isStop())
     {
+      SAS::Event end_rf(msg->trail, SASEvent::END_RF_SESSION, 0);
+      end_rf.add_var_param(sess->session_id);
+      SAS::report_event(end_rf);
+
       // Delete the session from the store and cancel the timer
       _store->delete_session_data(msg->call_id,
                                   msg->role,
@@ -159,6 +168,12 @@ std::string SessionManager::create_opaque_data(Message* msg)
 
 void SessionManager::on_ccf_response (bool accepted, uint32_t interim_interval, std::string session_id, int rc, Message* msg)
 {
+  // Log this here, as it's the first time we have access to the
+  // session ID for a new session
+  SAS::Event new_rf(msg->trail, SASEvent::NEW_RF_SESSION, 0);
+  new_rf.add_var_param(session_id);
+  SAS::report_event(new_rf);
+
   if (accepted)
   {
     if (msg->record_type.isInterim() &&
@@ -174,6 +189,9 @@ void SessionManager::on_ccf_response (bool accepted, uint32_t interim_interval, 
                             "/call-id/"+msg->call_id+"?timer-interim=true",
                             create_opaque_data(msg),
                             msg->trail);
+      SAS::Event updated_timer(msg->trail, SASEvent::INTERIM_TIMER_RENEWED, 0);
+      updated_timer.add_static_param(interim_interval);
+      SAS::report_event(updated_timer);
     }
     else if (msg->record_type.isStart())
     {
@@ -188,6 +206,9 @@ void SessionManager::on_ccf_response (bool accepted, uint32_t interim_interval, 
                                create_opaque_data(msg),
                                msg->trail);
       };
+      SAS::Event new_timer(msg->trail, SASEvent::INTERIM_TIMER_CREATED, 0);
+      new_timer.add_static_param(interim_interval);
+      SAS::report_event(new_timer);
 
       LOG_INFO("Writing session to store");
       SessionStore::Session* sess = new SessionStore::Session();
