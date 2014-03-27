@@ -51,7 +51,8 @@ SessionStore::~SessionStore()
 
 SessionStore::Session* SessionStore::get_session_data(const std::string& call_id,
                                                       const role_of_node_t role,
-                                                      const node_functionality_t function)
+                                                      const node_functionality_t function,
+                                                      SAS::TrailId trail)
 {
   std::string key = create_key(call_id, role, function);
   LOG_DEBUG("Retrieving session data for %s", key.c_str());
@@ -59,7 +60,7 @@ SessionStore::Session* SessionStore::get_session_data(const std::string& call_id
 
   std::string data;
   uint64_t cas;
-  Store::Status status = _store->get_data("session", key, data, cas);
+  Store::Status status = _store->get_data("session", key, data, cas, trail);
 
   if (status == Store::Status::OK && !data.empty())
   {
@@ -74,7 +75,8 @@ SessionStore::Session* SessionStore::get_session_data(const std::string& call_id
 bool SessionStore::set_session_data(const std::string& call_id,
                                     const role_of_node_t role,
                                     const node_functionality_t function,
-                                    Session* session)
+                                    Session* session,
+                                    SAS::TrailId trail)
 {
   std::string key = create_key(call_id, role, function);
   LOG_DEBUG("Saving session data for %s, CAS = %ld", key.c_str(), session->_cas);
@@ -85,7 +87,8 @@ bool SessionStore::set_session_data(const std::string& call_id,
                                           key,
                                           data,
                                           session->_cas,
-                                          session->session_refresh_time);
+                                          session->session_refresh_time,
+                                          trail);
   LOG_DEBUG("Store returned %d", status);
 
   return (status = Store::Status::OK);
@@ -93,12 +96,13 @@ bool SessionStore::set_session_data(const std::string& call_id,
 
 bool SessionStore::delete_session_data(const std::string& call_id,
                                        const role_of_node_t role,
-                                       const node_functionality_t function)
+                                       const node_functionality_t function,
+                                       SAS::TrailId trail)
 {
   std::string key = create_key(call_id, role, function);
   LOG_DEBUG("Deleting session data for %s", key.c_str());
 
-  Store::Status status = _store->delete_data("session", key);
+  Store::Status status = _store->delete_data("session", key, trail);
   LOG_DEBUG("Store returned %d", status);
 
   return (status = Store::Status::OK);
@@ -110,7 +114,7 @@ std::string SessionStore::serialize_session(Session* session)
   std::ostringstream oss(std::ostringstream::out|std::ostringstream::binary);
 
   oss << session->session_id << '\0';
-  
+
   int num_ccf = session->ccf.size();
   oss.write((const char*)&num_ccf, sizeof(int));
 
@@ -122,7 +126,7 @@ std::string SessionStore::serialize_session(Session* session)
   }
 
   oss.write((const char*)&session->acct_record_number, sizeof(uint32_t));
-  
+
   oss << session->timer_id << '\0';
 
   oss.write((const char*)&session->session_refresh_time, sizeof(uint32_t));

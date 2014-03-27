@@ -58,7 +58,8 @@ void SessionManager::handle(Message* msg)
     // This relates to an existing session
     sess = _store->get_session_data(msg->call_id,
                                     msg->role,
-                                    msg->function);
+                                    msg->function,
+                                    msg->trail);
 
     if (sess == NULL)
     {
@@ -79,7 +80,8 @@ void SessionManager::handle(Message* msg)
       bool success = _store->set_session_data(msg->call_id,
                                               msg->role,
                                               msg->function,
-                                              sess);
+                                              sess,
+                                              msg->trail);
       if (!success)
       {
         // Someone has written conflicting data since we read this, so start processing this message again
@@ -95,7 +97,8 @@ void SessionManager::handle(Message* msg)
       // Delete the session from the store and cancel the timer
       _store->delete_session_data(msg->call_id,
                                   msg->role,
-                                  msg->function);
+                                  msg->function,
+                                  msg->trail);
       LOG_INFO("Received STOP for session %s, deleting session and timer using timer ID %s", msg->call_id.c_str(), sess->timer_id.c_str());
 
       _timer_conn->send_delete(sess->timer_id,
@@ -227,7 +230,8 @@ void SessionManager::on_ccf_response (bool accepted, uint32_t interim_interval, 
       _store->set_session_data(msg->call_id,
                                msg->role,
                                msg->function,
-                               sess);
+                               sess,
+                               msg->trail);
       delete sess;
     }
 
@@ -244,7 +248,8 @@ void SessionManager::on_ccf_response (bool accepted, uint32_t interim_interval, 
         LOG_INFO("Session for %s received 5002 error from CDF, deleting", msg->call_id.c_str());
         _store->delete_session_data(msg->call_id,
                                     msg->role,
-                                    msg->function);
+                                    msg->function,
+                                    msg->trail);
       }
       else if (!msg->timer_interim)
       {

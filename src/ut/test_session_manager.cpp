@@ -131,7 +131,7 @@ TEST_F(SessionManagerTest, SimpleTest)
   // START should put a session in the store
   mgr->handle(start_msg);
 
-  sess = store->get_session_data("CALL_ID_ONE", ORIGINATING, SCSCF);
+  sess = store->get_session_data("CALL_ID_ONE", ORIGINATING, SCSCF, FAKE_TRAIL_ID);
   ASSERT_NE((SessionStore::Session*)NULL, sess);
   EXPECT_EQ(1u, sess->acct_record_number);
   delete sess;
@@ -140,7 +140,7 @@ TEST_F(SessionManagerTest, SimpleTest)
   // INTERIM should keep that session in the store
   mgr->handle(interim_msg);
 
-  sess = store->get_session_data("CALL_ID_ONE", ORIGINATING, SCSCF);
+  sess = store->get_session_data("CALL_ID_ONE", ORIGINATING, SCSCF, FAKE_TRAIL_ID);
   ASSERT_NE((SessionStore::Session*)NULL, sess);
   EXPECT_EQ(2u, sess->acct_record_number);
   delete sess;
@@ -149,7 +149,7 @@ TEST_F(SessionManagerTest, SimpleTest)
   // STOP should remove the session from the store
   mgr->handle(stop_msg);
 
-  sess = store->get_session_data("CALL_ID_ONE", ORIGINATING, SCSCF);
+  sess = store->get_session_data("CALL_ID_ONE", ORIGINATING, SCSCF, FAKE_TRAIL_ID);
   ASSERT_EQ(NULL, sess);
 
   delete mgr;
@@ -175,7 +175,7 @@ TEST_F(SessionManagerTest, TimeUpdateTest)
 
   mgr->handle(start_msg);
 
-  sess = store->get_session_data("CALL_ID_ONE", ORIGINATING, SCSCF);
+  sess = store->get_session_data("CALL_ID_ONE", ORIGINATING, SCSCF, FAKE_TRAIL_ID);
   ASSERT_NE((SessionStore::Session*)NULL, sess);
   EXPECT_EQ(1u, sess->acct_record_number);
   delete sess;
@@ -184,7 +184,7 @@ TEST_F(SessionManagerTest, TimeUpdateTest)
   mgr->handle(interim_msg);
 
   // An INTERIM message which increases the session refresh interval should be accepted
-  sess = store->get_session_data("CALL_ID_ONE", ORIGINATING, SCSCF);
+  sess = store->get_session_data("CALL_ID_ONE", ORIGINATING, SCSCF, FAKE_TRAIL_ID);
   ASSERT_NE((SessionStore::Session*)NULL, sess);
   EXPECT_EQ(2u, sess->acct_record_number);
   delete sess;
@@ -192,7 +192,7 @@ TEST_F(SessionManagerTest, TimeUpdateTest)
 
   mgr->handle(stop_msg);
 
-  sess = store->get_session_data("CALL_ID_ONE", ORIGINATING, SCSCF);
+  sess = store->get_session_data("CALL_ID_ONE", ORIGINATING, SCSCF, FAKE_TRAIL_ID);
   ASSERT_EQ(NULL, sess);
 
   delete mgr;
@@ -217,16 +217,16 @@ TEST_F(SessionManagerTest, NewCallTest)
 
   mgr->handle(start_msg);
 
-  sess = store->get_session_data("CALL_ID_TWO", ORIGINATING, SCSCF);
+  sess = store->get_session_data("CALL_ID_TWO", ORIGINATING, SCSCF, FAKE_TRAIL_ID);
   delete sess;
   mgr->handle(stop_msg);
-  sess = store->get_session_data("CALL_ID_TWO", ORIGINATING, SCSCF);
+  sess = store->get_session_data("CALL_ID_TWO", ORIGINATING, SCSCF, FAKE_TRAIL_ID);
   ASSERT_EQ(NULL, sess);
 
   mgr->handle(start_msg_2);
 
   // Re-using call-IDs should just work
-  sess = store->get_session_data("CALL_ID_TWO", ORIGINATING, SCSCF);
+  sess = store->get_session_data("CALL_ID_TWO", ORIGINATING, SCSCF, FAKE_TRAIL_ID);
   ASSERT_EQ(1u, sess->acct_record_number);
   delete sess;
   sess = NULL;
@@ -251,7 +251,7 @@ TEST_F(SessionManagerTest, UnknownCallTest)
 
   // If we receive an INTERIM for a call not in the store, we should ignore it
   mgr->handle(interim_msg);
-  sess = store->get_session_data("CALL_ID_THREE", ORIGINATING, SCSCF);
+  sess = store->get_session_data("CALL_ID_THREE", ORIGINATING, SCSCF, FAKE_TRAIL_ID);
   ASSERT_EQ(NULL, sess);
 
   delete mgr;
@@ -275,11 +275,11 @@ TEST_F(SessionManagerTest, CDFFailureTest)
 
   // When a START message fails, we should not store the session or handle any subsequent messages
   mgr->handle(start_msg);
-  sess = store->get_session_data("CALL_ID_FOUR", ORIGINATING, SCSCF);
+  sess = store->get_session_data("CALL_ID_FOUR", ORIGINATING, SCSCF, FAKE_TRAIL_ID);
   ASSERT_EQ(NULL, sess);
 
   mgr->handle(interim_msg);
-  sess = store->get_session_data("CALL_ID_FOUR", ORIGINATING, SCSCF);
+  sess = store->get_session_data("CALL_ID_FOUR", ORIGINATING, SCSCF, FAKE_TRAIL_ID);
   ASSERT_EQ(NULL, sess);
 
   delete mgr;
@@ -304,7 +304,7 @@ TEST_F(SessionManagerTest, CDFInterimFailureTest)
   Message* interim_msg = new Message("CALL_ID_FOUR", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(3), 300, FAKE_TRAIL_ID);
 
   mgr->handle(start_msg);
-  sess = store->get_session_data("CALL_ID_FOUR", ORIGINATING, SCSCF);
+  sess = store->get_session_data("CALL_ID_FOUR", ORIGINATING, SCSCF, FAKE_TRAIL_ID);
   ASSERT_NE((SessionStore::Session*)NULL, sess);
   EXPECT_EQ(1u, sess->acct_record_number);
   delete sess;
@@ -312,7 +312,7 @@ TEST_F(SessionManagerTest, CDFInterimFailureTest)
 
   // When an INTERIM message fails with an error other than 5002 "Session unknown", we should still keep the session
   fail_mgr->handle(interim_msg);
-  sess = store->get_session_data("CALL_ID_FOUR", ORIGINATING, SCSCF);
+  sess = store->get_session_data("CALL_ID_FOUR", ORIGINATING, SCSCF, FAKE_TRAIL_ID);
   ASSERT_NE((SessionStore::Session*)NULL, sess);
   EXPECT_EQ(2u, sess->acct_record_number);
   delete sess;
@@ -342,7 +342,7 @@ TEST_F(SessionManagerTest, CDFInterimUnknownTest)
   Message* interim_msg = new Message("CALL_ID_FOUR", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(3), 300, FAKE_TRAIL_ID);
 
   mgr->handle(start_msg);
-  sess = store->get_session_data("CALL_ID_FOUR", ORIGINATING, SCSCF);
+  sess = store->get_session_data("CALL_ID_FOUR", ORIGINATING, SCSCF, FAKE_TRAIL_ID);
   ASSERT_NE((SessionStore::Session*)NULL, sess);
   EXPECT_EQ(1u, sess->acct_record_number);
   delete sess;
@@ -350,7 +350,7 @@ TEST_F(SessionManagerTest, CDFInterimUnknownTest)
 
   // When an INTERIM message fails with a 5002 "Session unknown" error, we should delete the session
   fail_mgr->handle(interim_msg);
-  sess = store->get_session_data("CALL_ID_FOUR", ORIGINATING, SCSCF);
+  sess = store->get_session_data("CALL_ID_FOUR", ORIGINATING, SCSCF, FAKE_TRAIL_ID);
   ASSERT_EQ(NULL, sess);
 
   delete mgr;
