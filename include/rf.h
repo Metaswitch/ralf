@@ -77,6 +77,7 @@ class AccountingRequest : public Diameter::Message
 public:
   AccountingRequest(const Dictionary* dict,
                     Diameter::Stack* diameter_stack,
+                    const std::string& session_id,
                     const std::string& dest_host,
                     const uint32_t& record_number,
                     const rapidjson::Value& contents);

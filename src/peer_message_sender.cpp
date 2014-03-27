@@ -80,6 +80,7 @@ void PeerMessageSender::int_send_msg()
   RalfTransaction* tsx = new RalfTransaction(_dict, this, _msg);
   Rf::AccountingRequest acr(_dict,
                             _diameter_stack,
+                            _msg->session_id,
                             ccf,
                             _msg->accounting_record_number,
                             _msg->received_json->FindMember("event")->value);
