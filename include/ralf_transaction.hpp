@@ -38,17 +38,17 @@
 
 #include "diameterstack.h"
 #include "message.hpp"
-#include "session_manager.hpp"
+#include "peer_message_sender.hpp"
 
 class RalfTransaction: public Diameter::Transaction
 {
 public:
   void on_response(Diameter::Message& rsp);
   void on_timeout();
-  RalfTransaction(Diameter::Dictionary* dict, SessionManager* sm, Message* msg): Diameter::Transaction(dict), _sm(sm), _msg(msg) {};
+  RalfTransaction(Diameter::Dictionary* dict, PeerMessageSender* peer_sender, Message* msg): Diameter::Transaction(dict), _peer_sender(peer_sender), _msg(msg) {};
 
 private:
-  SessionManager* _sm;
+  PeerMessageSender* _peer_sender;
   Message* _msg;
 };
 

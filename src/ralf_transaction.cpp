@@ -38,7 +38,7 @@
 
 void RalfTransaction::on_timeout()
 {
-  _sm->on_ccf_response(false, 0, "", 0, _msg);
+  _peer_sender->send_cb(ER_DIAMETER_UNABLE_TO_DELIVER, 0, "");
 }
 
 // Handles the Accounting-Control-Answer from the CCF, parsing out the data the SessionManager needs.
@@ -52,12 +52,5 @@ void RalfTransaction::on_response(Diameter::Message& rsp)
   rsp.get_str_from_avp(_dict->SESSION_ID, session_id);
   rsp.get_i32_from_avp(_dict->ACCT_INTERIM_INTERVAL, interim_interval);
 
-  if (result_code == 2001)
-  {
-    _sm->on_ccf_response(true, interim_interval, session_id, result_code, _msg);
-  }
-  else
-  {
-    _sm->on_ccf_response(false, interim_interval, session_id, result_code, _msg);
-  }
+  _peer_sender->send_cb(result_code, interim_interval, session_id);
 }

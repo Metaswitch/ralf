@@ -34,9 +34,6 @@
  * as those licenses appear in the file LICENSE-OPENSSL.
  */
 
-#define PRIMARY_CCF 0
-#define SECONDARY_CCF 1
-
 #include <stddef.h>
 #include <errno.h>
 #include "log.h"
@@ -45,27 +42,23 @@
 #include "rf.h"
 
 /* Creates a PeerMessageSender. The object is deleted when:
- *   - we call send() and the call to fd_peer_add() fails
- *   - we fail to connect to any of the available CCFs
- *   - we successfully send a message
+ *   - we send an ACR to a CCF that responds
+ *   - we fail to send the ACR to any of the available CCFs
  *
  *   No action should be taken after any of the above happens, as the this pointer becomes invalid.
  */
-PeerMessageSender::PeerMessageSender()
+PeerMessageSender::PeerMessageSender() : _which(0)
 {
-  _which = PRIMARY_CCF;
 }
 
 PeerMessageSender::~PeerMessageSender()
 {
 }
 
-/* Sends the message to the primary given CCF or, if it can't connect to that CCF, to the backup CCF.
+/* Sends the message to the sequence of given CCFs.
  *
- * Does not retry on errors - only on failed connections.
- *
- * If the call to fd_peer_add fails (e.g. with ENOMEM), calls back into the SessionManager then deletes this PeerMessageSender.
- *  */
+ * Does not retry on errors - only on failed sends (DIAMETER_UNABLE_TO_SEND).
+ */
 void PeerMessageSender::send(Message* msg, SessionManager* sm, Rf::Dictionary* dict, Diameter::Stack* diameter_stack)
 {
   _msg = msg;
@@ -73,111 +66,59 @@ void PeerMessageSender::send(Message* msg, SessionManager* sm, Rf::Dictionary* d
   _sm = sm;
   _dict = dict;
   _diameter_stack = diameter_stack;
-  send();
-}
-
-void PeerMessageSender::send() {
-  std::string ccf = _ccfs[_which];
-
-  // Check for an existing connection
-  peer_hdr* peer = NULL;
-  DiamId_t diam_id = strdup(ccf.c_str());
-  int rc = fd_peer_getbyid(diam_id, (long unsigned int) ccf.length(), 0, &peer);
-  LOG_DEBUG("Checking connection to %s", diam_id);
-
-  if (rc == 0 && peer != NULL)
-  {
-    // We have an existing connection.
-    free(diam_id);
-    int_send_msg();
-  }
-  else
-  {
-    // We don't have an existing connection - try and establish one
-    peer_info myinfo;
-    memset(&myinfo, 0, sizeof(myinfo));
-    myinfo.pi_diamid = diam_id;
-    myinfo.pi_diamidlen = (long unsigned int) ccf.length();
-    myinfo.config.pic_realm = (char*)"example.com";
-    myinfo.config.pic_port = 3868;
-    myinfo.config.pic_lft = 120;
-    myinfo.config.pic_flags.exp = PI_EXP_INACTIVE;
-    myinfo.config.pic_flags.sec = PI_SEC_NONE;
-    fd_list_init(&myinfo.pi_endpoints, NULL);
-
-    LOG_DEBUG("Connecting to %s (number %d)", myinfo.pi_diamid, _which);
-    int rc = fd_peer_add(&myinfo, "PeerMessageSender::send", PeerMessageSender::fd_add_cb, this);
-    if (rc == EEXIST)
-    {
-      // This peer has been added between checking the connection and trying to add it - send the message
-      int_send_msg();
-    }
-    else if (rc != 0)
-    {
-      LOG_ERROR("fd_peer_add failed to add peer %s, rc %d", myinfo.pi_diamid, rc);
-      _sm->on_ccf_response(false, 0, "", 0, _msg);
-      delete this;
-    }
-  }
+  int_send_msg();
 }
 
 /* Actually sends the message to the current active CCF.
  *
  * After sending the message, deletes this PeerMessageSender.
- *  */
+ */
 void PeerMessageSender::int_send_msg()
 {
   std::string ccf = _ccfs[_which];
   LOG_DEBUG("Sending message to %s (number %d)", ccf.c_str(), _which);
-  RalfTransaction* tsx = new RalfTransaction(_dict, _sm, _msg);
-  Rf::AccountingRequest acr(_dict, _diameter_stack, ccf, _msg->accounting_record_number, _msg->received_json->FindMember("event")->value);
+  RalfTransaction* tsx = new RalfTransaction(_dict, this, _msg);
+  Rf::AccountingRequest acr(_dict,
+                            _diameter_stack,
+                            ccf,
+                            _msg->accounting_record_number,
+                            _msg->received_json->FindMember("event")->value);
   acr.send(tsx);
-  delete this;
 }
 
-// Static callback - just calls into the relevant instance method
-void PeerMessageSender::fd_add_cb(struct peer_info* peer, void* thisptr)
-{
-  ((PeerMessageSender*) thisptr)->fd_add_cb(peer);
-}
-
-/* Called either when a connection to a peer is in OPEN state or when there is an error.
+/* Called when a message has been sent and a response has been received.
  *
- * If the connection succeeded, calls int_send_msg() which then deletes this PeerMessageSender.
+ * If the send succeeded (as in, the message reached it's target), call back into SessionManager and self-destruct.
  *
- * If the connection failed, either try the backup CCF or (if there isn't one), calls back into SessionManager then deletes this PeerMessageSender.
+ * If the send failed due to routing issues, either try the backup CCF or (if there isn't one), calls back into SessionManager and self-destruct.
  */
-void PeerMessageSender::fd_add_cb(struct peer_info* peer)
+void PeerMessageSender::send_cb(int result_code,
+                                int interim_interval,
+                                std::string session_id)
 {
-  peer_hdr* hdr = NULL;
-  int get_peer_rc = -1;
-
-  // Get the peer's state by looking up the ID.
-  if (peer)
+  if (result_code != ER_DIAMETER_UNABLE_TO_DELIVER)
   {
-    get_peer_rc = fd_peer_getbyid(peer->pi_diamid, peer->pi_diamidlen, 0, &hdr);
-  }
-
-  if ((get_peer_rc == 0) && (hdr != NULL) && (fd_peer_get_state(hdr) == STATE_OPEN))
-  {
-    // Connection succeeded, so send our message to this CCF.
-    int_send_msg();
+    // Send succeeded, notify the SessionManager.
+    _sm->on_ccf_response(result_code == ER_DIAMETER_SUCCESS, interim_interval, session_id, result_code, _msg);
+    delete this;
   }
   else
   {
-    // Connection failed - do we have a backup CCF?
-    LOG_WARNING("Failed to connect to %s (number %d)", _ccfs[_which].c_str(), _which);
-    if (_which == PRIMARY_CCF && (_ccfs.size() > 1))
+    // Send failed
+    LOG_WARNING("Failed to send ACR to %s (number %d)", _ccfs[_which].c_str(), _which);
+
+    // Do we have a backup CCF?
+    _which++;
+    if (_which < _ccfs.size())
     {
-      // Yes we do - select it and try again.
-      _which = SECONDARY_CCF;
-      send();
+      // Yes we do try again.
+      int_send_msg();
     }
     else
     {
-      // No, or we've already used it - fail and log.
+      // No, we've run out, fail
       LOG_ERROR("Failed to connect to all CCFs, message not sent");
-      _sm->on_ccf_response(false, 0, "", 0, _msg);
+      _sm->on_ccf_response(false, 0, "", result_code, _msg);
       delete this;
     }
   }
