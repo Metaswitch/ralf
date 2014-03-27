@@ -70,7 +70,6 @@ void BillingControllerHandler::run()
 
     SAS::Event timer_pop(trail(), SASEvent::INTERIM_TIMER_POPPED, 0);
     SAS::report_event(timer_pop);
-
   }
 
   Message* msg = parse_body(call_id(), timer_interim, _req.body(), trail());

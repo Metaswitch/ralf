@@ -195,7 +195,6 @@ void SessionManager::on_ccf_response (bool accepted, uint32_t interim_interval, 
       SAS::Event updated_timer(msg->trail, SASEvent::INTERIM_TIMER_RENEWED, 0);
       updated_timer.add_static_param(interim_interval);
       SAS::report_event(updated_timer);
-
     }
     else if (msg->record_type.isStart())
     {
