@@ -65,6 +65,7 @@ void BillingControllerHandler::run()
   {
     timer_interim = true;
     SAS::Marker cid_assoc(trail(), MARKER_ID_SIP_CALL_ID, 0);
+    cid_assoc.add_var_param(call_id());
     SAS::report_marker(cid_assoc);
   }
 

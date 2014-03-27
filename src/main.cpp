@@ -263,7 +263,7 @@ int main(int argc, char**argv)
 
   SAS::init(options.sas_system_name,
             "ralf",
-            "org.projectclearwater.sprout.20131107",
+            SASEvent::CURRENT_RESOURCE_BUNDLE,
             options.sas_server,
             sas_write);
 
