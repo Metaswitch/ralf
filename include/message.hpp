@@ -103,7 +103,7 @@ struct Message
 
   uint32_t interim_interval;
   uint32_t session_refresh_time;
-  SAS::TrailId _trail;
+  SAS::TrailId trail;
 };
 
 #endif

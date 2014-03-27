@@ -47,6 +47,7 @@
 #include "httpstack.h"
 #include "handlers.hpp"
 #include "logger.h"
+#include "saslogger.h"
 #include "rf.h"
 #include "peer_message_sender_factory.hpp"
 #include "sas.h"
@@ -85,10 +86,10 @@ void usage(void)
        " -F, --log-file <directory>\n"
        "                            Log to file in specified directory\n"
        " -L, --log-level N          Set log level to N (default: 4)\n"
-       " -S, --sas <ipv4>,<system name>\n"
+       " -S, --sas <host>,<system name>\n"
        " Use specified host as Service Assurance Server and specified\n"
        " system name to identify this system to SAS. If this option isn't\n"
-       " specified SAS is disabled\n"
+       " specified, SAS is disabled\n"
        " -d, --daemon               Run as daemon\n"
        " -h, --help                 Show this help screen\n");
 }
@@ -113,7 +114,7 @@ int init_options(int argc, char**argv, struct options& options)
 
   int opt;
   int long_opt_ind;
-  while ((opt = getopt_long(argc, argv, "c:H:t:D:d:s:a:F:L:h:S", long_opt, &long_opt_ind)) != -1)
+  while ((opt = getopt_long(argc, argv, "c:H:t:D:d:s:a:F:L:S:h", long_opt, &long_opt_ind)) != -1)
   {
     switch (opt)
     {
@@ -130,16 +131,18 @@ int init_options(int argc, char**argv, struct options& options)
     {
       std::vector<std::string> sas_options;
       Utils::split_string(std::string(optarg), ',', sas_options, 0, false);
-      if (sas_options.size() == 2)
+      if ((sas_options.size() == 2) &&
+          !sas_options[0].empty() &&
+          !sas_options[1].empty())
       {
         options.sas_server = sas_options[0];
         options.sas_system_name = sas_options[1];
-        fprintf(stdout, "SAS set to %s\n", options.sas_server.c_str());
-        fprintf(stdout, "System name is set to %s\n", options.sas_system_name.c_str());
+        printf("SAS set to %s\n", options.sas_server.c_str());
+        printf("System name is set to %s\n", options.sas_system_name.c_str());
       }
       else
       {
-        fprintf(stdout, "Invalid --sas option, SAS disabled\n");
+        printf("Invalid --sas option, SAS disabled\n");
       }
     }
     break;
@@ -179,7 +182,7 @@ int init_options(int argc, char**argv, struct options& options)
       return -1;
 
     default:
-      fprintf(stdout, "Unknown option.  Run with --help for options.\n");
+      printf("Unknown option.  Run with --help for options.\n");
       return -1;
     }
   }
@@ -208,42 +211,6 @@ void exception_handler(int sig)
   // Dump a core.
   abort();
 }
-
-// LCOV_EXCL_START
-void sas_write(SAS::log_level_t sas_level, const char *module, int line_number, const char *fmt, ...)
-{
-  int level;
-  va_list args;
-
-  switch (sas_level) {
-    case SAS::LOG_LEVEL_DEBUG:
-      level = Log::DEBUG_LEVEL;
-      break;
-    case SAS::LOG_LEVEL_VERBOSE:
-      level = Log::VERBOSE_LEVEL;
-      break;
-    case SAS::LOG_LEVEL_INFO:
-      level = Log::INFO_LEVEL;
-      break;
-    case SAS::LOG_LEVEL_STATUS:
-      level = Log::STATUS_LEVEL;
-      break;
-    case SAS::LOG_LEVEL_WARNING:
-      level = Log::WARNING_LEVEL;
-      break;
-    case SAS::LOG_LEVEL_ERROR:
-      level = Log::ERROR_LEVEL;
-      break;
-    default:
-      LOG_ERROR("Unknown SAS log level %d, treating as error level", sas_level);
-      level = Log::ERROR_LEVEL;
-    }
-
-  va_start(args, fmt);
-  Log::_write(level, module, line_number, fmt, args);
-  va_end(args);
-}
-// LCOV_EXCL_STOP
 
 int main(int argc, char**argv)
 {
@@ -294,10 +261,6 @@ int main(int argc, char**argv)
 
   LOG_STATUS("Log level set to %d", options.log_level);
 
-  if (options.sas_system_name == "")
-  {
-    options.sas_system_name = std::string(options.http_address + std::string(":") + std::to_string(options.http_port));
-  }
   SAS::init(options.sas_system_name,
             "ralf",
             "org.projectclearwater.sprout.20131107",

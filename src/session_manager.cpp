@@ -90,7 +90,7 @@ void SessionManager::handle(Message* msg)
       LOG_INFO("Received STOP for session %s, deleting session and timer using timer ID %s", msg->call_id.c_str(), sess->timer_id.c_str());
 
       _timer_conn->send_delete(sess->timer_id,
-                               msg->_trail);
+                               msg->trail);
     }
 
     msg->accounting_record_number = sess->acct_record_number;
@@ -172,7 +172,7 @@ void SessionManager::on_ccf_response (bool accepted, uint32_t interim_interval, 
                             msg->session_refresh_time,
                             "http://localhost:9888/call-id/"+msg->call_id+"?timer-interim=true",
                             create_opaque_data(msg),
-                            msg->_trail);
+                            msg->trail);
     }
     else if (msg->record_type.isStart())
     {
@@ -185,7 +185,7 @@ void SessionManager::on_ccf_response (bool accepted, uint32_t interim_interval, 
                                msg->session_refresh_time, // repeat-for
                                "http://localhost:9888/call-id/"+msg->call_id+"?timer-interim=true",
                                create_opaque_data(msg),
-                               msg->_trail);
+                               msg->trail);
       };
 
       LOG_INFO("Writing session to store");
@@ -244,7 +244,7 @@ void SessionManager::on_ccf_response (bool accepted, uint32_t interim_interval, 
                                 msg->session_refresh_time,
                                 "http://localhost:9888/call-id/"+msg->call_id+"?timer-interim=true",
                                 create_opaque_data(msg),
-                                msg->_trail);
+                                msg->trail);
         }
       }
     }
