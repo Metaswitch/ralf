@@ -77,6 +77,7 @@ Message* BillingControllerHandler::parse_body(std::string call_id, std::string t
   if (timer_param.compare("true") == 0) {
     timer_interim = true;
   }
+
   rapidjson::Document* body = new rapidjson::Document();
   std::string bodys = reqbody;
   body->Parse<0>(bodys.c_str());
@@ -84,6 +85,18 @@ Message* BillingControllerHandler::parse_body(std::string call_id, std::string t
   uint32_t session_refresh_time = 0;
   role_of_node_t role_of_node;
   node_functionality_t node_functionality;
+
+  // Log the body early so we still see it if we later determineit's invalid.
+  if (Log::enabled(Log::DEBUG_LEVEL))
+  {
+    // LCOV_EXCL_START - Debug logging is not enabled in UT
+    rapidjson::StringBuffer s;
+    rapidjson::PrettyWriter<rapidjson::StringBuffer> w(s);
+    body->Accept(w);
+    LOG_DEBUG("Handling request, body:\n%s", s.GetString());
+    // LCOV_EXCL_STOP
+  }
+
 
   // Verify that the body is correct JSON with an "event" element
   if (!(*body).IsObject() ||
@@ -188,16 +201,6 @@ Message* BillingControllerHandler::parse_body(std::string call_id, std::string t
       LOG_DEBUG("Adding CCF %s", (*body)["peers"]["ccf"][i].GetString());
       ccfs.push_back((*body)["peers"]["ccf"][i].GetString());
     }
-  }
-
-  if (Log::enabled(Log::DEBUG_LEVEL))
-  {
-    // LCOV_EXCL_START - Debug logging is not enabled in UT
-    rapidjson::StringBuffer s;
-    rapidjson::PrettyWriter<rapidjson::StringBuffer> w(s);
-    body->Accept(w);
-    LOG_DEBUG("Handling request, body:\n%s", s.GetString());
-    // LCOV_EXCL_STOP
   }
 
   Message* msg = new Message(call_id,
