@@ -77,7 +77,8 @@ void BillingControllerHandler::run()
   if (msg == NULL)
   {
     SAS::Event rejected(msg->trail, SASEvent::REQUEST_REJECTED, 0);
-    rejected.add_var_param("Invalid JSON");
+    std::string message = "Invalid JSON";
+    rejected.add_var_param(message);
     SAS::report_event(rejected);
     send_http_reply(400);
     return;
