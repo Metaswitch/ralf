@@ -123,7 +123,7 @@ AccountingRequest::AccountingRequest(const Dictionary* dict,
     }
     catch (Diameter::Stack::Exception e)
     {
-      LOG_WARNING("AVP %s not recognised, ignoring", it->value.GetString());
+      LOG_WARNING("AVP %s not recognised, ignoring", it->name.GetString());
     }
   }   
 }
