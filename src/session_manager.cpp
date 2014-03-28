@@ -90,8 +90,11 @@ void SessionManager::handle(Message* msg)
                                   msg->function);
       LOG_INFO("Received STOP for session %s, deleting session and timer using timer ID %s", msg->call_id.c_str(), sess->timer_id.c_str());
 
-      _timer_conn->send_delete(sess->timer_id,
-                               fake_trail);
+      if (sess->timer_id != "NO_TIMER")
+      {
+        _timer_conn->send_delete(sess->timer_id,
+                                 fake_trail);
+      }
     }
 
     msg->accounting_record_number = sess->acct_record_number;
