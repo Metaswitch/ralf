@@ -44,6 +44,7 @@
 #include "ralf_transaction.hpp"
 #include "rf.h"
 #include "sas.h"
+#include "ralfsasevent.h"
 
 /* Creates a PeerMessageSender. The object is deleted when:
  *   - we call send() and the call to fd_peer_add() fails

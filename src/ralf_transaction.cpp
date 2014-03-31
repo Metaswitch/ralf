@@ -35,6 +35,7 @@
  */
 
 #include "ralf_transaction.hpp"
+#include "ralfsasevent.h"
 
 void RalfTransaction::on_timeout()
 {

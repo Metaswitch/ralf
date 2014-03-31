@@ -43,13 +43,16 @@
 #include "message.hpp"
 #include "session_manager.hpp"
 #include "sas.h"
+#include "ralfsasevent.h"
 
 const std::string TIMER_INTERIM_PARAM = "timer-interim";
 
 class PingHandler : public HttpStack::Handler
 {
 public:
-  PingHandler(HttpStack::Request& req) : HttpStack::Handler(req) {};
+  PingHandler(HttpStack::Request& req, SAS::TrailId trail) : 
+    HttpStack::Handler(req, trail) 
+  {};
   void run();
 };
 
@@ -61,7 +64,11 @@ struct BillingControllerConfig
 class BillingControllerHandler : public HttpStack::Handler
 {
 public:
-  BillingControllerHandler(HttpStack::Request& req, const BillingControllerConfig* cfg) :  HttpStack::Handler(req),  _sess_mgr(cfg->mgr) {};
+  BillingControllerHandler(HttpStack::Request& req,
+                           const BillingControllerConfig* cfg,
+                           SAS::TrailId trail) :  
+    HttpStack::Handler(req, trail), _sess_mgr(cfg->mgr) 
+  {};
   void run();
   static Message* parse_body(std::string call_id, bool timer_interim, std::string reqbody, SAS::TrailId trail);
 private:
