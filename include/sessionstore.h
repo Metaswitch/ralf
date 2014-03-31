@@ -46,7 +46,7 @@
 class SessionStore
 {
 public:
-  
+
   class Session
   {
   public:
@@ -88,17 +88,20 @@ public:
   // Retrieve session state for a given Call-ID.
   Session* get_session_data(const std::string& call_id,
                             const role_of_node_t role,
-                            const node_functionality_t function);
+                            const node_functionality_t function,
+                            SAS::TrailId trail);
 
   // Save the session object back into the store (this may fail due to CAS atomicity
   // checking)
   bool set_session_data(const std::string& call_id,
                         const role_of_node_t role,
                         const node_functionality_t function,
-                        Session* data);
+                        Session* data,
+                        SAS::TrailId trail);
   bool delete_session_data(const std::string& call_id,
                            const role_of_node_t role,
-                           const node_functionality_t function);
+                           const node_functionality_t function,
+                           SAS::TrailId trail);
 
 private:
   // Serialise a session to a string, ready to store in the DB.

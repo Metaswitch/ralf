@@ -43,11 +43,14 @@
 #include "chronosconnection.h"
 #include "accesslogger.h"
 #include "log.h"
+#include "utils.h"
 #include "httpstack.h"
 #include "handlers.hpp"
 #include "logger.h"
+#include "saslogger.h"
 #include "rf.h"
 #include "peer_message_sender_factory.hpp"
+#include "sas.h"
 
 struct options
 {
@@ -63,6 +66,8 @@ struct options
   bool log_to_file;
   std::string log_directory;
   int log_level;
+  std::string sas_server;
+  std::string sas_system_name;
 };
 
 void usage(void)
@@ -81,6 +86,10 @@ void usage(void)
        " -F, --log-file <directory>\n"
        "                            Log to file in specified directory\n"
        " -L, --log-level N          Set log level to N (default: 4)\n"
+       " -S, --sas <host>,<system name>\n"
+       " Use specified host as Service Assurance Server and specified\n"
+       " system name to identify this system to SAS. If this option isn't\n"
+       " specified, SAS is disabled\n"
        " -d, --daemon               Run as daemon\n"
        " -h, --help                 Show this help screen\n");
 }
@@ -95,6 +104,7 @@ int init_options(int argc, char**argv, struct options& options)
     {"dest-realm",        required_argument, NULL, 'D'},
     {"dest-host",         required_argument, NULL, 'd'},
     {"server-name",       required_argument, NULL, 's'},
+    {"sas",               required_argument, NULL, 'S'},
     {"access-log",        required_argument, NULL, 'a'},
     {"log-file",          required_argument, NULL, 'F'},
     {"log-level",         required_argument, NULL, 'L'},
@@ -104,7 +114,7 @@ int init_options(int argc, char**argv, struct options& options)
 
   int opt;
   int long_opt_ind;
-  while ((opt = getopt_long(argc, argv, "c:H:t:D:d:s:a:F:L:h", long_opt, &long_opt_ind)) != -1)
+  while ((opt = getopt_long(argc, argv, "c:H:t:D:d:s:a:F:L:S:h", long_opt, &long_opt_ind)) != -1)
   {
     switch (opt)
     {
@@ -116,6 +126,26 @@ int init_options(int argc, char**argv, struct options& options)
       options.http_address = std::string(optarg);
       // TODO: Parse optional HTTP port.
       break;
+
+    case 'S':
+    {
+      std::vector<std::string> sas_options;
+      Utils::split_string(std::string(optarg), ',', sas_options, 0, false);
+      if ((sas_options.size() == 2) &&
+          !sas_options[0].empty() &&
+          !sas_options[1].empty())
+      {
+        options.sas_server = sas_options[0];
+        options.sas_system_name = sas_options[1];
+        printf("SAS set to %s\n", options.sas_server.c_str());
+        printf("System name is set to %s\n", options.sas_system_name.c_str());
+      }
+      else
+      {
+        printf("Invalid --sas option, SAS disabled\n");
+      }
+    }
+    break;
 
     case 't':
       options.http_threads = atoi(optarg);
@@ -152,7 +182,7 @@ int init_options(int argc, char**argv, struct options& options)
       return -1;
 
     default:
-      fprintf(stdout, "Unknown option.  Run with --help for options.\n");
+      printf("Unknown option.  Run with --help for options.\n");
       return -1;
     }
   }
@@ -202,6 +232,8 @@ int main(int argc, char**argv)
   options.access_log_enabled = false;
   options.log_to_file = false;
   options.log_level = 0;
+  options.sas_server = "0.0.0.0";
+  options.sas_system_name = "";
 
   if (init_options(argc, argv, options) != 0)
   {
@@ -229,6 +261,12 @@ int main(int argc, char**argv)
 
   LOG_STATUS("Log level set to %d", options.log_level);
 
+  SAS::init(options.sas_system_name,
+            "ralf",
+            SASEvent::CURRENT_RESOURCE_BUNDLE,
+            options.sas_server,
+            sas_write);
+
   Diameter::Stack* diameter_stack = Diameter::Stack::get_instance();
   Rf::Dictionary* dict = NULL;
   diameter_stack->initialize();
@@ -246,7 +284,7 @@ int main(int argc, char**argv)
 
   HttpStack* http_stack = HttpStack::get_instance();
   HttpStack::HandlerFactory<PingHandler> ping_handler_factory;
-  HttpStack::ConfiguredHandlerFactory<BillingControllerHandler, BillingControllerConfig> billing_handler_factory(cfg);
+  BillingControllerHandlerFactory billing_handler_factory(cfg);
   try
   {
     http_stack->initialize();

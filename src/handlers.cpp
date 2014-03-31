@@ -48,7 +48,7 @@
 void PingHandler::run()
 {
   _req.add_content("OK");
-  _req.send_reply(200);
+  send_http_reply(200);
   delete this;
 }
 
@@ -56,27 +56,41 @@ void BillingControllerHandler::run()
 {
   if (_req.method() != htp_method_POST)
   {
-    _req.send_reply(405);
+    send_http_reply(405);
     return;
   }
-  Message* msg = parse_body(call_id(), _req.param("timer-interim"), _req.body());
+
+  bool timer_interim = false;
+  if (_req.param(TIMER_INTERIM_PARAM) == "true")
+  {
+    timer_interim = true;
+    SAS::Marker cid_assoc(trail(), MARKER_ID_SIP_CALL_ID, 0);
+    cid_assoc.add_var_param(call_id());
+    SAS::report_marker(cid_assoc);
+
+    SAS::Event timer_pop(trail(), SASEvent::INTERIM_TIMER_POPPED, 0);
+    SAS::report_event(timer_pop);
+  }
+
+  Message* msg = parse_body(call_id(), timer_interim, _req.body(), trail());
+
   if (msg == NULL)
   {
-    _req.send_reply(400);
+    SAS::Event rejected(msg->trail, SASEvent::REQUEST_REJECTED, 0);
+    std::string message = "Invalid JSON";
+    rejected.add_var_param(message);
+    SAS::report_event(rejected);
+    send_http_reply(400);
     return;
   }
-  _req.send_reply(200);
+  send_http_reply(200);
   _sess_mgr->handle(msg);
   delete this;
 }
 //LCOV_EXCL_STOP
 
-Message* BillingControllerHandler::parse_body(std::string call_id, std::string timer_param, std::string reqbody)
+Message* BillingControllerHandler::parse_body(std::string call_id, bool timer_interim, std::string reqbody, SAS::TrailId trail)
 {
-  bool timer_interim = false;
-  if (timer_param.compare("true") == 0) {
-    timer_interim = true;
-  }
   rapidjson::Document* body = new rapidjson::Document();
   std::string bodys = reqbody;
   body->Parse<0>(bodys.c_str());
@@ -200,12 +214,17 @@ Message* BillingControllerHandler::parse_body(std::string call_id, std::string t
     // LCOV_EXCL_STOP
   }
 
+  SAS::Event incoming(trail, SASEvent::INCOMING_REQUEST, 0);
+  incoming.add_static_param(role_of_node);
+  SAS::report_event(incoming);
+
   Message* msg = new Message(call_id,
                              role_of_node,
                              node_functionality,
                              body,
-                             record_type, 
+                             record_type,
                              session_refresh_time,
+                             trail,
                              timer_interim);
   if (!ccfs.empty())
   {

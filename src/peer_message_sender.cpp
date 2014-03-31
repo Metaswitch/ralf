@@ -43,6 +43,8 @@
 #include "peer_message_sender.hpp"
 #include "ralf_transaction.hpp"
 #include "rf.h"
+#include "sas.h"
+#include "ralfsasevent.h"
 
 /* Creates a PeerMessageSender. The object is deleted when:
  *   - we call send() and the call to fd_peer_add() fails
@@ -51,7 +53,8 @@
  *
  *   No action should be taken after any of the above happens, as the this pointer becomes invalid.
  */
-PeerMessageSender::PeerMessageSender()
+PeerMessageSender::PeerMessageSender(SAS::TrailId trail) :
+  _trail(trail)
 {
   _which = PRIMARY_CCF;
 }
@@ -129,9 +132,15 @@ void PeerMessageSender::int_send_msg()
 {
   std::string ccf = _ccfs[_which];
   LOG_DEBUG("Sending message to %s (number %d)", ccf.c_str(), _which);
-  RalfTransaction* tsx = new RalfTransaction(_dict, _sm, _msg);
+  RalfTransaction* tsx = new RalfTransaction(_dict, _sm, _msg, _trail);
   Rf::AccountingRequest acr(_dict, _diameter_stack, ccf, _msg->accounting_record_number, _msg->received_json->FindMember("event")->value);
   acr.send(tsx);
+
+  SAS::Event msg_sent(_msg->trail, SASEvent::BILLING_REQUEST_SENT, 0);
+  msg_sent.add_var_param(_ccfs[_which]);
+  msg_sent.add_static_param(_msg->accounting_record_number);
+  SAS::report_event(msg_sent);
+
   delete this;
 }
 
@@ -167,10 +176,19 @@ void PeerMessageSender::fd_add_cb(struct peer_info* peer)
   {
     // Connection failed - do we have a backup CCF?
     LOG_WARNING("Failed to connect to %s (number %d)", _ccfs[_which].c_str(), _which);
+    SAS::Event cdf_failed(_msg->trail, SASEvent::BILLING_REQUEST_NOT_SENT, 0);
+    cdf_failed.add_var_param(_ccfs[_which]);
+    SAS::report_event(cdf_failed);
+
     if (_which == PRIMARY_CCF && (_ccfs.size() > 1))
     {
       // Yes we do - select it and try again.
       _which = SECONDARY_CCF;
+
+      SAS::Event cdf_failover(_msg->trail, SASEvent::CDF_FAILOVER, 0);
+      cdf_failover.add_var_param(_ccfs[_which]);
+      SAS::report_event(cdf_failover);
+
       send();
     }
     else
