@@ -40,6 +40,8 @@
 #include "peer_message_sender.hpp"
 #include "ralf_transaction.hpp"
 #include "rf.h"
+#include "sas.h"
+#include "ralfsasevent.h"
 
 /* Creates a PeerMessageSender. The object is deleted when:
  *   - we send an ACR to a CCF that responds
@@ -47,7 +49,9 @@
  *
  *   No action should be taken after any of the above happens, as the this pointer becomes invalid.
  */
-PeerMessageSender::PeerMessageSender() : _which(0)
+PeerMessageSender::PeerMessageSender(SAS::TrailId trail) :
+  _which(0),
+  _trail(trail)
 {
 }
 
@@ -77,7 +81,7 @@ void PeerMessageSender::int_send_msg()
 {
   std::string ccf = _ccfs[_which];
   LOG_DEBUG("Sending message to %s (number %d)", ccf.c_str(), _which);
-  RalfTransaction* tsx = new RalfTransaction(_dict, this, _msg);
+  RalfTransaction* tsx = new RalfTransaction(_dict, this, _msg, _trail);
   Rf::AccountingRequest acr(_dict,
                             _diameter_stack,
                             _msg->session_id,
@@ -85,6 +89,12 @@ void PeerMessageSender::int_send_msg()
                             _msg->accounting_record_number,
                             _msg->received_json->FindMember("event")->value);
   acr.send(tsx);
+
+  SAS::Event msg_sent(_msg->trail, SASEvent::BILLING_REQUEST_SENT, 0);
+  msg_sent.add_var_param(_ccfs[_which]);
+  msg_sent.add_static_param(_msg->accounting_record_number);
+  SAS::report_event(msg_sent);
+
 }
 
 /* Called when a message has been sent and a response has been received.
@@ -107,6 +117,9 @@ void PeerMessageSender::send_cb(int result_code,
   {
     // Send failed
     LOG_WARNING("Failed to send ACR to %s (number %d)", _ccfs[_which].c_str(), _which);
+    SAS::Event cdf_failed(_msg->trail, SASEvent::BILLING_REQUEST_NOT_SENT, 0);
+    cdf_failed.add_var_param(_ccfs[_which]);
+    SAS::report_event(cdf_failed);
 
     // Do we have a backup CCF?
     _which++;
@@ -114,6 +127,11 @@ void PeerMessageSender::send_cb(int result_code,
     {
       // Yes we do try again.
       int_send_msg();
+
+      SAS::Event cdf_failover(_msg->trail, SASEvent::CDF_FAILOVER, 0);
+      cdf_failover.add_var_param(_ccfs[_which]);
+      SAS::report_event(cdf_failover);
+
     }
     else
     {

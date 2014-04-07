@@ -39,13 +39,22 @@
 #include "diameterstack.h"
 #include "message.hpp"
 #include "peer_message_sender.hpp"
+#include "sas.h"
 
 class RalfTransaction: public Diameter::Transaction
 {
 public:
   void on_response(Diameter::Message& rsp);
   void on_timeout();
-  RalfTransaction(Diameter::Dictionary* dict, PeerMessageSender* peer_sender, Message* msg): Diameter::Transaction(dict), _peer_sender(peer_sender), _msg(msg) {};
+  RalfTransaction(Diameter::Dictionary* dict,
+                  PeerMessageSender* peer_sender,
+                  Message* msg,
+                  SAS::TrailId trail) :
+    Diameter::Transaction(dict, trail),
+    _peer_sender(peer_sender),
+    _msg(msg)
+  {
+  };
 
 private:
   PeerMessageSender* _peer_sender;

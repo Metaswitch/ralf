@@ -49,9 +49,12 @@
 class PeerMessageSender
 {
 public:
-  PeerMessageSender();
+  PeerMessageSender(SAS::TrailId trail);
   virtual ~PeerMessageSender();
-  virtual void send(Message* msg, SessionManager* sm, Rf::Dictionary* dict, Diameter::Stack* diameter_stack);
+  virtual void send(Message* msg,
+                    SessionManager* sm,
+                    Rf::Dictionary* dict,
+                    Diameter::Stack* diameter_stack);
 
   void send_cb(int result_cdoe, int interim_interval, std::string session_id);
 
@@ -64,6 +67,7 @@ private:
   SessionManager* _sm;
   Rf::Dictionary* _dict;
   Diameter::Stack* _diameter_stack;
+  SAS::TrailId _trail;
 };
 
 #endif /* PEER_MESSAGE_SENDER_HPP_ */

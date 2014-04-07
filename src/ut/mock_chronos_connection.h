@@ -13,8 +13,8 @@ using ::testing::Return;
 class MockChronosConnection : public ChronosConnection
 {
 public:
-  MockChronosConnection(const std::string& chronos) : ChronosConnection(chronos)
-  {  
+MockChronosConnection(const std::string& chronos) : ChronosConnection(chronos, "localhost:10888")
+  {
     ON_CALL(*this, send_post(_, _, _, _, _, _)).
       WillByDefault(DoAll(SetArgReferee<0>("TIMER_ID"),
             Return(HTTP_OK)));
@@ -39,5 +39,5 @@ public:
   MOCK_METHOD5(send_put, HTTPCode(const std::string&, uint32_t, const std::string&, const std::string&, SAS::TrailId));
   MOCK_METHOD5(send_post, HTTPCode(std::string&, uint32_t, const std::string&, const std::string&, SAS::TrailId));
 };
-              
+
 #endif

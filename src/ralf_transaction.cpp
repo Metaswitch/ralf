@@ -35,6 +35,7 @@
  */
 
 #include "ralf_transaction.hpp"
+#include "ralfsasevent.h"
 
 void RalfTransaction::on_timeout()
 {
@@ -53,4 +54,10 @@ void RalfTransaction::on_response(Diameter::Message& rsp)
   rsp.get_i32_from_avp(_dict->ACCT_INTERIM_INTERVAL, interim_interval);
 
   _peer_sender->send_cb(result_code, interim_interval, session_id);
+    SAS::Event succeeded(_msg->trail, SASEvent::BILLING_REQUEST_SUCCEEDED, 0);
+    succeeded.add_var_param(session_id);
+    SAS::report_event(succeeded);
+    SAS::Event rejected(_msg->trail, SASEvent::BILLING_REQUEST_REJECTED, 0);
+    rejected.add_var_param(session_id);
+    SAS::report_event(rejected);
 }

@@ -43,6 +43,7 @@
 #include "log.h"
 #include "peer_message_sender.hpp"
 #include "sas.h"
+#include "ralfsasevent.h"
 #include "peer_message_sender_factory.hpp"
 #include "rapidjson/document.h"
 #include "rapidjson/stringbuffer.h"
@@ -51,14 +52,14 @@
 void SessionManager::handle(Message* msg)
 {
   SessionStore::Session* sess = NULL;
-  SAS::TrailId fake_trail = 0;
 
   if (msg->record_type.isInterim() || msg->record_type.isStop())
   {
     // This relates to an existing session
     sess = _store->get_session_data(msg->call_id,
                                     msg->role,
-                                    msg->function);
+                                    msg->function,
+                                    msg->trail);
 
     if (sess == NULL)
     {
@@ -70,12 +71,17 @@ void SessionManager::handle(Message* msg)
 
     if (msg->record_type.isInterim())
     {
+      SAS::Event continued_rf(msg->trail, SASEvent::CONTINUED_RF_SESSION, 0);
+      continued_rf.add_var_param(sess->session_id);
+      SAS::report_event(continued_rf);
+
       sess->acct_record_number += 1;
       // Update the store with the incremented accounting record number
       bool success = _store->set_session_data(msg->call_id,
                                               msg->role,
                                               msg->function,
-                                              sess);
+                                              sess,
+                                              msg->trail);
       if (!success)
       {
         // Someone has written conflicting data since we read this, so start processing this message again
@@ -84,16 +90,21 @@ void SessionManager::handle(Message* msg)
     }
     else if  (msg->record_type.isStop())
     {
+      SAS::Event end_rf(msg->trail, SASEvent::END_RF_SESSION, 0);
+      end_rf.add_var_param(sess->session_id);
+      SAS::report_event(end_rf);
+
       // Delete the session from the store and cancel the timer
       _store->delete_session_data(msg->call_id,
                                   msg->role,
-                                  msg->function);
+                                  msg->function,
+                                  msg->trail);
       LOG_INFO("Received STOP for session %s, deleting session and timer using timer ID %s", msg->call_id.c_str(), sess->timer_id.c_str());
 
       if (sess->timer_id != "NO_TIMER")
       {
         _timer_conn->send_delete(sess->timer_id,
-                                 fake_trail);
+                                 msg->trail);
       }
     }
 
@@ -121,7 +132,8 @@ void SessionManager::handle(Message* msg)
   };
 
   // go to the Diameter stack
-  PeerMessageSender* pm = _factory->newSender(); // self-deleting
+  // TODO fill in the trail ID from the message.
+  PeerMessageSender* pm = _factory->newSender(0); // self-deleting
   pm->send(msg, this, _dict, _diameter_stack);
 }
 
@@ -162,7 +174,12 @@ std::string SessionManager::create_opaque_data(Message* msg)
 
 void SessionManager::on_ccf_response (bool accepted, uint32_t interim_interval, std::string session_id, int rc, Message* msg)
 {
-  SAS::TrailId fake_trail = 0;
+  // Log this here, as it's the first time we have access to the
+  // session ID for a new session
+  SAS::Event new_rf(msg->trail, SASEvent::NEW_RF_SESSION, 0);
+  new_rf.add_var_param(session_id);
+  SAS::report_event(new_rf);
+
   if (accepted)
   {
     if (msg->record_type.isInterim() &&
@@ -175,9 +192,12 @@ void SessionManager::on_ccf_response (bool accepted, uint32_t interim_interval, 
       _timer_conn->send_put(msg->timer_id,
                             interim_interval,
                             msg->session_refresh_time,
-                            "http://localhost:9888/call-id/"+msg->call_id+"?timer-interim=true",
+                            "/call-id/"+msg->call_id+"?timer-interim=true",
                             create_opaque_data(msg),
-                            fake_trail);
+                            msg->trail);
+      SAS::Event updated_timer(msg->trail, SASEvent::INTERIM_TIMER_RENEWED, 0);
+      updated_timer.add_static_param(interim_interval);
+      SAS::report_event(updated_timer);
     }
     else if (msg->record_type.isStart())
     {
@@ -188,10 +208,13 @@ void SessionManager::on_ccf_response (bool accepted, uint32_t interim_interval, 
         _timer_conn->send_post(timer_id,  // Chronos returns a timer ID which is filled in to this parameter
                                interim_interval, // interval
                                msg->session_refresh_time, // repeat-for
-                               "http://localhost:9888/call-id/"+msg->call_id+"?timer-interim=true",
+                               "/call-id/"+msg->call_id+"?timer-interim=true",
                                create_opaque_data(msg),
-                               fake_trail);
+                               msg->trail);
       };
+      SAS::Event new_timer(msg->trail, SASEvent::INTERIM_TIMER_CREATED, 0);
+      new_timer.add_static_param(interim_interval);
+      SAS::report_event(new_timer);
 
       LOG_INFO("Writing session to store");
       SessionStore::Session* sess = new SessionStore::Session();
@@ -209,7 +232,8 @@ void SessionManager::on_ccf_response (bool accepted, uint32_t interim_interval, 
       _store->set_session_data(msg->call_id,
                                msg->role,
                                msg->function,
-                               sess);
+                               sess,
+                               msg->trail);
       delete sess;
     }
 
@@ -226,7 +250,8 @@ void SessionManager::on_ccf_response (bool accepted, uint32_t interim_interval, 
         LOG_INFO("Session for %s received 5002 error from CDF, deleting", msg->call_id.c_str());
         _store->delete_session_data(msg->call_id,
                                     msg->role,
-                                    msg->function);
+                                    msg->function,
+                                    msg->trail);
       }
       else if (!msg->timer_interim)
       {
@@ -247,9 +272,9 @@ void SessionManager::on_ccf_response (bool accepted, uint32_t interim_interval, 
           _timer_conn->send_put(msg->timer_id,
                                 interim_interval,
                                 msg->session_refresh_time,
-                                "http://localhost:9888/call-id/"+msg->call_id+"?timer-interim=true",
+                                "/call-id/"+msg->call_id+"?timer-interim=true",
                                 create_opaque_data(msg),
-                                fake_trail);
+                                msg->trail);
         }
       }
     }

@@ -122,7 +122,7 @@ TEST_F(RfTest, DISABLED_SuccessTransactionTest)
 {
   Diameter::Stack* diameter_stack = Diameter::Stack::get_instance();
   Rf::Dictionary* dict = new Rf::Dictionary();
-  RalfTransaction tsx(dict, NULL, NULL);
+  RalfTransaction tsx(dict, NULL, NULL, 0);
   diameter_stack->start();
   std::string body = "{\"peers\": {\"ccf\": [\"ec2-54-197-167-141.compute-1.amazonaws.com\"]}, \"event\": {\"Accounting-Record-Type\": 1, \"Acct-Interim-Interval\": 300, \"Result-Code\": 2001}}";
   rapidjson::Document* body_doc = new rapidjson::Document();
@@ -142,7 +142,7 @@ TEST_F(RfTest, DISABLED_FailureTransactionTest)
 {
   Diameter::Stack* diameter_stack = Diameter::Stack::get_instance();
   Rf::Dictionary* dict = new Rf::Dictionary();
-  RalfTransaction tsx(dict, NULL, NULL);
+  RalfTransaction tsx(dict, NULL, NULL, 0);
   diameter_stack->start();
   std::string body = "{\"peers\": {\"ccf\": [\"ec2-54-197-167-141.compute-1.amazonaws.com\"]}, \"event\": {\"Accounting-Record-Type\": 1, \"Acct-Interim-Interval\": 300, \"Result-Code\": 3001}}";  rapidjson::Document* body_doc = new rapidjson::Document();
   body_doc->Parse<0>(body.c_str());
@@ -161,7 +161,7 @@ TEST_F(RfTest, DISABLED_TimeoutTransactionTest)
 {
   Diameter::Stack* diameter_stack = Diameter::Stack::get_instance();
   Rf::Dictionary* dict = new Rf::Dictionary();
-  RalfTransaction tsx(dict, NULL, NULL);
+  RalfTransaction tsx(dict, NULL, NULL, 0);
   diameter_stack->start();
   tsx.on_timeout();
   // assert that a fake SessionManager was called with accepted = false

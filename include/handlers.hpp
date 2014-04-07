@@ -42,11 +42,17 @@
 #include "httpstack.h"
 #include "message.hpp"
 #include "session_manager.hpp"
+#include "sas.h"
+#include "ralfsasevent.h"
+
+const std::string TIMER_INTERIM_PARAM = "timer-interim";
 
 class PingHandler : public HttpStack::Handler
 {
 public:
-  PingHandler(HttpStack::Request& req) : HttpStack::Handler(req) {};
+  PingHandler(HttpStack::Request& req, SAS::TrailId trail) :
+    HttpStack::Handler(req, trail)
+  {};
   void run();
 };
 
@@ -58,12 +64,39 @@ struct BillingControllerConfig
 class BillingControllerHandler : public HttpStack::Handler
 {
 public:
-  BillingControllerHandler(HttpStack::Request& req, const BillingControllerConfig* cfg) :  HttpStack::Handler(req),  _sess_mgr(cfg->mgr) {};
+  BillingControllerHandler(HttpStack::Request& req,
+                           const BillingControllerConfig* cfg,
+                           SAS::TrailId trail) :
+    HttpStack::Handler(req, trail), _sess_mgr(cfg->mgr)
+  {};
   void run();
-  static Message* parse_body(std::string call_id, std::string timer_param, std::string reqbody);
+  static Message* parse_body(std::string call_id, bool timer_interim, std::string reqbody, SAS::TrailId trail);
 private:
   inline std::string call_id() {return _req.file();};
   SessionManager* _sess_mgr;
+};
+
+class BillingControllerHandlerFactory :
+  public HttpStack::ConfiguredHandlerFactory<BillingControllerHandler, BillingControllerConfig>
+{
+public:
+  BillingControllerHandlerFactory(BillingControllerConfig* cfg) :
+    ConfiguredHandlerFactory<BillingControllerHandler, BillingControllerConfig>(cfg)
+  {}
+  virtual ~BillingControllerHandlerFactory() {}
+
+  SASEvent::HttpLogLevel sas_log_level(HttpStack::Request& req)
+  {
+    // Log timer pops from chronos at detail level rather than protocol.
+    if (req.param(TIMER_INTERIM_PARAM) == "true")
+    {
+      return SASEvent::HttpLogLevel::DETAIL;
+    }
+    else
+    {
+      return SASEvent::HttpLogLevel::PROTOCOL;
+    }
+  }
 };
 
 #endif
