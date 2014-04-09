@@ -124,7 +124,7 @@ GMOCK_SRCS_ := $(GMOCK_DIR)/src/*.cc $(GMOCK_HEADERS)
 
 COVERAGEFLAGS = $(OBJ_DIR_TEST) --object-directory=$(shell pwd) \
                 --root=$(shell pwd) --exclude=^ut/ \
-                --sort-percentage --exclude-lines
+                --sort-percentage
 
 VGFLAGS = --suppressions=$(VG_SUPPRESS) \
           --gen-suppressions=all \
