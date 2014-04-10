@@ -76,15 +76,18 @@ void BillingControllerHandler::run()
 
   if (msg == NULL)
   {
-    SAS::Event rejected(msg->trail, SASEvent::REQUEST_REJECTED, 0);
+    SAS::Event rejected(trail(), SASEvent::REQUEST_REJECTED, 0);
     std::string message = "Invalid JSON";
     rejected.add_var_param(message);
     SAS::report_event(rejected);
     send_http_reply(400);
-    return;
   }
-  send_http_reply(200);
-  _sess_mgr->handle(msg);
+  else
+  {
+    send_http_reply(200);
+    _sess_mgr->handle(msg);
+  }
+
   delete this;
 }
 //LCOV_EXCL_STOP
