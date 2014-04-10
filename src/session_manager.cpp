@@ -210,6 +210,8 @@ void SessionManager::on_ccf_response (bool accepted, uint32_t interim_interval, 
     else if (msg->record_type.isStart())
     {
       // New message from Sprout - create a new timer then insert the session into the store
+
+      // Set the timer id initially to NO_TIMER - this isn't included in the path of the POST
       std::string timer_id = NO_TIMER;
 
       if (msg->session_refresh_time > interim_interval)
@@ -308,6 +310,8 @@ void SessionManager::on_ccf_response (bool accepted, uint32_t interim_interval, 
   delete msg;
 }
 
+// Update the timer ID for the session. This is a best effect change - if there's
+// contention then this update will fail
 void SessionManager::update_timer_id(Message* msg, std::string timer_id)
 {
   SessionStore::Session* sess = _store->get_session_data(msg->call_id,
