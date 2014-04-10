@@ -220,14 +220,10 @@ distclean: clean
 $(OBJ_DIR_TEST)/gtest-all.o : $(GTEST_SRCS_)
 	$(CXX) $(CPPFLAGS) -I$(GTEST_DIR) -I$(GTEST_DIR)/include -I$(GMOCK_DIR) -I$(GMOCK_DIR)/include \
             -c $(GTEST_DIR)/src/gtest-all.cc -o $@
-$(OBJ_DIR_TEST)/gtest-all.depends : $(OBJ_DIR_TEST)
-	touch $@
 
 $(OBJ_DIR_TEST)/gmock-all.o : $(GMOCK_SRCS_)
 	$(CXX) $(CPPFLAGS) -I$(GTEST_DIR) -I$(GTEST_DIR)/include -I$(GMOCK_DIR) -I$(GMOCK_DIR)/include \
             -c $(GMOCK_DIR)/src/gmock-all.cc -o $@
-$(OBJ_DIR_TEST)/gmock-all.depends : $(OBJ_DIR_TEST)
-	touch $@
 
 # Build rule for our interposer.
 $(OBJ_DIR_TEST)/test_interposer.so: ut/test_interposer.cpp ut/test_interposer.hpp
