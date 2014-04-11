@@ -57,6 +57,7 @@ public:
   bool isStart() {return (_type == 2);}
   bool isInterim() {return (_type == 3);}
   bool isStop() {return (_type == 4);}
+  uint32_t code() {return _type;}
 
 private:
   uint32_t _type;
