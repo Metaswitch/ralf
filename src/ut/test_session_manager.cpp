@@ -159,6 +159,61 @@ TEST_F(SessionManagerTest, SimpleTest)
   delete memstore;
 }
 
+TEST_F(SessionManagerTest, TimerIDTest)
+{
+  LocalStore* memstore = new LocalStore();
+  SessionStore* store = new SessionStore(memstore);
+  DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory();
+  MockChronosConnection* fake_chronos = new MockChronosConnection("http://localhost:1234");
+  SessionManager* mgr = new SessionManager(store, _dict, factory, fake_chronos, _diameter_stack);
+  SessionStore::Session* sess = NULL;
+
+  Message* start_msg = new Message("CALL_ID_ONE", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(2), 300, FAKE_TRAIL_ID);
+  start_msg->ccfs.push_back("10.0.0.1");
+  Message* interim_msg = new Message("CALL_ID_ONE", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(3), 0, FAKE_TRAIL_ID);
+  Message* stop_msg = new Message("CALL_ID_ONE", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(4), 0, FAKE_TRAIL_ID);
+
+  // START should put a session in the store
+  mgr->handle(start_msg);
+
+  sess = store->get_session_data("CALL_ID_ONE", ORIGINATING, SCSCF, FAKE_TRAIL_ID);
+  ASSERT_NE((SessionStore::Session*)NULL, sess);
+  EXPECT_EQ(1u, sess->acct_record_number);
+
+  // Change the stored timer - this means that the chronos PUT will return a
+  // clashing timer, triggering the session manager to update the stored timer ID
+  sess->timer_id = "NEW_TIMER";
+  store->set_session_data("CALL_ID_ONE", ORIGINATING, SCSCF, sess, FAKE_TRAIL_ID);
+
+  delete sess;
+  sess = NULL;
+
+  // INTERIM should keep that session in the store
+  mgr->handle(interim_msg);
+
+  sess = store->get_session_data("CALL_ID_ONE", ORIGINATING, SCSCF, FAKE_TRAIL_ID);
+  ASSERT_NE((SessionStore::Session*)NULL, sess);
+  EXPECT_EQ(2u, sess->acct_record_number);
+
+  // The timer id should have been updated to match the id returned from the PUT.
+  EXPECT_EQ("TIMER_ID", sess->timer_id);
+
+  delete sess;
+  sess = NULL;
+
+  // STOP should remove the session from the store
+  mgr->handle(stop_msg);
+
+  sess = store->get_session_data("CALL_ID_ONE", ORIGINATING, SCSCF, FAKE_TRAIL_ID);
+  ASSERT_EQ(NULL, sess);
+
+  delete mgr;
+  delete factory;
+  delete fake_chronos;
+  delete store;
+  delete memstore;
+}
+
 TEST_F(SessionManagerTest, TimeUpdateTest)
 {
   LocalStore* memstore = new LocalStore();
@@ -315,6 +370,55 @@ TEST_F(SessionManagerTest, CDFInterimFailureTest)
   sess = store->get_session_data("CALL_ID_FOUR", ORIGINATING, SCSCF, FAKE_TRAIL_ID);
   ASSERT_NE((SessionStore::Session*)NULL, sess);
   EXPECT_EQ(2u, sess->acct_record_number);
+  delete sess;
+  sess = NULL;
+
+  delete mgr;
+  delete factory;
+  delete fail_mgr;
+  delete fail_factory;
+  delete fake_chronos;
+  delete store;
+  delete memstore;
+}
+
+TEST_F(SessionManagerTest, CDFInterimFailureWithTimerIdChangeTest)
+{
+  LocalStore* memstore = new LocalStore();
+  SessionStore* store = new SessionStore(memstore);
+  DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory();
+  MockChronosConnection* fake_chronos = new MockChronosConnection("http://localhost:1234");
+  SessionManager* mgr = new SessionManager(store, _dict, factory, fake_chronos, _diameter_stack);
+  DummyErrorPeerMessageSenderFactory* fail_factory = new DummyErrorPeerMessageSenderFactory();
+  SessionManager* fail_mgr = new SessionManager(store, _dict, fail_factory, fake_chronos, _diameter_stack);
+  SessionStore::Session* sess = NULL;
+
+  Message* start_msg = new Message("CALL_ID_FOUR", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(2), 300, FAKE_TRAIL_ID);
+  Message* interim_msg = new Message("CALL_ID_FOUR", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(3), 300, FAKE_TRAIL_ID);
+
+  mgr->handle(start_msg);
+  sess = store->get_session_data("CALL_ID_FOUR", ORIGINATING, SCSCF, FAKE_TRAIL_ID);
+
+  ASSERT_NE((SessionStore::Session*)NULL, sess);
+  EXPECT_EQ(1u, sess->acct_record_number);
+
+  // Change the stored timer - this means that the chronos PUT will return a
+  // clashing timer, triggering the session manager to update the stored timer ID
+  sess->timer_id = "NEW_TIMER";
+  store->set_session_data("CALL_ID_FOUR", ORIGINATING, SCSCF, sess, FAKE_TRAIL_ID);
+
+  delete sess;
+  sess = NULL;
+
+  // When an INTERIM message fails with an error other than 5002 "Session unknown", we should still keep the session
+  fail_mgr->handle(interim_msg);
+  sess = store->get_session_data("CALL_ID_FOUR", ORIGINATING, SCSCF, FAKE_TRAIL_ID);
+  ASSERT_NE((SessionStore::Session*)NULL, sess);
+  EXPECT_EQ(2u, sess->acct_record_number);
+
+  // The timer id should have been updated to match the id returned from the PUT.
+  EXPECT_EQ("TIMER_ID", sess->timer_id);
+
   delete sess;
   sess = NULL;
 

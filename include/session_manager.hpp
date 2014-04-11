@@ -61,6 +61,13 @@ public:
 
 private:
   std::string create_opaque_data(Message* msg);
+  void update_timer_id(Message* msg, std::string timer_id);
+  void send_chronos_update(std::string& timer_id,
+                           uint32_t interim_interval,
+                           uint32_t session_refresh_time,
+                           const std::string& callback_uri,
+                           const std::string& opaque_data,
+                           SAS::TrailId trail);
 
   SessionStore* _store;
   ChronosConnection* _timer_conn;
