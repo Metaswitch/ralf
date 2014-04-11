@@ -82,6 +82,7 @@ get_settings()
 {
   # Set up defaults and then pull in the settings for this node.
   sas_server=0.0.0.0
+  num_http_threads=$(($(grep processor /proc/cpuinfo | wc -l) * 50))
   . /etc/clearwater/config
 
   # Set up a default cluster_settings file if it does not exist.
@@ -124,7 +125,8 @@ do_start()
         # enable gdb to dump a parent homestead process's stack
         echo 0 > /proc/sys/kernel/yama/ptrace_scope
         get_settings
-        DAEMON_ARGS="-a $log_directory
+        DAEMON_ARGS="--http-threads $num_http_threads
+                     -a $log_directory
                      -F $log_directory
                      -L $log_level
                      --sas $sas_server,$NAME@$public_hostname"

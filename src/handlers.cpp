@@ -76,21 +76,25 @@ void BillingControllerHandler::run()
 
   if (msg == NULL)
   {
-    SAS::Event rejected(msg->trail, SASEvent::REQUEST_REJECTED, 0);
+    SAS::Event rejected(trail(), SASEvent::REQUEST_REJECTED, 0);
     std::string message = "Invalid JSON";
     rejected.add_var_param(message);
     SAS::report_event(rejected);
     send_http_reply(400);
-    return;
   }
-  send_http_reply(200);
-  _sess_mgr->handle(msg);
+  else
+  {
+    send_http_reply(200);
+    _sess_mgr->handle(msg);
+  }
+
   delete this;
 }
 //LCOV_EXCL_STOP
 
 Message* BillingControllerHandler::parse_body(std::string call_id, bool timer_interim, std::string reqbody, SAS::TrailId trail)
 {
+
   rapidjson::Document* body = new rapidjson::Document();
   std::string bodys = reqbody;
   body->Parse<0>(bodys.c_str());
@@ -98,6 +102,25 @@ Message* BillingControllerHandler::parse_body(std::string call_id, bool timer_in
   uint32_t session_refresh_time = 0;
   role_of_node_t role_of_node;
   node_functionality_t node_functionality;
+
+  // Log the body early so we still see it if we later determine it's invalid.
+  if (Log::enabled(Log::DEBUG_LEVEL))
+  {
+    if (body->HasParseError())
+    {
+      // Print the body from the source string.  We can't pretty print an
+      // invalid document.
+      LOG_DEBUG("Handling request, Body:\n%s", reqbody.c_str());
+    }
+    else
+    {
+      rapidjson::StringBuffer s;
+      rapidjson::PrettyWriter<rapidjson::StringBuffer> w(s);
+      body->Accept(w);
+      LOG_DEBUG("Handling request, body:\n%s", s.GetString());
+    }
+  }
+
 
   // Verify that the body is correct JSON with an "event" element
   if (!(*body).IsObject() ||
@@ -204,18 +227,9 @@ Message* BillingControllerHandler::parse_body(std::string call_id, bool timer_in
     }
   }
 
-  if (Log::enabled(Log::DEBUG_LEVEL))
-  {
-    // LCOV_EXCL_START - Debug logging is not enabled in UT
-    rapidjson::StringBuffer s;
-    rapidjson::PrettyWriter<rapidjson::StringBuffer> w(s);
-    body->Accept(w);
-    LOG_DEBUG("Handling request, body:\n%s", s.GetString());
-    // LCOV_EXCL_STOP
-  }
-
   SAS::Event incoming(trail, SASEvent::INCOMING_REQUEST, 0);
-  incoming.add_static_param(role_of_node);
+  incoming.add_static_param(record_type.code());
+  incoming.add_static_param(node_functionality);
   SAS::report_event(incoming);
 
   Message* msg = new Message(call_id,

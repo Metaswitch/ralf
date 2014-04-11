@@ -51,7 +51,7 @@ cat > /var/lib/ralf/ralf.conf <<EOF
 # -------- Local ---------
 
 Identity = "$public_hostname";
-Realm = "$(echo $hs_hostname | sed -e 's/:[^:]*$//g')";
+Realm = "$(echo $ralf_hostname | sed -e 's/:[^:]*$//g')";
 
 # TLS configuration
 TLS_Cred = "/var/lib/ralf/cert.pem", "/var/lib/ralf/privkey.pem";
@@ -80,3 +80,8 @@ LoadExtension = "/usr/share/clearwater/lib/freeDiameter/dict_dcca.fdx";
 LoadExtension = "/usr/share/clearwater/lib/freeDiameter/dict_dcca_3gpp.fdx";
 
 EOF
+
+for ccf in $(echo $ccf_hostnames | tr "," "\n")
+do
+  echo "ConnectPeer = \"$ccf\" { No_TLS; };" >> /var/lib/ralf/ralf.conf
+done

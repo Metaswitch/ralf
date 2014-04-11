@@ -108,7 +108,12 @@ TEST_F(RfTest, CreateMessageTest)
   body_doc->Parse<0>(body.c_str());
   ASSERT_TRUE(body_doc->IsObject());
 
-  Rf::AccountingRequest acr = Rf::AccountingRequest(_dict, _real_stack, "example.com", 3u, body_doc->FindMember("event")->value);
+  Rf::AccountingRequest acr = Rf::AccountingRequest(_dict,
+                                                    _real_stack,
+                                                    "session-id",
+                                                    "example.com",
+                                                    3u,
+                                                    body_doc->FindMember("event")->value);
   Diameter::Message msg = launder_message(acr);
   acr = Rf::AccountingRequest(msg);
 };
@@ -123,7 +128,12 @@ TEST_F(RfTest, DISABLED_SuccessTransactionTest)
   rapidjson::Document* body_doc = new rapidjson::Document();
   body_doc->Parse<0>(body.c_str());
   ASSERT_TRUE(body_doc->IsObject());
-  Rf::AccountingRequest* msg = new Rf::AccountingRequest(dict, diameter_stack, "example.com", 3u, body_doc->FindMember("event")->value);
+  Rf::AccountingRequest* msg = new Rf::AccountingRequest(dict,
+                                                         diameter_stack,
+                                                         "session_id",
+                                                         "example.com",
+                                                         3u,
+                                                         body_doc->FindMember("event")->value);
   tsx.on_response(*msg);
   // assert that a fake SessionManager was called with accepted = true
 };
@@ -137,7 +147,12 @@ TEST_F(RfTest, DISABLED_FailureTransactionTest)
   std::string body = "{\"peers\": {\"ccf\": [\"ec2-54-197-167-141.compute-1.amazonaws.com\"]}, \"event\": {\"Accounting-Record-Type\": 1, \"Acct-Interim-Interval\": 300, \"Result-Code\": 3001}}";  rapidjson::Document* body_doc = new rapidjson::Document();
   body_doc->Parse<0>(body.c_str());
   ASSERT_TRUE(body_doc->IsObject());
-  Rf::AccountingRequest* msg = new Rf::AccountingRequest(dict, diameter_stack, "example.com", 3u, body_doc->FindMember("event")->value);
+  Rf::AccountingRequest* msg = new Rf::AccountingRequest(dict,
+                                                         diameter_stack,
+                                                         "session_id",
+                                                         "example.com",
+                                                         3u,
+                                                         body_doc->FindMember("event")->value);
   tsx.on_response(*msg);
   // assert that a fake SessionManager was called with accepted = false
 };

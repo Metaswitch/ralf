@@ -56,13 +56,13 @@ public:
                     Rf::Dictionary* dict,
                     Diameter::Stack* diameter_stack);
 
+  void send_cb(int result_cdoe, int interim_interval, std::string session_id);
+
 private:
-  void send();
-  static void fd_add_cb(peer_info* peer, void* this_ptr);
-  void fd_add_cb(peer_info* peer);
   void int_send_msg();
+
   Message* _msg;
-  int _which;
+  unsigned int _which;
   std::vector<std::string> _ccfs;
   SessionManager* _sm;
   Rf::Dictionary* _dict;

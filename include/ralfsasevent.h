@@ -39,7 +39,7 @@
 
 #include "sasevent.h"
 
-namespace SASEvent 
+namespace SASEvent
 {
   //----------------------------------------------------------------------------
   // Ralf events
@@ -67,4 +67,3 @@ namespace SASEvent
 
 
 #endif
-

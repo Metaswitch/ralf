@@ -104,8 +104,11 @@ void SessionManager::handle(Message* msg)
                                   msg->trail);
       LOG_INFO("Received STOP for session %s, deleting session and timer using timer ID %s", msg->call_id.c_str(), sess->timer_id.c_str());
 
-      _timer_conn->send_delete(sess->timer_id,
-                               msg->trail);
+      if (sess->timer_id != "NO_TIMER")
+      {
+        _timer_conn->send_delete(sess->timer_id,
+                                 msg->trail);
+      }
     }
 
     msg->accounting_record_number = sess->acct_record_number;
@@ -132,8 +135,7 @@ void SessionManager::handle(Message* msg)
   };
 
   // go to the Diameter stack
-  // TODO fill in the trail ID from the message.
-  PeerMessageSender* pm = _factory->newSender(0); // self-deleting
+  PeerMessageSender* pm = _factory->newSender(msg->trail); // self-deleting
   pm->send(msg, this, _dict, _diameter_stack);
 }
 

@@ -47,7 +47,7 @@
 
 namespace Rf {
 
-const std::vector<std::string> VENDORS { "", "3GPP" };
+const std::vector<std::string> VENDORS { "3GPP", "" };
 
 class AccountingRecordType {
 public:
@@ -57,6 +57,7 @@ public:
   bool isStart() {return (_type == 2);}
   bool isInterim() {return (_type == 3);}
   bool isStop() {return (_type == 4);}
+  uint32_t code() {return _type;}
 
 private:
   uint32_t _type;
@@ -77,6 +78,7 @@ class AccountingRequest : public Diameter::Message
 public:
   AccountingRequest(const Dictionary* dict,
                     Diameter::Stack* diameter_stack,
+                    const std::string& session_id,
                     const std::string& dest_host,
                     const uint32_t& record_number,
                     const rapidjson::Value& contents);

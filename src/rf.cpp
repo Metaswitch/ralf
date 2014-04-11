@@ -52,6 +52,7 @@ Dictionary::Dictionary() :
 // this object could be the "event" part of the original HTTP request received by Ralf.
 AccountingRequest::AccountingRequest(const Dictionary* dict,
                                      Diameter::Stack* diameter_stack,
+                                     const std::string& session_id,
                                      const std::string& dest_host,
                                      const uint32_t& record_number,
                                      const rapidjson::Value& contents) :
@@ -60,7 +61,14 @@ AccountingRequest::AccountingRequest(const Dictionary* dict,
   LOG_DEBUG("Building an Accounting-Request");
 
   // Fill in the default fields
-  add_new_session_id();
+  if (session_id == "")
+  {
+    add_new_session_id();
+  }
+  else
+  {
+    add_session_id(session_id);
+  }
   add_origin();
 
   // Fill in contributed fields
@@ -115,7 +123,7 @@ AccountingRequest::AccountingRequest(const Dictionary* dict,
     }
     catch (Diameter::Stack::Exception e)
     {
-      LOG_WARNING("AVP %s not recognised, ignoring", it->value.GetString());
+      LOG_WARNING("AVP %s not recognised, ignoring", it->name.GetString());
     }
   }   
 }
