@@ -228,7 +228,8 @@ Message* BillingControllerHandler::parse_body(std::string call_id, bool timer_in
   }
 
   SAS::Event incoming(trail, SASEvent::INCOMING_REQUEST, 0);
-  incoming.add_static_param(role_of_node);
+  incoming.add_static_param(record_type.code());
+  incoming.add_static_param(node_functionality);
   SAS::report_event(incoming);
 
   Message* msg = new Message(call_id,
