@@ -58,14 +58,12 @@ void RalfTransaction::on_response(Diameter::Message& rsp)
     SAS::Event succeeded(_msg->trail, SASEvent::BILLING_REQUEST_SUCCEEDED, 0);
     succeeded.add_var_param(session_id);
     SAS::report_event(succeeded);
-    _sm->on_ccf_response(true, interim_interval, session_id, result_code, _msg);
   }
   else
   {
     SAS::Event rejected(_msg->trail, SASEvent::BILLING_REQUEST_REJECTED, 0);
     rejected.add_var_param(session_id);
     SAS::report_event(rejected);
-    _sm->on_ccf_response(false, interim_interval, session_id, result_code, _msg);
   }
 
   _peer_sender->send_cb(result_code, interim_interval, session_id);
