@@ -132,8 +132,7 @@ void SessionManager::handle(Message* msg)
   };
 
   // go to the Diameter stack
-  // TODO fill in the trail ID from the message.
-  PeerMessageSender* pm = _factory->newSender(0); // self-deleting
+  PeerMessageSender* pm = _factory->newSender(msg->trail); // self-deleting
   pm->send(msg, this, _dict, _diameter_stack);
 }
 
