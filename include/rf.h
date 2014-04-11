@@ -47,7 +47,7 @@
 
 namespace Rf {
 
-const std::vector<std::string> VENDORS { "", "3GPP" };
+const std::vector<std::string> VENDORS { "3GPP", "" };
 
 class AccountingRecordType {
 public:
