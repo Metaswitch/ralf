@@ -30,4 +30,4 @@
 	url = git@github.com:Metaswitch/jsoncpp-upstream.git
 [submodule "modules/gcovr"]
 	path = modules/gcovr
-	url = https://github.com/Metaswitch/gcovr-upstream
+	url = git@github.com:gcovr/gcovr.git
