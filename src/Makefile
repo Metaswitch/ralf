@@ -33,7 +33,8 @@ TARGET_SOURCES := accesslogger.cpp \
                   statistic.cpp \
                   utils.cpp \
                   zmq_lvc.cpp \
-                  log.cpp
+                  log.cpp \
+                  load_monitor.cpp
 
 TARGET_SOURCES_BUILD := main.cpp
 
@@ -41,7 +42,7 @@ TARGET_SOURCES_TEST := test_sessionstore.cpp \
                        test_session_manager.cpp \
                        test_rf.cpp \
                        test_handlers.cpp \
-											 test_main.cpp
+                       test_main.cpp
 
 TARGET_EXTRA_OBJS_TEST := gmock-all.o \
                           gtest-all.o

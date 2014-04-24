@@ -51,6 +51,7 @@
 #include "rf.h"
 #include "peer_message_sender_factory.hpp"
 #include "sas.h"
+#include "load_monitor.h"
 
 struct options
 {
@@ -267,6 +268,11 @@ int main(int argc, char**argv)
             options.sas_server,
             sas_write);
 
+  LoadMonitor* load_monitor = new LoadMonitor(100000, // Initial target latency (us)
+                                              20, // Maximum token bucket size.
+                                              10.0, // Initial token fill rate (per sec).
+                                              10.0); // Minimum token fill rate (pre sec).
+
   Diameter::Stack* diameter_stack = Diameter::Stack::get_instance();
   Rf::Dictionary* dict = NULL;
   diameter_stack->initialize();
@@ -288,7 +294,7 @@ int main(int argc, char**argv)
   try
   {
     http_stack->initialize();
-    http_stack->configure(options.http_address, options.http_port, options.http_threads, access_logger);
+    http_stack->configure(options.http_address, options.http_port, options.http_threads, access_logger, load_monitor);
     http_stack->register_handler("^/ping$",
                                  &ping_handler_factory);
     http_stack->register_handler("^/call-id/[^/]*$",
@@ -311,6 +317,8 @@ int main(int argc, char**argv)
   {
     fprintf(stderr, "Caught HttpStack::Exception - %s - %d\n", e._func, e._rc);
   }
+
+  delete load_monitor; load_monitor = NULL;
 
   signal(SIGTERM, SIG_DFL);
   sem_destroy(&term_sem);
