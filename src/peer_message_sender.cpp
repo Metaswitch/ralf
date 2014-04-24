@@ -81,6 +81,12 @@ void PeerMessageSender::int_send_msg()
 {
   std::string ccf = _ccfs[_which];
   LOG_DEBUG("Sending message to %s (number %d)", ccf.c_str(), _which);
+
+  SAS::Event msg_sent(_msg->trail, SASEvent::BILLING_REQUEST_SENT, 0);
+  msg_sent.add_var_param(ccf);
+  msg_sent.add_static_param(_msg->accounting_record_number);
+  SAS::report_event(msg_sent);
+
   RalfTransaction* tsx = new RalfTransaction(_dict, this, _msg, _trail);
   Rf::AccountingRequest acr(_dict,
                             _diameter_stack,
@@ -88,13 +94,11 @@ void PeerMessageSender::int_send_msg()
                             ccf,
                             _msg->accounting_record_number,
                             _msg->received_json->FindMember("event")->value);
-  acr.send(tsx);
 
-  SAS::Event msg_sent(_msg->trail, SASEvent::BILLING_REQUEST_SENT, 0);
-  msg_sent.add_var_param(_ccfs[_which]);
-  msg_sent.add_static_param(_msg->accounting_record_number);
-  SAS::report_event(msg_sent);
-
+  // Send the message to freeDiameter.  This object could get modified by a
+  // callback (including being deleted) so is not safe to reference after this
+  // point.
+  acr.send(tsx); return;
 }
 
 /* Called when a message has been sent and a response has been received.
@@ -111,7 +115,7 @@ void PeerMessageSender::send_cb(int result_code,
   {
     // Send succeeded, notify the SessionManager.
     _sm->on_ccf_response(result_code == ER_DIAMETER_SUCCESS, interim_interval, session_id, result_code, _msg);
-    delete this;
+    delete this; return;
   }
   else
   {
@@ -125,20 +129,20 @@ void PeerMessageSender::send_cb(int result_code,
     _which++;
     if (_which < _ccfs.size())
     {
-      // Yes we do try again.
-      int_send_msg();
-
       SAS::Event cdf_failover(_msg->trail, SASEvent::CDF_FAILOVER, 0);
       cdf_failover.add_var_param(_ccfs[_which]);
       SAS::report_event(cdf_failover);
 
+      // Yes we do try again.  Must be the last thing we do (as this object
+      // could be modified/freed in a callback after this point).
+      int_send_msg(); return;
     }
     else
     {
       // No, we've run out, fail
       LOG_ERROR("Failed to connect to all CCFs, message not sent");
       _sm->on_ccf_response(false, 0, "", result_code, _msg);
-      delete this;
+      delete this; return;
     }
   }
 }
