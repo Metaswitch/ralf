@@ -328,6 +328,8 @@ void SessionManager::update_timer_id(Message* msg, std::string timer_id)
                            msg->function,
                            sess,
                            msg->trail);
+
+  delete sess; sess = NULL;
 }
 
 void SessionManager::send_chronos_update(std::string& timer_id,
