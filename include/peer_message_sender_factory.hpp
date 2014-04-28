@@ -38,9 +38,9 @@
 
 #include "peer_message_sender.hpp"
 
-class PeerMessageSenderFactory {
+class PeerMessageSenderFactory
+{
 public:
-
   PeerMessageSenderFactory(const std::string& dest_realm) : _dest_realm(dest_realm) {};
 
   virtual PeerMessageSender* newSender(SAS::TrailId trail)

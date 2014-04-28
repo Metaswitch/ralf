@@ -34,12 +34,11 @@ TARGET_SOURCES := accesslogger.cpp \
                   utils.cpp \
                   zmq_lvc.cpp \
                   log.cpp \
-                  load_monitor.cpp \
-									baseresolver.cpp \
-									diameterresolver.cpp \
-									dnscachedresolver.cpp \
-									dnsparser.cpp \
-									realmmanager.cpp
+                  baseresolver.cpp \
+                  diameterresolver.cpp \
+                  dnscachedresolver.cpp \
+                  dnsparser.cpp \
+                  realmmanager.cpp
 
 TARGET_SOURCES_BUILD := main.cpp
 
@@ -111,9 +110,9 @@ LDFLAGS += -lzmq \
            -lsas \
            -lcurl \
            -lpthread \
-					 -lcares \
-					 -lboost_regex \
-					 -lboost_date_time
+           -lcares \
+           -lboost_regex \
+           -lboost_date_time
 
 # Test build uses just-built libraries, which may not be installed
 LDFLAGS_TEST += -Wl,-rpath=$(ROOT)/usr/lib

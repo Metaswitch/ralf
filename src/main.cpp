@@ -133,7 +133,7 @@ int init_options(int argc, char**argv, struct options& options)
       // TODO: Parse optional HTTP port.
       break;
 
-    case 'S':
+    case 's':
     {
       std::vector<std::string> sas_options;
       Utils::split_string(std::string(optarg), ',', sas_options, 0, false);
@@ -184,7 +184,7 @@ int init_options(int argc, char**argv, struct options& options)
       return -1;
 
     default:
-      printf("Unknown option.  Run with --help for options.\n");
+      printf("Unknown option: %d.  Run with --help for options.\n", opt);
       return -1;
     }
   }
