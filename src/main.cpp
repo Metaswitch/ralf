@@ -319,7 +319,6 @@ int main(int argc, char**argv)
   DnsCachedResolver* dns_resolver = new DnsCachedResolver("127.0.0.1");
   DiameterResolver* diameter_resolver = new DiameterResolver(dns_resolver, af);
   RealmManager* realm_manager = new RealmManager(diameter_stack,
-                                                 "",
                                                  options.billing_realm,
                                                  options.max_peers,
                                                  diameter_resolver);
@@ -337,6 +336,8 @@ int main(int argc, char**argv)
   }
 
   delete realm_manager; realm_manager = NULL;
+  delete diameter_resolver; diameter_resolver = NULL;
+  delete dns_resolver; dns_resolver = NULL;
 
   delete load_monitor; load_monitor = NULL;
 
