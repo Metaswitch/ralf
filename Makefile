@@ -16,7 +16,7 @@ DEB_NAMES := ralf ralf-dbg ralf-libs ralf-libs-dbg
 INCLUDE_DIR := ${INSTALL_DIR}/include
 LIB_DIR := ${INSTALL_DIR}/lib
 
-SUBMODULES := libevhtp libmemcached freeDiameter sas-client jsoncpp
+SUBMODULES := c-ares libevhtp libmemcached freeDiameter sas-client jsoncpp
 
 include $(patsubst %, ${MK_DIR}/%.mk, ${SUBMODULES})
 include ${MK_DIR}/ralf.mk

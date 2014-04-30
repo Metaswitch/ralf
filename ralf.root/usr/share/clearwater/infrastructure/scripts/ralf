@@ -80,8 +80,3 @@ LoadExtension = "/usr/share/clearwater/lib/freeDiameter/dict_dcca.fdx";
 LoadExtension = "/usr/share/clearwater/lib/freeDiameter/dict_dcca_3gpp.fdx";
 
 EOF
-
-for ccf in $(echo $ccf_hostnames | tr "," "\n")
-do
-  echo "ConnectPeer = \"$ccf\" { No_TLS; };" >> /var/lib/ralf/ralf.conf
-done

@@ -52,16 +52,18 @@
 #include "peer_message_sender_factory.hpp"
 #include "sas.h"
 #include "load_monitor.h"
+#include "diameterresolver.h"
+#include "realmmanager.h"
 
 struct options
 {
+  std::string local_host;
   std::string diameter_conf;
   std::string http_address;
   unsigned short http_port;
   int http_threads;
-  std::string dest_realm;
-  std::string dest_host;
-  std::string server_name;
+  std::string billing_realm;
+  int max_peers;
   bool access_log_enabled;
   std::string access_log_directory;
   bool log_to_file;
@@ -75,23 +77,22 @@ void usage(void)
 {
   puts("Options:\n"
        "\n"
+       " -l, --localhost <hostname> Specify the local hostname or IP address\n"
        " -c, --diameter-conf <file> File name for Diameter configuration\n"
        " -H, --http <address>[:<port>]\n"
        "                            Set HTTP bind address and port (default: 0.0.0.0:8888)\n"
        " -t, --http-threads N       Number of HTTP threads (default: 1)\n"
-       " -D, --dest-realm <name>    Set Destination-Realm on Cx messages\n"
-       " -d, --dest-host <name>     Set Destination-Host on Cx messages\n"
-       " -s, --server-name <name>   Set Server-Name on Cx messages\n"
+       " -b, --billing-realm <name> Set Destination-Realm on Rf messages\n"
+       " -p, --max-peers N          Number of peers to connect to (default: 2)\n"
        " -a, --access-log <directory>\n"
        "                            Generate access logs in specified directory\n"
        " -F, --log-file <directory>\n"
        "                            Log to file in specified directory\n"
        " -L, --log-level N          Set log level to N (default: 4)\n"
-       " -S, --sas <host>,<system name>\n"
+       " -s, --sas <host>,<system name>\n"
        " Use specified host as Service Assurance Server and specified\n"
        " system name to identify this system to SAS. If this option isn't\n"
        " specified, SAS is disabled\n"
-       " -d, --daemon               Run as daemon\n"
        " -h, --help                 Show this help screen\n");
 }
 
@@ -99,26 +100,30 @@ int init_options(int argc, char**argv, struct options& options)
 {
   struct option long_opt[] =
   {
+    {"localhost",         required_argument, NULL, 'l'},
     {"diameter-conf",     required_argument, NULL, 'c'},
     {"http",              required_argument, NULL, 'H'},
     {"http-threads",      required_argument, NULL, 't'},
-    {"dest-realm",        required_argument, NULL, 'D'},
-    {"dest-host",         required_argument, NULL, 'd'},
-    {"server-name",       required_argument, NULL, 's'},
-    {"sas",               required_argument, NULL, 'S'},
+    {"billing-realm",     required_argument, NULL, 'b'},
+    {"max-peers",         required_argument, NULL, 'p'},
     {"access-log",        required_argument, NULL, 'a'},
     {"log-file",          required_argument, NULL, 'F'},
     {"log-level",         required_argument, NULL, 'L'},
+    {"sas",               required_argument, NULL, 's'},
     {"help",              no_argument,       NULL, 'h'},
     {NULL,                0,                 NULL, 0},
   };
 
   int opt;
   int long_opt_ind;
-  while ((opt = getopt_long(argc, argv, "c:H:t:D:d:s:a:F:L:S:h", long_opt, &long_opt_ind)) != -1)
+  while ((opt = getopt_long(argc, argv, "l:c:H:t:b:p:a:F:L:s:h", long_opt, &long_opt_ind)) != -1)
   {
     switch (opt)
     {
+    case 'l':
+      options.local_host = std::string(optarg);
+      break;
+
     case 'c':
       options.diameter_conf = std::string(optarg);
       break;
@@ -128,7 +133,7 @@ int init_options(int argc, char**argv, struct options& options)
       // TODO: Parse optional HTTP port.
       break;
 
-    case 'S':
+    case 's':
     {
       std::vector<std::string> sas_options;
       Utils::split_string(std::string(optarg), ',', sas_options, 0, false);
@@ -152,16 +157,12 @@ int init_options(int argc, char**argv, struct options& options)
       options.http_threads = atoi(optarg);
       break;
 
-    case 'D':
-      options.dest_realm = std::string(optarg);
+    case 'b':
+      options.billing_realm = std::string(optarg);
       break;
 
-    case 'd':
-      options.dest_host = std::string(optarg);
-      break;
-
-    case 's':
-      options.server_name = std::string(optarg);
+    case 'p':
+      options.max_peers = atoi(optarg);
       break;
 
     case 'a':
@@ -183,7 +184,7 @@ int init_options(int argc, char**argv, struct options& options)
       return -1;
 
     default:
-      printf("Unknown option.  Run with --help for options.\n");
+      printf("Unknown option: %d.  Run with --help for options.\n", opt);
       return -1;
     }
   }
@@ -223,13 +224,13 @@ int main(int argc, char**argv)
   signal(SIGTERM, terminate_handler);
 
   struct options options;
+  options.local_host = "127.0.0.1";
   options.diameter_conf = "/var/lib/ralf/ralf.conf";
   options.http_address = "0.0.0.0";
   options.http_port = 10888;
   options.http_threads = 1;
-  options.dest_realm = "dest-realm.unknown";
-  options.dest_host = "dest-host.unknown";
-  options.server_name = "sip:server-name.unknown";
+  options.billing_realm = "dest-realm.unknown";
+  options.max_peers = 2;
   options.access_log_enabled = false;
   options.log_to_file = false;
   options.log_level = 0;
@@ -284,7 +285,7 @@ int main(int argc, char**argv)
   MemcachedStore* mstore = new MemcachedStore(false, "./cluster_settings");
   SessionStore* store = new SessionStore(mstore);
   BillingControllerConfig* cfg = new BillingControllerConfig();
-  PeerMessageSenderFactory* factory = new PeerMessageSenderFactory();
+  PeerMessageSenderFactory* factory = new PeerMessageSenderFactory(options.billing_realm);
   ChronosConnection* timer_conn = new ChronosConnection("localhost:7253", "localhost:" + std::to_string(options.http_port));
   cfg->mgr = new SessionManager(store, dict, factory, timer_conn, diameter_stack);
 
@@ -306,6 +307,22 @@ int main(int argc, char**argv)
     fprintf(stderr, "Caught HttpStack::Exception - %s - %d\n", e._func, e._rc);
   }
 
+  // Create a DNS resolver and a Diameter specific resolver.
+  int af = AF_INET;
+  struct in6_addr dummy_addr;
+  if (inet_pton(AF_INET6, options.local_host.c_str(), &dummy_addr) == 1)
+  {
+    LOG_DEBUG("Local host is an IPv6 address");
+    af = AF_INET6;
+  }
+
+  DnsCachedResolver* dns_resolver = new DnsCachedResolver("127.0.0.1");
+  DiameterResolver* diameter_resolver = new DiameterResolver(dns_resolver, af);
+  RealmManager* realm_manager = new RealmManager(diameter_stack,
+                                                 options.billing_realm,
+                                                 options.max_peers,
+                                                 diameter_resolver);
+
   sem_wait(&term_sem);
 
   try
@@ -317,6 +334,10 @@ int main(int argc, char**argv)
   {
     fprintf(stderr, "Caught HttpStack::Exception - %s - %d\n", e._func, e._rc);
   }
+
+  delete realm_manager; realm_manager = NULL;
+  delete diameter_resolver; diameter_resolver = NULL;
+  delete dns_resolver; dns_resolver = NULL;
 
   delete load_monitor; load_monitor = NULL;
 

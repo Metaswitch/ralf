@@ -38,12 +38,18 @@
 
 #include "peer_message_sender.hpp"
 
-class PeerMessageSenderFactory {
+class PeerMessageSenderFactory
+{
 public:
+  PeerMessageSenderFactory(const std::string& dest_realm) : _dest_realm(dest_realm) {};
+
   virtual PeerMessageSender* newSender(SAS::TrailId trail)
   {
-    return new PeerMessageSender(trail);
+    return new PeerMessageSender(trail, _dest_realm);
   }
+
+private:
+  const std::string _dest_realm;
 };
 
 

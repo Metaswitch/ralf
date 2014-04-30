@@ -49,7 +49,7 @@
 class PeerMessageSender
 {
 public:
-  PeerMessageSender(SAS::TrailId trail);
+  PeerMessageSender(SAS::TrailId trail, const std::string& dest_realm);
   virtual ~PeerMessageSender();
   virtual void send(Message* msg,
                     SessionManager* sm,
@@ -68,6 +68,7 @@ private:
   Rf::Dictionary* _dict;
   Diameter::Stack* _diameter_stack;
   SAS::TrailId _trail;
+  const std::string _dest_realm;
 };
 
 #endif /* PEER_MESSAGE_SENDER_HPP_ */

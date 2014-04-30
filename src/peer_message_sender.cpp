@@ -49,9 +49,10 @@
  *
  *   No action should be taken after any of the above happens, as the this pointer becomes invalid.
  */
-PeerMessageSender::PeerMessageSender(SAS::TrailId trail) :
+PeerMessageSender::PeerMessageSender(SAS::TrailId trail, const std::string& dest_realm) :
   _which(0),
-  _trail(trail)
+  _trail(trail),
+  _dest_realm(dest_realm)
 {
 }
 
@@ -92,6 +93,7 @@ void PeerMessageSender::int_send_msg()
                             _diameter_stack,
                             _msg->session_id,
                             ccf,
+                            _dest_realm,
                             _msg->accounting_record_number,
                             _msg->received_json->FindMember("event")->value);
 
