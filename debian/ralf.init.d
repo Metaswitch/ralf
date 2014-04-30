@@ -103,6 +103,15 @@ get_settings()
       [ -r $file ] && . $file
     done
   fi
+
+  # Set the destination realm correctly
+  if [ ! -z $billing_realm ]
+  then
+    billing_realm="--billing-realm $billing_realm"
+  elif [ ! -z $home_domain ]
+  then
+    billing_realm="--billing-realm $home_domain"
+  fi
 }
 
 #
@@ -125,10 +134,12 @@ do_start()
         # enable gdb to dump a parent homestead process's stack
         echo 0 > /proc/sys/kernel/yama/ptrace_scope
         get_settings
-        DAEMON_ARGS="--http-threads $num_http_threads
+        DAEMON_ARGS="--localhost $local_ip
+                     --http-threads $num_http_threads
                      -a $log_directory
                      -F $log_directory
                      -L $log_level
+                     $billing_realm
                      --sas $sas_server,$NAME@$public_hostname"
 
         start-stop-daemon --start --quiet --background --make-pidfile --pidfile $PIDFILE --exec $DAEMON --chuid $NAME --chdir $HOME -- $DAEMON_ARGS \

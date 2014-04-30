@@ -54,6 +54,7 @@ AccountingRequest::AccountingRequest(const Dictionary* dict,
                                      Diameter::Stack* diameter_stack,
                                      const std::string& session_id,
                                      const std::string& dest_host,
+                                     const std::string& dest_realm,
                                      const uint32_t& record_number,
                                      const rapidjson::Value& contents) :
   Diameter::Message(dict, dict->ACCOUNTING_REQUEST, diameter_stack)
@@ -75,6 +76,10 @@ AccountingRequest::AccountingRequest(const Dictionary* dict,
   Diameter::Dictionary::AVP dest_host_dict("Destination-Host");
   Diameter::AVP dest_host_avp(dest_host_dict);
   add(dest_host_avp.val_str(dest_host));
+
+  Diameter::Dictionary::AVP dest_realm_dict("Destination-Realm");
+  Diameter::AVP dest_realm_avp(dest_realm_dict);
+  add(dest_realm_avp.val_str(dest_realm));
 
   Diameter::Dictionary::AVP record_number_dict("Accounting-Record-Number");
   Diameter::AVP record_number_avp(record_number_dict);

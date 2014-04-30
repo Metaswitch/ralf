@@ -111,7 +111,8 @@ TEST_F(RfTest, CreateMessageTest)
   Rf::AccountingRequest acr = Rf::AccountingRequest(_dict,
                                                     _real_stack,
                                                     "session-id",
-                                                    "example.com",
+                                                    "host.example.com",
+                                                    "realm.example.com",
                                                     3u,
                                                     body_doc->FindMember("event")->value);
   Diameter::Message msg = launder_message(acr);
@@ -131,7 +132,8 @@ TEST_F(RfTest, DISABLED_SuccessTransactionTest)
   Rf::AccountingRequest* msg = new Rf::AccountingRequest(dict,
                                                          diameter_stack,
                                                          "session_id",
-                                                         "example.com",
+                                                         "host.example.com",
+                                                         "realm.example.com",
                                                          3u,
                                                          body_doc->FindMember("event")->value);
   tsx.on_response(*msg);
@@ -150,7 +152,8 @@ TEST_F(RfTest, DISABLED_FailureTransactionTest)
   Rf::AccountingRequest* msg = new Rf::AccountingRequest(dict,
                                                          diameter_stack,
                                                          "session_id",
-                                                         "example.com",
+                                                         "host.example.com",
+                                                         "realm.example.com",
                                                          3u,
                                                          body_doc->FindMember("event")->value);
   tsx.on_response(*msg);

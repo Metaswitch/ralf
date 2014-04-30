@@ -80,6 +80,7 @@ public:
                     Diameter::Stack* diameter_stack,
                     const std::string& session_id,
                     const std::string& dest_host,
+                    const std::string& dest_realm,
                     const uint32_t& record_number,
                     const rapidjson::Value& contents);
   inline AccountingRequest(Diameter::Message& msg) : Diameter::Message(msg) {};
