@@ -117,6 +117,8 @@ TEST_F(RfTest, CreateMessageTest)
                                                     body_doc->FindMember("event")->value);
   Diameter::Message msg = launder_message(acr);
   acr = Rf::AccountingRequest(msg);
+
+  delete body_doc;
 };
 
 TEST_F(RfTest, DISABLED_SuccessTransactionTest)
