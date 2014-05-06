@@ -1,4 +1,4 @@
 #!/bin/bash
 ONE_GIG=1073741824
 python2.7 /usr/share/clearwater/bin/log_cleanup.py /var/log/ralf ralf_ $ONE_GIG
-python2.7 /usr/share/clearwater/bin/log_cleanup.py /var/log/ralf log_ $ONE_GIG
+python2.7 /usr/share/clearwater/bin/log_cleanup.py /var/log/ralf access_ $ONE_GIG
