@@ -37,6 +37,7 @@
 #include <string>
 #include <map>
 
+#include "utils.h"
 #include "message.hpp"
 #include "sessionstore.h"
 #include "session_manager.hpp"
@@ -195,7 +196,7 @@ void SessionManager::on_ccf_response (bool accepted, uint32_t interim_interval, 
       send_chronos_update(timer_id,
                           interim_interval,
                           msg->session_refresh_time,
-                          "/call-id/"+msg->call_id+"?timer-interim=true",
+                          "/call-id/"+Utils::url_escape(msg->call_id)+"?timer-interim=true",
                           create_opaque_data(msg),
                           msg->trail);
 
@@ -221,7 +222,7 @@ void SessionManager::on_ccf_response (bool accepted, uint32_t interim_interval, 
          HTTPCode status = _timer_conn->send_post(timer_id,  // Chronos returns a timer ID which is filled in to this parameter
                                                   interim_interval, // interval
                                                   msg->session_refresh_time, // repeat-for
-                                                  "/call-id/"+msg->call_id+"?timer-interim=true",
+                                                  "/call-id/"+Utils::url_escape(msg->call_id)+"?timer-interim=true",
                                                   create_opaque_data(msg),
                                                   msg->trail);
 
@@ -294,7 +295,7 @@ void SessionManager::on_ccf_response (bool accepted, uint32_t interim_interval, 
           send_chronos_update(timer_id,
                               interim_interval,
                               msg->session_refresh_time,
-                              "/call-id/"+msg->call_id+"?timer-interim=true",
+                              "/call-id/"+Utils::url_escape(msg->call_id)+"?timer-interim=true",
                               create_opaque_data(msg),
                               msg->trail);
 
