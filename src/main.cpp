@@ -286,7 +286,7 @@ int main(int argc, char**argv)
   SessionStore* store = new SessionStore(mstore);
   BillingControllerConfig* cfg = new BillingControllerConfig();
   PeerMessageSenderFactory* factory = new PeerMessageSenderFactory(options.billing_realm);
-  ChronosConnection* timer_conn = new ChronosConnection("localhost:7253", "localhost:" + std::to_string(options.http_port));
+  ChronosConnection* timer_conn = new ChronosConnection("localhost:7253", options.http_address + ":" + std::to_string(options.http_port));
   cfg->mgr = new SessionManager(store, dict, factory, timer_conn, diameter_stack);
 
   HttpStack* http_stack = HttpStack::get_instance();
