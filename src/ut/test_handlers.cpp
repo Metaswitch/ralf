@@ -58,9 +58,9 @@ TEST_F(HandlerTest, GoodJSONTest)
   Message* msg = BillingControllerHandler::parse_body("abcd", false, body, FAKE_TRAIL_ID);
   ASSERT_NE((Message*)NULL, msg);
   EXPECT_TRUE(msg->record_type.isEvent());
-  EXPECT_EQ(msg->ccfs.size(), 1);
+  EXPECT_EQ(msg->ccfs.size(), 1u);
   EXPECT_EQ(msg->ccfs[0], "ec2-54-197-167-141.compute-1.amazonaws.com");
-  EXPECT_EQ(msg->session_refresh_time, 300);
+  EXPECT_EQ(msg->session_refresh_time, 300u);
   EXPECT_EQ(msg->timer_interim, false);
   delete msg;
 };
@@ -71,9 +71,9 @@ TEST_F(HandlerTest, TimerInterimTest)
   Message* msg = BillingControllerHandler::parse_body("abcd", true, body, FAKE_TRAIL_ID);
   ASSERT_NE((Message*)NULL, msg);
   EXPECT_TRUE(msg->record_type.isEvent());
-  EXPECT_EQ(msg->ccfs.size(), 1);
+  EXPECT_EQ(msg->ccfs.size(), 1u);
   EXPECT_EQ(msg->ccfs[0], "ec2-54-197-167-141.compute-1.amazonaws.com");
-  EXPECT_EQ(msg->session_refresh_time, 300);
+  EXPECT_EQ(msg->session_refresh_time, 300u);
   EXPECT_EQ(msg->timer_interim, true);
   delete msg;
 };
