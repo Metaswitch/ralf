@@ -53,10 +53,9 @@ Message::Message(const std::string& call_id,
   record_type(record_type),
   timer_interim(timer_interim),
   session_refresh_time(session_refresh_time),
-  trail(trail)
-{
-  interim_interval = 0;
-};
+  trail(trail),
+  interim_interval(0)
+{};
 
 /* Deletes the enclosed rapidjson::Document. */
 Message::~Message()
