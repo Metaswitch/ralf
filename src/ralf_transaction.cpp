@@ -51,6 +51,9 @@ void RalfTransaction::on_response(Diameter::Message& rsp)
 
   rsp.result_code(result_code);
   rsp.get_str_from_avp(_dict->SESSION_ID, session_id);
+
+  // This isn't a mandatory AVP. If it's missing, the interim interval is
+  // set to 0.
   rsp.get_i32_from_avp(_dict->ACCT_INTERIM_INTERVAL, interim_interval);
 
   if (result_code == 2001)
