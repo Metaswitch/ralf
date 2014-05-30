@@ -10,7 +10,7 @@ INSTALL_DIR ?= ${PREFIX}
 MODULE_DIR := ${ROOT}/modules
 
 DEB_COMPONENT := ralf
-DEB_MAJOR_VERSION := 1.0
+DEB_MAJOR_VERSION := 1.0${DEB_VERSION_QUALIFIER}
 DEB_NAMES := ralf ralf-dbg ralf-libs ralf-libs-dbg
 
 INCLUDE_DIR := ${INSTALL_DIR}/include
