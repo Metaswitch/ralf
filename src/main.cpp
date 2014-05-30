@@ -322,6 +322,7 @@ int main(int argc, char**argv)
                                                  options.billing_realm,
                                                  options.max_peers,
                                                  diameter_resolver);
+  realm_manager->start();
 
   sem_wait(&term_sem);
 
@@ -335,6 +336,7 @@ int main(int argc, char**argv)
     fprintf(stderr, "Caught HttpStack::Exception - %s - %d\n", e._func, e._rc);
   }
 
+  realm_manager->stop();
   delete realm_manager; realm_manager = NULL;
   delete diameter_resolver; diameter_resolver = NULL;
   delete dns_resolver; dns_resolver = NULL;
