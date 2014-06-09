@@ -48,6 +48,8 @@ then
     identity=$public_hostname
 fi
 
+# Strip any characters not valid in an FQDN out of ralf_hostname (for
+# example, it might be an IPv6 address)
 realm=$(echo $ralf_hostname | sed -e 's/:[^:]*$//g' | sed -e 's/^\[//g' | sed -e 's/\]$//g')
 
 /usr/share/clearwater/bin/generic_create_diameterconf ralf $identity $realm $ralf_listen_port
