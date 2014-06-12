@@ -35,6 +35,7 @@
 # as those licenses appear in the file LICENSE-OPENSSL.
 
 ralf_listen_port=3869
+ralf_secure_listen_port=5659
 . /etc/clearwater/config
 
 # Allow a specific FQDN for Ralf to be set (in case this is an
@@ -52,4 +53,4 @@ fi
 # example, it might be an IPv6 address)
 realm=$(echo $ralf_hostname | sed -e 's/:[^:]*$//g' | sed -e 's/^\[//g' | sed -e 's/\]$//g')
 
-/usr/share/clearwater/bin/generic_create_diameterconf ralf $identity $realm $ralf_listen_port
+/usr/share/clearwater/bin/generic_create_diameterconf ralf $identity $realm $ralf_listen_port $ralf_secure_listen_port
