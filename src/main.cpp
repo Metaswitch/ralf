@@ -210,6 +210,10 @@ void exception_handler(int sig)
   // Log the signal, along with a backtrace.
   LOG_BACKTRACE("Signal %d caught", sig);
 
+  // Ensure the log files are complete - the core file created by abort() below
+  // will trigger the log files to be copied to the diags bundle
+  LOG_COMMIT();
+
   // Dump a core.
   abort();
 }
@@ -279,7 +283,8 @@ int main(int argc, char**argv)
   diameter_stack->initialize();
   diameter_stack->configure(options.diameter_conf);
   dict = new Rf::Dictionary();
-  diameter_stack->advertize_application(dict->TGPP, dict->RF);
+  diameter_stack->advertize_application(Diameter::Dictionary::Application::ACCT,
+                                        dict->TGPP, dict->RF);
   diameter_stack->start();
 
   MemcachedStore* mstore = new MemcachedStore(false, "./cluster_settings");
