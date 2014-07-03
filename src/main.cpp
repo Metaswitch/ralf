@@ -39,6 +39,7 @@
 #include <semaphore.h>
 #include <strings.h>
 
+#include "ipv6utils.h"
 #include "memcachedstore.h"
 #include "chronosconnection.h"
 #include "accesslogger.h"
@@ -291,7 +292,22 @@ int main(int argc, char**argv)
   SessionStore* store = new SessionStore(mstore);
   BillingControllerConfig* cfg = new BillingControllerConfig();
   PeerMessageSenderFactory* factory = new PeerMessageSenderFactory(options.billing_realm);
-  ChronosConnection* timer_conn = new ChronosConnection("localhost:7253", "localhost:" + std::to_string(options.http_port));
+
+  std::string port_str = std::to_string(options.http_port);
+
+  // We want Chronos to call back to its local sprout instance so that we can
+  // handle Ralfs failing without missing timers.
+  std::string chronos_callback_addr = "127.0.0.1:" + port_str;
+  std::string local_chronos = "127.0.0.1:7253";
+  if (is_ipv6(options.http_address))
+  {
+    chronos_callback_addr = "[::1]:" + port_str;
+    local_chronos = "[::1]:7253";
+  }
+
+  // Create a connection to Chronos.
+  LOG_STATUS("Creating connection to Chronos at %s using %s as the callback URI", local_chronos.c_str(), chronos_callback_addr.c_str());
+  ChronosConnection* timer_conn = new ChronosConnection(local_chronos, chronos_callback_addr);
   cfg->mgr = new SessionManager(store, dict, factory, timer_conn, diameter_stack);
 
   HttpStack* http_stack = HttpStack::get_instance();

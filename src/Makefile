@@ -38,7 +38,8 @@ TARGET_SOURCES := accesslogger.cpp \
                   diameterresolver.cpp \
                   dnscachedresolver.cpp \
                   dnsparser.cpp \
-                  realmmanager.cpp
+                  realmmanager.cpp \
+                  ipv6utils.cpp
 
 TARGET_SOURCES_BUILD := main.cpp
 
