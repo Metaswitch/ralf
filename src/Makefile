@@ -47,7 +47,8 @@ TARGET_SOURCES_TEST := test_sessionstore.cpp \
                        test_session_manager.cpp \
                        test_rf.cpp \
                        test_handlers.cpp \
-                       test_main.cpp
+                       test_main.cpp \
+                       fakelogger.cpp
 
 TARGET_EXTRA_OBJS_TEST := gmock-all.o \
                           gtest-all.o
