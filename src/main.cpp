@@ -311,16 +311,14 @@ int main(int argc, char**argv)
   cfg->mgr = new SessionManager(store, dict, factory, timer_conn, diameter_stack);
 
   HttpStack* http_stack = HttpStack::get_instance();
-  HttpStack::HandlerFactory<PingHandler> ping_handler_factory;
-  BillingControllerHandlerFactory billing_handler_factory(cfg);
+  HttpStackUtils::PingController ping_controller;
+  BillingController billing_controller(cfg);
   try
   {
     http_stack->initialize();
     http_stack->configure(options.http_address, options.http_port, options.http_threads, access_logger, load_monitor);
-    http_stack->register_handler("^/ping$",
-                                 &ping_handler_factory);
-    http_stack->register_handler("^/call-id/[^/]*$",
-                                 &billing_handler_factory);
+    http_stack->register_controller("^/ping$", & ping_controller);
+    http_stack->register_controller("^/call-id/[^/]*$", &billing_controller);
     http_stack->start();
   }
   catch (HttpStack::Exception& e)

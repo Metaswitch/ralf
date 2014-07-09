@@ -40,6 +40,7 @@
 #include <boost/bind.hpp>
 
 #include "httpstack.h"
+#include "httpstack_utils.h"
 #include "message.hpp"
 #include "session_manager.hpp"
 #include "sas.h"
@@ -47,27 +48,18 @@
 
 const std::string TIMER_INTERIM_PARAM = "timer-interim";
 
-class PingHandler : public HttpStack::Handler
-{
-public:
-  PingHandler(HttpStack::Request& req, SAS::TrailId trail) :
-    HttpStack::Handler(req, trail)
-  {};
-  void run();
-};
-
 struct BillingControllerConfig
 {
   SessionManager* mgr;
 };
 
-class BillingControllerHandler : public HttpStack::Handler
+class BillingControllerHandler : public HttpStackUtils::Handler
 {
 public:
   BillingControllerHandler(HttpStack::Request& req,
                            const BillingControllerConfig* cfg,
                            SAS::TrailId trail) :
-    HttpStack::Handler(req, trail), _sess_mgr(cfg->mgr)
+    HttpStackUtils::Handler(req, trail), _sess_mgr(cfg->mgr)
   {};
   void run();
   static Message* parse_body(std::string call_id, bool timer_interim, std::string reqbody, SAS::TrailId trail);
@@ -76,14 +68,14 @@ private:
   SessionManager* _sess_mgr;
 };
 
-class BillingControllerHandlerFactory :
-  public HttpStack::ConfiguredHandlerFactory<BillingControllerHandler, BillingControllerConfig>
+class BillingController:
+  public HttpStackUtils::SpawningController<BillingControllerHandler, BillingControllerConfig>
 {
 public:
-  BillingControllerHandlerFactory(BillingControllerConfig* cfg) :
-    ConfiguredHandlerFactory<BillingControllerHandler, BillingControllerConfig>(cfg)
+  BillingController(BillingControllerConfig* cfg) :
+    SpawningController<BillingControllerHandler, BillingControllerConfig>(cfg)
   {}
-  virtual ~BillingControllerHandlerFactory() {}
+  virtual ~BillingController() {}
 
   SASEvent::HttpLogLevel sas_log_level(HttpStack::Request& req)
   {
