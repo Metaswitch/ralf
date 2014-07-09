@@ -41,6 +41,7 @@
 
 #include "httpstack.h"
 #include "httpstack_utils.h"
+#include "chronos_utils.h"
 #include "message.hpp"
 #include "session_manager.hpp"
 #include "sas.h"
@@ -77,16 +78,16 @@ public:
   {}
   virtual ~BillingController() {}
 
-  SASEvent::HttpLogLevel sas_log_level(HttpStack::Request& req)
+  HttpStack::SasLogger* sas_logger(HttpStack::Request& req)
   {
-    // Log timer pops from chronos at detail level rather than protocol.
+    // Work out whether this is a chronos transaction or not.
     if (req.param(TIMER_INTERIM_PARAM) == "true")
     {
-      return SASEvent::HttpLogLevel::DETAIL;
+      return &ChronosUtils::HTTP_STACK_SAS_LOGGER;
     }
     else
     {
-      return SASEvent::HttpLogLevel::PROTOCOL;
+      return &HttpStack::DEFAULT_SAS_LOGGER;
     }
   }
 };

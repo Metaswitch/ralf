@@ -40,7 +40,8 @@ TARGET_SOURCES := accesslogger.cpp \
                   dnscachedresolver.cpp \
                   dnsparser.cpp \
                   realmmanager.cpp \
-                  ipv6utils.cpp
+                  ipv6utils.cpp \
+                  chronos_utils.cpp
 
 TARGET_SOURCES_BUILD := main.cpp
 
