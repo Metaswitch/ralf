@@ -41,7 +41,6 @@
 
 #include "httpstack.h"
 #include "httpstack_utils.h"
-#include "chronos_utils.h"
 #include "message.hpp"
 #include "session_manager.hpp"
 #include "sas.h"
@@ -83,7 +82,7 @@ public:
     // Work out whether this is a chronos transaction or not.
     if (req.param(TIMER_INTERIM_PARAM) == "true")
     {
-      return &ChronosUtils::HTTP_STACK_SAS_LOGGER;
+      return &HttpStackUtils::CHRONOS_SAS_LOGGER;
     }
     else
     {
