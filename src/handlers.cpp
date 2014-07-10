@@ -45,12 +45,6 @@
 
 //LCOV_EXCL_START
 // We don't want to actually run the handlers
-void PingHandler::run()
-{
-  _req.add_content("OK");
-  send_http_reply(200);
-  delete this;
-}
 
 void BillingControllerHandler::run()
 {

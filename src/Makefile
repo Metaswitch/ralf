@@ -24,6 +24,7 @@ TARGET_SOURCES := accesslogger.cpp \
                   ralf_transaction.cpp \
                   message.cpp \
                   httpstack.cpp \
+                  httpstack_utils.cpp \
                   handlers.cpp \
                   logger.cpp \
                   saslogger.cpp \

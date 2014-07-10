@@ -52,9 +52,9 @@ Message::Message(const std::string& call_id,
   received_json(body),
   record_type(record_type),
   timer_interim(timer_interim),
+  interim_interval(0),
   session_refresh_time(session_refresh_time),
-  trail(trail),
-  interim_interval(0)
+  trail(trail)
 {};
 
 /* Deletes the enclosed rapidjson::Document. */
