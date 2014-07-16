@@ -13,7 +13,7 @@ using ::testing::Return;
 class MockChronosConnection : public ChronosConnection
 {
 public:
-MockChronosConnection(const std::string& chronos) : ChronosConnection(chronos, "localhost:10888")
+MockChronosConnection(const std::string& chronos) : ChronosConnection(chronos, "localhost:10888", NULL)
   {
     ON_CALL(*this, send_post(_, _, _, _, _, _)).
       WillByDefault(DoAll(SetArgReferee<0>("TIMER_ID"),

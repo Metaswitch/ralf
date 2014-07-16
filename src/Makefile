@@ -28,6 +28,7 @@ TARGET_SOURCES := accesslogger.cpp \
                   handlers.cpp \
                   logger.cpp \
                   saslogger.cpp \
+                  httpresolver.cpp \
                   httpconnection.cpp \
                   chronosconnection.cpp \
                   load_monitor.cpp \
