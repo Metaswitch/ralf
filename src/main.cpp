@@ -41,6 +41,7 @@
 
 #include "ipv6utils.h"
 #include "memcachedstore.h"
+#include "httpresolver.h"
 #include "chronosconnection.h"
 #include "accesslogger.h"
 #include "log.h"
@@ -293,21 +294,27 @@ int main(int argc, char**argv)
   BillingControllerConfig* cfg = new BillingControllerConfig();
   PeerMessageSenderFactory* factory = new PeerMessageSenderFactory(options.billing_realm);
 
+  // Create a DNS resolver.  We'll use this both for HTTP and for Diameter.
+  DnsCachedResolver* dns_resolver = new DnsCachedResolver("127.0.0.1");
+
   std::string port_str = std::to_string(options.http_port);
 
   // We want Chronos to call back to its local sprout instance so that we can
   // handle Ralfs failing without missing timers.
+  int http_af = AF_INET;
   std::string chronos_callback_addr = "127.0.0.1:" + port_str;
   std::string local_chronos = "127.0.0.1:7253";
   if (is_ipv6(options.http_address))
   {
+    http_af = AF_INET6;
     chronos_callback_addr = "[::1]:" + port_str;
     local_chronos = "[::1]:7253";
   }
 
-  // Create a connection to Chronos.
+  // Create a connection to Chronos.  This requires an HttpResolver.
   LOG_STATUS("Creating connection to Chronos at %s using %s as the callback URI", local_chronos.c_str(), chronos_callback_addr.c_str());
-  ChronosConnection* timer_conn = new ChronosConnection(local_chronos, chronos_callback_addr);
+  HttpResolver* http_resolver = new HttpResolver(dns_resolver, http_af);
+  ChronosConnection* timer_conn = new ChronosConnection(local_chronos, chronos_callback_addr, http_resolver);
   cfg->mgr = new SessionManager(store, dict, factory, timer_conn, diameter_stack);
 
   HttpStack* http_stack = HttpStack::get_instance();
@@ -327,16 +334,15 @@ int main(int argc, char**argv)
   }
 
   // Create a DNS resolver and a Diameter specific resolver.
-  int af = AF_INET;
+  int diameter_af = AF_INET;
   struct in6_addr dummy_addr;
   if (inet_pton(AF_INET6, options.local_host.c_str(), &dummy_addr) == 1)
   {
     LOG_DEBUG("Local host is an IPv6 address");
-    af = AF_INET6;
+    diameter_af = AF_INET6;
   }
 
-  DnsCachedResolver* dns_resolver = new DnsCachedResolver("127.0.0.1");
-  DiameterResolver* diameter_resolver = new DiameterResolver(dns_resolver, af);
+  DiameterResolver* diameter_resolver = new DiameterResolver(dns_resolver, diameter_af);
   RealmManager* realm_manager = new RealmManager(diameter_stack,
                                                  options.billing_realm,
                                                  options.max_peers,
@@ -358,6 +364,7 @@ int main(int argc, char**argv)
   realm_manager->stop();
   delete realm_manager; realm_manager = NULL;
   delete diameter_resolver; diameter_resolver = NULL;
+  delete http_resolver; http_resolver = NULL;
   delete dns_resolver; dns_resolver = NULL;
 
   delete load_monitor; load_monitor = NULL;
