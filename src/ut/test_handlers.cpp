@@ -55,7 +55,7 @@ class HandlerTest : public ::testing::Test
 TEST_F(HandlerTest, GoodJSONTest)
 {
   std::string body = "{\"peers\": {\"ccf\": [\"ec2-54-197-167-141.compute-1.amazonaws.com\"]}, \"event\": {\"Accounting-Record-Type\": 1, \"Acct-Interim-Interval\": 300, \"Service-Information\": {\"IMS-Information\": {\"Role-Of-Node\": 0, \"Node-Functionality\": 0}}}}";
-  Message* msg = BillingControllerTask::parse_body("abcd", false, body, FAKE_TRAIL_ID);
+  Message* msg = BillingHandlerTask::parse_body("abcd", false, body, FAKE_TRAIL_ID);
   ASSERT_NE((Message*)NULL, msg);
   EXPECT_TRUE(msg->record_type.isEvent());
   EXPECT_EQ(msg->ccfs.size(), 1u);
@@ -68,7 +68,7 @@ TEST_F(HandlerTest, GoodJSONTest)
 TEST_F(HandlerTest, TimerInterimTest)
 {
   std::string body = "{\"peers\": {\"ccf\": [\"ec2-54-197-167-141.compute-1.amazonaws.com\"]}, \"event\": {\"Accounting-Record-Type\": 1, \"Acct-Interim-Interval\": 300, \"Service-Information\": {\"IMS-Information\": {\"Role-Of-Node\": 0, \"Node-Functionality\": 0}}}}";
-  Message* msg = BillingControllerTask::parse_body("abcd", true, body, FAKE_TRAIL_ID);
+  Message* msg = BillingHandlerTask::parse_body("abcd", true, body, FAKE_TRAIL_ID);
   ASSERT_NE((Message*)NULL, msg);
   EXPECT_TRUE(msg->record_type.isEvent());
   EXPECT_EQ(msg->ccfs.size(), 1u);
@@ -81,62 +81,62 @@ TEST_F(HandlerTest, TimerInterimTest)
 TEST_F(HandlerTest, BadJSONTest)
 {
   std::string body = "Type\": 1, \"Acct-Interim-Interval\": 300, \"Service-Information\": {\"IMS-Information\": {\"Role-Of-Node\": 0, \"Node-Functionality\": 0}}}}";
-  Message* msg = BillingControllerTask::parse_body("abcd", false, body, FAKE_TRAIL_ID);
+  Message* msg = BillingHandlerTask::parse_body("abcd", false, body, FAKE_TRAIL_ID);
   ASSERT_EQ(NULL, msg);
 };
 
 TEST_F(HandlerTest, NoCCFsTest)
 {
   std::string body = "{\"peers\": {\"ccf\": []}, \"event\": {\"Accounting-Record-Type\": 1, \"Acct-Interim-Interval\": 300, \"Service-Information\": {\"IMS-Information\": {\"Role-Of-Node\": 0, \"Node-Functionality\": 0}}}}";
-  Message* msg = BillingControllerTask::parse_body("abcd", false, body, FAKE_TRAIL_ID);
+  Message* msg = BillingHandlerTask::parse_body("abcd", false, body, FAKE_TRAIL_ID);
   ASSERT_EQ(NULL, msg);
 };
 
 TEST_F(HandlerTest, InvalidPeersTest)
 {
   std::string body = "{\"peers\": {\"ccf\": [77]}, \"event\": {\"Accounting-Record-Type\": 1, \"Acct-Interim-Interval\": 300, \"Service-Information\": {\"IMS-Information\": {\"Role-Of-Node\": 0, \"Node-Functionality\": 0}}}}";
-  Message* msg = BillingControllerTask::parse_body("abcd", false, body, FAKE_TRAIL_ID);
+  Message* msg = BillingHandlerTask::parse_body("abcd", false, body, FAKE_TRAIL_ID);
   ASSERT_EQ(NULL, msg);
 };
 
 TEST_F(HandlerTest, NoPeerElementTest)
 {
   std::string body = "{\"event\": {\"Accounting-Record-Type\": 1, \"Acct-Interim-Interval\": 300, \"Service-Information\": {\"IMS-Information\": {\"Role-Of-Node\": 0, \"Node-Functionality\": 0}}}}";
-  Message* msg = BillingControllerTask::parse_body("abcd", false, body, FAKE_TRAIL_ID);
+  Message* msg = BillingHandlerTask::parse_body("abcd", false, body, FAKE_TRAIL_ID);
   ASSERT_EQ(NULL, msg);
 };
 
 TEST_F(HandlerTest, InvalidTypeTest)
 {
   std::string body = "{\"peers\": {\"ccf\": [\"ec2-54-197-167-141.compute-1.amazonaws.com\"]}, \"event\": {\"Accounting-Record-Type\": 8, \"Acct-Interim-Interval\": 300, \"Service-Information\": {\"IMS-Information\": {\"Role-Of-Node\": 0, \"Node-Functionality\": 0}}}}";
-  Message* msg = BillingControllerTask::parse_body("abcd", false, body, FAKE_TRAIL_ID);
+  Message* msg = BillingHandlerTask::parse_body("abcd", false, body, FAKE_TRAIL_ID);
   ASSERT_EQ(NULL, msg);
 };
 
 TEST_F(HandlerTest, NoTypeTest)
 {
   std::string body = "{\"peers\": {\"ccf\": [\"ec2-54-197-167-141.compute-1.amazonaws.com\"]}, \"event\": {\"Acct-Interim-Interval\": 300, \"Service-Information\": {\"IMS-Information\": {\"Role-Of-Node\": 0, \"Node-Functionality\": 0}}}}";
-  Message* msg = BillingControllerTask::parse_body("abcd", false, body, FAKE_TRAIL_ID);
+  Message* msg = BillingHandlerTask::parse_body("abcd", false, body, FAKE_TRAIL_ID);
   ASSERT_EQ(NULL, msg);
 };
 
 TEST_F(HandlerTest, NoIMSInfoTest)
 {
   std::string body = "{\"peers\": {\"ccf\": [\"ec2-54-197-167-141.compute-1.amazonaws.com\"]}, \"event\": {\"Acct-Interim-Interval\": 300}}";
-  Message* msg = BillingControllerTask::parse_body("abcd", false, body, FAKE_TRAIL_ID);
+  Message* msg = BillingHandlerTask::parse_body("abcd", false, body, FAKE_TRAIL_ID);
   ASSERT_EQ(NULL, msg);
 };
 
 TEST_F(HandlerTest, NoRoleOfNodeTest)
 {
   std::string body = "{\"peers\": {\"ccf\": [\"ec2-54-197-167-141.compute-1.amazonaws.com\"]}, \"event\": {\"Acct-Interim-Interval\": 300, \"Service-Information\": {\"IMS-Information\": {\"Node-Functionality\": 0}}}}";
-  Message* msg = BillingControllerTask::parse_body("abcd", false, body, FAKE_TRAIL_ID);
+  Message* msg = BillingHandlerTask::parse_body("abcd", false, body, FAKE_TRAIL_ID);
   ASSERT_EQ(NULL, msg);
 };
 
 TEST_F(HandlerTest, NoNodeFunctionalityTest)
 {
   std::string body = "{\"peers\": {\"ccf\": [\"ec2-54-197-167-141.compute-1.amazonaws.com\"]}, \"event\": {\"Acct-Interim-Interval\": 300, \"Service-Information\": {\"IMS-Information\": {\"Role-Of-Node\": 0}}}}";
-  Message* msg = BillingControllerTask::parse_body("abcd", false, body, FAKE_TRAIL_ID);
+  Message* msg = BillingHandlerTask::parse_body("abcd", false, body, FAKE_TRAIL_ID);
   ASSERT_EQ(NULL, msg);
 };

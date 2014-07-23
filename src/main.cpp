@@ -291,7 +291,7 @@ int main(int argc, char**argv)
 
   MemcachedStore* mstore = new MemcachedStore(false, "./cluster_settings");
   SessionStore* store = new SessionStore(mstore);
-  BillingControllerConfig* cfg = new BillingControllerConfig();
+  BillingHandlerConfig* cfg = new BillingHandlerConfig();
   PeerMessageSenderFactory* factory = new PeerMessageSenderFactory(options.billing_realm);
 
   // Create a DNS resolver.  We'll use this both for HTTP and for Diameter.
@@ -318,14 +318,14 @@ int main(int argc, char**argv)
   cfg->mgr = new SessionManager(store, dict, factory, timer_conn, diameter_stack);
 
   HttpStack* http_stack = HttpStack::get_instance();
-  HttpStackUtils::PingController ping_controller;
-  BillingController billing_controller(cfg);
+  HttpStackUtils::PingHandler ping_handler;
+  BillingHandler billing_handler(cfg);
   try
   {
     http_stack->initialize();
     http_stack->configure(options.http_address, options.http_port, options.http_threads, access_logger, load_monitor);
-    http_stack->register_controller("^/ping$", & ping_controller);
-    http_stack->register_controller("^/call-id/[^/]*$", &billing_controller);
+    http_stack->register_handler("^/ping$", & ping_handler);
+    http_stack->register_handler("^/call-id/[^/]*$", &billing_handler);
     http_stack->start();
   }
   catch (HttpStack::Exception& e)
