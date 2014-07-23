@@ -53,13 +53,13 @@ struct BillingControllerConfig
   SessionManager* mgr;
 };
 
-class BillingControllerHandler : public HttpStackUtils::Handler
+class BillingControllerTask : public HttpStackUtils::Task
 {
 public:
-  BillingControllerHandler(HttpStack::Request& req,
+  BillingControllerTask(HttpStack::Request& req,
                            const BillingControllerConfig* cfg,
                            SAS::TrailId trail) :
-    HttpStackUtils::Handler(req, trail), _sess_mgr(cfg->mgr)
+    HttpStackUtils::Task(req, trail), _sess_mgr(cfg->mgr)
   {};
   void run();
   static Message* parse_body(std::string call_id, bool timer_interim, std::string reqbody, SAS::TrailId trail);
@@ -69,11 +69,11 @@ private:
 };
 
 class BillingController:
-  public HttpStackUtils::SpawningController<BillingControllerHandler, BillingControllerConfig>
+  public HttpStackUtils::SpawningController<BillingControllerTask, BillingControllerConfig>
 {
 public:
   BillingController(BillingControllerConfig* cfg) :
-    SpawningController<BillingControllerHandler, BillingControllerConfig>(cfg)
+    SpawningController<BillingControllerTask, BillingControllerConfig>(cfg)
   {}
   virtual ~BillingController() {}
 
