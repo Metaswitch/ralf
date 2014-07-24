@@ -57,8 +57,8 @@ class BillingHandlerTask : public HttpStackUtils::Task
 {
 public:
   BillingHandlerTask(HttpStack::Request& req,
-                           const BillingHandlerConfig* cfg,
-                           SAS::TrailId trail) :
+                     const BillingHandlerConfig* cfg,
+                     SAS::TrailId trail) :
     HttpStackUtils::Task(req, trail), _sess_mgr(cfg->mgr)
   {};
   void run();
