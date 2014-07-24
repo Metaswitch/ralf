@@ -53,10 +53,10 @@ struct BillingHandlerConfig
   SessionManager* mgr;
 };
 
-class BillingHandlerTask : public HttpStackUtils::Task
+class BillingTask : public HttpStackUtils::Task
 {
 public:
-  BillingHandlerTask(HttpStack::Request& req,
+  BillingTask(HttpStack::Request& req,
                      const BillingHandlerConfig* cfg,
                      SAS::TrailId trail) :
     HttpStackUtils::Task(req, trail), _sess_mgr(cfg->mgr)
@@ -69,11 +69,11 @@ private:
 };
 
 class BillingHandler:
-  public HttpStackUtils::SpawningHandler<BillingHandlerTask, BillingHandlerConfig>
+  public HttpStackUtils::SpawningHandler<BillingTask, BillingHandlerConfig>
 {
 public:
   BillingHandler(BillingHandlerConfig* cfg) :
-    SpawningHandler<BillingHandlerTask, BillingHandlerConfig>(cfg)
+    SpawningHandler<BillingTask, BillingHandlerConfig>(cfg)
   {}
   virtual ~BillingHandler() {}
 

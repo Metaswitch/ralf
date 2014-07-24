@@ -46,7 +46,7 @@
 //LCOV_EXCL_START
 // We don't want to actually run the handlers
 
-void BillingHandlerTask::run()
+void BillingTask::run()
 {
   if (_req.method() != htp_method_POST)
   {
@@ -86,7 +86,7 @@ void BillingHandlerTask::run()
 }
 //LCOV_EXCL_STOP
 
-Message* BillingHandlerTask::parse_body(std::string call_id, bool timer_interim, std::string reqbody, SAS::TrailId trail)
+Message* BillingTask::parse_body(std::string call_id, bool timer_interim, std::string reqbody, SAS::TrailId trail)
 {
 
   rapidjson::Document* body = new rapidjson::Document();
