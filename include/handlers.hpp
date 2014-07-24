@@ -48,18 +48,18 @@
 
 const std::string TIMER_INTERIM_PARAM = "timer-interim";
 
-struct BillingControllerConfig
+struct BillingHandlerConfig
 {
   SessionManager* mgr;
 };
 
-class BillingControllerHandler : public HttpStackUtils::Handler
+class BillingTask : public HttpStackUtils::Task
 {
 public:
-  BillingControllerHandler(HttpStack::Request& req,
-                           const BillingControllerConfig* cfg,
-                           SAS::TrailId trail) :
-    HttpStackUtils::Handler(req, trail), _sess_mgr(cfg->mgr)
+  BillingTask(HttpStack::Request& req,
+                     const BillingHandlerConfig* cfg,
+                     SAS::TrailId trail) :
+    HttpStackUtils::Task(req, trail), _sess_mgr(cfg->mgr)
   {};
   void run();
   static Message* parse_body(std::string call_id, bool timer_interim, std::string reqbody, SAS::TrailId trail);
@@ -68,14 +68,14 @@ private:
   SessionManager* _sess_mgr;
 };
 
-class BillingController:
-  public HttpStackUtils::SpawningController<BillingControllerHandler, BillingControllerConfig>
+class BillingHandler:
+  public HttpStackUtils::SpawningHandler<BillingTask, BillingHandlerConfig>
 {
 public:
-  BillingController(BillingControllerConfig* cfg) :
-    SpawningController<BillingControllerHandler, BillingControllerConfig>(cfg)
+  BillingHandler(BillingHandlerConfig* cfg) :
+    SpawningHandler<BillingTask, BillingHandlerConfig>(cfg)
   {}
-  virtual ~BillingController() {}
+  virtual ~BillingHandler() {}
 
   HttpStack::SasLogger* sas_logger(HttpStack::Request& req)
   {
