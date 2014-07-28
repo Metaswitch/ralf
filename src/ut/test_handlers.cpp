@@ -64,7 +64,7 @@ TEST_F(HandlerTest, GoodJSONTest)
   EXPECT_EQ(msg->ccfs[0], "ec2-54-197-167-141.compute-1.amazonaws.com");
   EXPECT_EQ(msg->session_refresh_time, 300u);
   EXPECT_EQ(msg->timer_interim, false);
-  delete msg;
+  delete msg; msg = NULL;
 };
 
 TEST_F(HandlerTest, TimerInterimTest)
@@ -79,7 +79,7 @@ TEST_F(HandlerTest, TimerInterimTest)
   EXPECT_EQ(msg->ccfs[0], "ec2-54-197-167-141.compute-1.amazonaws.com");
   EXPECT_EQ(msg->session_refresh_time, 300u);
   EXPECT_EQ(msg->timer_interim, true);
-  delete msg;
+  delete msg; msg = NULL;
 };
 
 TEST_F(HandlerTest, BadJSONTest)
@@ -89,6 +89,7 @@ TEST_F(HandlerTest, BadJSONTest)
   long rc = BillingTask::parse_body("abcd", false, body, &msg, FAKE_TRAIL_ID);
   EXPECT_EQ(rc, 400);
   ASSERT_EQ(NULL, msg);
+  delete msg; msg = NULL;
 };
 
 TEST_F(HandlerTest, NoCCFsTest)
@@ -98,6 +99,7 @@ TEST_F(HandlerTest, NoCCFsTest)
   long rc = BillingTask::parse_body("abcd", false, body, &msg, FAKE_TRAIL_ID);
   EXPECT_EQ(rc, 400);
   ASSERT_EQ(NULL, msg);
+  delete msg; msg = NULL;
 };
 
 TEST_F(HandlerTest, InvalidPeersTest)
@@ -107,6 +109,7 @@ TEST_F(HandlerTest, InvalidPeersTest)
   long rc = BillingTask::parse_body("abcd", false, body, &msg, FAKE_TRAIL_ID);
   EXPECT_EQ(rc, 400);
   ASSERT_EQ(NULL, msg);
+  delete msg; msg = NULL;
 };
 
 TEST_F(HandlerTest, NoPeerElementTest)
@@ -116,6 +119,7 @@ TEST_F(HandlerTest, NoPeerElementTest)
   long rc = BillingTask::parse_body("abcd", false, body, &msg, FAKE_TRAIL_ID);
   EXPECT_EQ(rc, 200);
   ASSERT_EQ(NULL, msg);
+  delete msg; msg = NULL;
 };
 
 TEST_F(HandlerTest, InvalidTypeTest)
@@ -125,6 +129,7 @@ TEST_F(HandlerTest, InvalidTypeTest)
   long rc = BillingTask::parse_body("abcd", false, body, &msg, FAKE_TRAIL_ID);
   EXPECT_EQ(rc, 400);
   ASSERT_EQ(NULL, msg);
+  delete msg; msg = NULL;
 };
 
 TEST_F(HandlerTest, NoTypeTest)
@@ -134,6 +139,7 @@ TEST_F(HandlerTest, NoTypeTest)
   long rc = BillingTask::parse_body("abcd", false, body, &msg, FAKE_TRAIL_ID);
   EXPECT_EQ(rc, 400);
   ASSERT_EQ(NULL, msg);
+  delete msg; msg = NULL;
 };
 
 TEST_F(HandlerTest, NoIMSInfoTest)
@@ -143,6 +149,7 @@ TEST_F(HandlerTest, NoIMSInfoTest)
   long rc = BillingTask::parse_body("abcd", false, body, &msg, FAKE_TRAIL_ID);
   EXPECT_EQ(rc, 400);
   ASSERT_EQ(NULL, msg);
+  delete msg; msg = NULL;
 };
 
 TEST_F(HandlerTest, NoRoleOfNodeTest)
@@ -152,6 +159,7 @@ TEST_F(HandlerTest, NoRoleOfNodeTest)
   long rc = BillingTask::parse_body("abcd", false, body, &msg, FAKE_TRAIL_ID);
   EXPECT_EQ(rc, 400);
   ASSERT_EQ(NULL, msg);
+  delete msg; msg = NULL;
 };
 
 TEST_F(HandlerTest, NoNodeFunctionalityTest)
@@ -161,4 +169,5 @@ TEST_F(HandlerTest, NoNodeFunctionalityTest)
   long rc = BillingTask::parse_body("abcd", false, body, &msg, FAKE_TRAIL_ID);
   EXPECT_EQ(rc, 400);
   ASSERT_EQ(NULL, msg);
+  delete msg; msg = NULL;
 };
