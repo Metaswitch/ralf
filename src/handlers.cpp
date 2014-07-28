@@ -66,29 +66,36 @@ void BillingTask::run()
     SAS::report_event(timer_pop);
   }
 
-  Message* msg = parse_body(call_id(), timer_interim, _req.body(), trail());
+  Message* msg = NULL;
+  HTTPCode rc = parse_body(call_id(), timer_interim, _req.body(), &msg, trail());
 
-  if (msg == NULL)
+  if (rc != HTTP_OK)
   {
-    SAS::Event rejected(trail(), SASEvent::REQUEST_REJECTED, 0);
-    std::string message = "Invalid JSON";
-    rejected.add_var_param(message);
+    SAS::Event rejected(trail(), SASEvent::REQUEST_REJECTED_INVALID_JSON, 0);
     SAS::report_event(rejected);
-    send_http_reply(400);
+    send_http_reply(rc);
   }
   else
   {
-    send_http_reply(200);
-    _sess_mgr->handle(msg);
+    send_http_reply(rc);
+
+    if (msg == NULL)
+    {
+      _sess_mgr->handle(msg);
+    }
   }
 
+  delete msg; msg = NULL;
   delete this;
 }
 //LCOV_EXCL_STOP
 
-Message* BillingTask::parse_body(std::string call_id, bool timer_interim, std::string reqbody, SAS::TrailId trail)
+HTTPCode BillingTask::parse_body(std::string call_id,
+                                 bool timer_interim,
+                                 std::string reqbody,
+                                 Message** msg,
+                                 SAS::TrailId trail)
 {
-
   rapidjson::Document* body = new rapidjson::Document();
   std::string bodys = reqbody;
   body->Parse<0>(bodys.c_str());
@@ -123,7 +130,7 @@ Message* BillingTask::parse_body(std::string call_id, bool timer_interim, std::s
   {
     LOG_WARNING("JSON document was either not valid or did not have an 'event' key");
     delete body;
-    return NULL;
+    return HTTP_BAD_RESULT;
   }
 
   // Verify the Role-Of-Node and Node-Functionality AVPs are present (we use these
@@ -135,7 +142,7 @@ Message* BillingTask::parse_body(std::string call_id, bool timer_interim, std::s
   {
     LOG_ERROR("IMS-Information not included in the event description");
     delete body;
-    return NULL;
+    return HTTP_BAD_RESULT;
   }
   else
   {
@@ -148,8 +155,9 @@ Message* BillingTask::parse_body(std::string call_id, bool timer_interim, std::s
     {
       LOG_ERROR("No Role-Of-Node in IMS-Information");
       delete body;
-      return NULL;
+      return HTTP_BAD_RESULT;
     }
+
     role_of_node = (role_of_node_t)role_of_node_json->value.GetInt();
 
     rapidjson::Value::Member* node_function_json = (*body)
@@ -161,8 +169,9 @@ Message* BillingTask::parse_body(std::string call_id, bool timer_interim, std::s
     {
       LOG_ERROR("No Node-Functionality in IMS-Information");
       delete body;
-      return NULL;
+      return HTTP_BAD_RESULT;
     }
+
     node_functionality = (node_functionality_t)node_function_json->value.GetInt();
   }
 
@@ -173,14 +182,15 @@ Message* BillingTask::parse_body(std::string call_id, bool timer_interim, std::s
   {
     LOG_WARNING("Accounting-Record-Type not available in JSON");
     delete body;
-    return NULL;
+    return HTTP_BAD_RESULT;
   }
+
   Rf::AccountingRecordType record_type((*body)["event"]["Accounting-Record-Type"].GetInt());
   if (!record_type.isValid())
   {
     LOG_ERROR("Accounting-Record-Type was not one of START/INTERIM/STOP/EVENT");
     delete body;
-    return NULL;
+    return HTTP_BAD_RESULT;
   }
 
   // Get the Acct-Interim-Interval if present
@@ -192,20 +202,28 @@ Message* BillingTask::parse_body(std::string call_id, bool timer_interim, std::s
 
   // If we have a START or EVENT Accounting-Record-Type, we must have
   // a list of CCFs to use as peers.
-
+  // If these are missing, Ralf can't send the ACR onto a CDF, but it has
+  // successfully processed the request. Log this and return 200 OK with
+  // no further processing.
   if (record_type.isStart() || record_type.isEvent())
   {
     if (!((body->HasMember("peers")) && (*body)["peers"].IsObject()))
     {
       LOG_ERROR("JSON lacked a 'peers' object (mandatory for START/EVENT)");
+      SAS::Event missing_peers(trail, SASEvent::INCOMING_REQUEST_NO_PEERS, 0);
+      missing_peers.add_static_param(record_type.code());
+      missing_peers.add_static_param(node_functionality);
+      SAS::report_event(missing_peers);
+
       delete body;
-      return NULL;
+      return HTTP_OK;
     }
+
     if (!((*body)["peers"].HasMember("ccf")) ||(!(*body)["peers"]["ccf"].IsArray()) || ((*body)["peers"]["ccf"].Size() == 0))
     {
       LOG_ERROR("JSON lacked a 'ccf' array, or the array was empty (mandatory for START/EVENT)");
       delete body;
-      return NULL;
+      return HTTP_BAD_RESULT;
     }
 
     for (rapidjson::SizeType i = 0; i < (*body)["peers"]["ccf"].Size(); i++)
@@ -214,7 +232,7 @@ Message* BillingTask::parse_body(std::string call_id, bool timer_interim, std::s
       {
         LOG_ERROR("JSON contains a 'ccf' array but not all the elements are strings");
         delete body;
-        return NULL;
+        return HTTP_BAD_RESULT;
       }
       LOG_DEBUG("Adding CCF %s", (*body)["peers"]["ccf"][i].GetString());
       ccfs.push_back((*body)["peers"]["ccf"][i].GetString());
@@ -226,17 +244,18 @@ Message* BillingTask::parse_body(std::string call_id, bool timer_interim, std::s
   incoming.add_static_param(node_functionality);
   SAS::report_event(incoming);
 
-  Message* msg = new Message(call_id,
-                             role_of_node,
-                             node_functionality,
-                             body,
-                             record_type,
-                             session_refresh_time,
-                             trail,
-                             timer_interim);
+  *msg = new Message(call_id,
+                     role_of_node,
+                     node_functionality,
+                     body,
+                     record_type,
+                     session_refresh_time,
+                     trail,
+                     timer_interim);
   if (!ccfs.empty())
   {
-    msg->ccfs = ccfs;
+    (*msg)->ccfs = ccfs;
   }
-  return msg;
+
+  return HTTP_OK;
 }
