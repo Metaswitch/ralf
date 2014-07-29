@@ -62,7 +62,11 @@ public:
     HttpStackUtils::Task(req, trail), _sess_mgr(cfg->mgr)
   {};
   void run();
-  static Message* parse_body(std::string call_id, bool timer_interim, std::string reqbody, SAS::TrailId trail);
+  static HTTPCode parse_body(std::string call_id,
+                             bool timer_interim,
+                             std::string reqbody,
+                             Message** msg,
+                             SAS::TrailId trail);
 private:
   inline std::string call_id() {return _req.file();};
   SessionManager* _sess_mgr;
