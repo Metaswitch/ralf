@@ -215,7 +215,6 @@ HTTPCode BillingTask::parse_body(std::string call_id,
       LOG_ERROR("JSON lacked a 'peers' object (mandatory for START/EVENT)");
       SAS::Event missing_peers(trail, SASEvent::INCOMING_REQUEST_NO_PEERS, 0);
       missing_peers.add_static_param(record_type.code());
-      missing_peers.add_static_param(node_functionality);
       SAS::report_event(missing_peers);
 
       delete body;
