@@ -69,7 +69,7 @@ void SessionManager::handle(Message* msg)
     {
       // No record of the session - ignore the request
       LOG_INFO("Session for %s not found in database, ignoring message", msg->call_id.c_str());
-      delete msg;
+      delete msg; msg = NULL;
       return;
     }
 
@@ -266,7 +266,7 @@ void SessionManager::on_ccf_response (bool accepted, uint32_t interim_interval, 
                                msg->function,
                                sess,
                                msg->trail);
-      delete sess;
+      delete sess; sess = NULL;
     }
 
   }
@@ -313,7 +313,7 @@ void SessionManager::on_ccf_response (bool accepted, uint32_t interim_interval, 
   }
 
   // Everything is finished and we're the last holder of the Message object - delete it.
-  delete msg;
+  delete msg; msg = NULL;
 }
 
 // Update the timer ID for the session. This is a best effect change - if there's

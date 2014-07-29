@@ -79,13 +79,16 @@ void BillingTask::run()
   {
     send_http_reply(rc);
 
-    if (msg == NULL)
+    if (msg != NULL)
     {
+      LOG_DEBUG("Handle the received message");
+
+      // The session manager takes ownership of the message object and is
+      // responsible for deleting it.
       _sess_mgr->handle(msg);
     }
   }
 
-  delete msg; msg = NULL;
   delete this;
 }
 //LCOV_EXCL_STOP
