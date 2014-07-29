@@ -86,6 +86,7 @@ void BillingTask::run()
       // The session manager takes ownership of the message object and is
       // responsible for deleting it.
       _sess_mgr->handle(msg);
+      msg = NULL;
     }
   }
 
