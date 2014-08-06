@@ -1,9 +1,9 @@
-#!/bin/sh
+#!/bin/bash
 
-# @file ralf.monit
+# @file poll_ralf.sh
 #
 # Project Clearwater - IMS in the Cloud
-# Copyright (C) 2013 Metaswitch Networks Ltd
+# Copyright (C) 2014  Metaswitch Networks Ltd
 #
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the
@@ -12,16 +12,16 @@
 # the program along with SSL, set forth below. This program is distributed
 # in the hope that it will be useful, but WITHOUT ANY WARRANTY;
 # without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE. See the GNU General Public License for more
+# A PARTICULAR PURPOSE.  See the GNU General Public License for more
 # details. You should have received a copy of the GNU General Public
-# License along with this program. If not, see
+# License along with this program.  If not, see
 # <http://www.gnu.org/licenses/>.
 #
 # The author can be reached by email at clearwater@metaswitch.com or by
 # post at Metaswitch Networks Ltd, 100 Church St, Enfield EN2 6BQ, UK
 #
 # Special Exception
-# Metaswitch Networks Ltd grants you permission to copy, modify,
+# Metaswitch Networks Ltd  grants you permission to copy, modify,
 # propagate, and distribute a work formed by combining OpenSSL with The
 # Software, or a work derivative of such a combination, even if such
 # copying, modification, propagation, or distribution would otherwise
@@ -34,26 +34,30 @@
 # under which the OpenSSL Project distributes the OpenSSL toolkit software,
 # as those licenses appear in the file LICENSE-OPENSSL.
 
+# This script uses HTTP to poll a ralf process and check whether it is healthy.
+
 . /etc/clearwater/config
 
-# Set up the monit configuration for ralf with the right IP addresses and ports
-cat > /etc/monit/conf.d/ralf.monit <<EOF
-# Poll every 10 seconds
-set daemon 10
+# In case ralf has only just restarted, give it a few seconds to come up.
+sleep 5
 
-# Check the server's public interfaces.  We put this first so that we process
-# failed polls (and maybe kill the server) before we process the restart.
-check program poll_ralf with path "/usr/share/clearwater/bin/poll_ralf.sh"
-  if status != 0 for 2 cycles then exec "/etc/init.d/ralf abort"
+# Grab our configuration - we just use the local IP address.
+. /etc/clearwater/config
 
-# Monitor the server's PID file and check its public interfaces.
-check process ralf pidfile /var/run/ralf.pid
-  start program = "/etc/init.d/ralf start"
-  stop program = "/etc/init.d/ralf stop"
-#  if failed host $local_ip port 80 type TCP protocol http
-#    and use the request "/ping" then exec "/etc/init.d/ralf abort-restart"
-EOF
-chmod 0644 /etc/monit/conf.d/ralf.monit
+# For HTTP, we need to wrap IPv6 addresses in square brackets.
+http_ip=$(/usr/share/clearwater/bin/bracket_ipv6_address.py $local_ip)
 
-# Force monit to reload its configuration
-service monit reload
+# Send HTTP request and check that the response is "OK".
+http_url=http://$http_ip:10888/ping
+curl -f -g -m 2 -s $http_url 2> /tmp/poll-ralf.sh.stderr.$$ | tee /tmp/poll-ralf.sh.stdout.$$ | head -1 | egrep -q "^OK$"
+rc=$?
+
+# Check the return code and log if appropriate.
+if [ $rc != 0 ] ; then
+  echo HTTP failed to $http_url        >&2
+  cat /tmp/poll-ralf.sh.stderr.$$ >&2
+  cat /tmp/poll-ralf.sh.stdout.$$ >&2
+fi
+rm -f /tmp/poll-ralf.sh.stderr.$$ /tmp/poll-ralf.sh.stdout.$$
+
+exit $rc
