@@ -75,6 +75,24 @@ struct options
   std::string sas_system_name;
 };
 
+const static struct option long_opt[] =
+{
+  {"localhost",         required_argument, NULL, 'l'},
+  {"diameter-conf",     required_argument, NULL, 'c'},
+  {"http",              required_argument, NULL, 'H'},
+  {"http-threads",      required_argument, NULL, 't'},
+  {"billing-realm",     required_argument, NULL, 'b'},
+  {"max-peers",         required_argument, NULL, 'p'},
+  {"access-log",        required_argument, NULL, 'a'},
+  {"log-file",          required_argument, NULL, 'F'},
+  {"log-level",         required_argument, NULL, 'L'},
+  {"sas",               required_argument, NULL, 's'},
+  {"help",              no_argument,       NULL, 'h'},
+  {NULL,                0,                 NULL, 0},
+};
+
+static std::string options_description = "l:c:H:t:b:p:a:F:L:s:h";
+
 void usage(void)
 {
   puts("Options:\n"
@@ -98,39 +116,56 @@ void usage(void)
        " -h, --help                 Show this help screen\n");
 }
 
-int init_options(int argc, char**argv, struct options& options)
+int init_logging_options(int argc, char**argv, struct options& options)
 {
-  struct option long_opt[] =
-  {
-    {"localhost",         required_argument, NULL, 'l'},
-    {"diameter-conf",     required_argument, NULL, 'c'},
-    {"http",              required_argument, NULL, 'H'},
-    {"http-threads",      required_argument, NULL, 't'},
-    {"billing-realm",     required_argument, NULL, 'b'},
-    {"max-peers",         required_argument, NULL, 'p'},
-    {"access-log",        required_argument, NULL, 'a'},
-    {"log-file",          required_argument, NULL, 'F'},
-    {"log-level",         required_argument, NULL, 'L'},
-    {"sas",               required_argument, NULL, 's'},
-    {"help",              no_argument,       NULL, 'h'},
-    {NULL,                0,                 NULL, 0},
-  };
-
   int opt;
   int long_opt_ind;
-  while ((opt = getopt_long(argc, argv, "l:c:H:t:b:p:a:F:L:s:h", long_opt, &long_opt_ind)) != -1)
+
+  optind = 0;
+  while ((opt = getopt_long(argc, argv, options_description.c_str(), long_opt, &long_opt_ind)) != -1)
+  {
+    switch (opt)
+    {
+    case 'F':
+      options.log_to_file = true;
+      options.log_directory = std::string(optarg);
+      break;
+
+    case 'L':
+      options.log_level = atoi(optarg);
+      break;
+
+    default:
+      // Ignore other options at this point
+      break;
+    }
+  }
+
+  return 0;
+}
+
+int init_options(int argc, char**argv, struct options& options)
+{
+  int opt;
+  int long_opt_ind;
+
+  optind = 0;
+  while ((opt = getopt_long(argc, argv, options_description.c_str(), long_opt, &long_opt_ind)) != -1)
   {
     switch (opt)
     {
     case 'l':
+      LOG_INFO("Local host: %s", optarg);
       options.local_host = std::string(optarg);
       break;
 
     case 'c':
+      LOG_INFO("Diameter configuration file: %s", optarg);
       options.diameter_conf = std::string(optarg);
       break;
 
     case 'H':
+      LOG_INFO("HTTP address: %s", optarg);
       options.http_address = std::string(optarg);
       // TODO: Parse optional HTTP port.
       break;
@@ -145,40 +180,40 @@ int init_options(int argc, char**argv, struct options& options)
       {
         options.sas_server = sas_options[0];
         options.sas_system_name = sas_options[1];
-        printf("SAS set to %s\n", options.sas_server.c_str());
-        printf("System name is set to %s\n", options.sas_system_name.c_str());
+        LOG_INFO("SAS set to %s\n", options.sas_server.c_str());
+        LOG_INFO("System name is set to %s\n", options.sas_system_name.c_str());
       }
       else
       {
-        printf("Invalid --sas option, SAS disabled\n");
+        LOG_WARNING("Invalid --sas option, SAS disabled\n");
       }
     }
     break;
 
     case 't':
+      LOG_INFO("HTTP threads: %s", optarg);
       options.http_threads = atoi(optarg);
       break;
 
     case 'b':
+      LOG_INFO("Billing realm: %s", optarg);
       options.billing_realm = std::string(optarg);
       break;
 
     case 'p':
+      LOG_INFO("Maximum peers: %s", optarg);
       options.max_peers = atoi(optarg);
       break;
 
     case 'a':
+      LOG_INFO("Access log: %s", optarg);
       options.access_log_enabled = true;
       options.access_log_directory = std::string(optarg);
       break;
 
     case 'F':
-      options.log_to_file = true;
-      options.log_directory = std::string(optarg);
-      break;
-
     case 'L':
-      options.log_level = atoi(optarg);
+      // Ignore F and L - these are handled by init_logging_options
       break;
 
     case 'h':
@@ -186,7 +221,7 @@ int init_options(int argc, char**argv, struct options& options)
       return -1;
 
     default:
-      printf("Unknown option: %d.  Run with --help for options.\n", opt);
+      LOG_ERROR("Unknown option: %d.  Run with --help for options.\n", opt);
       return -1;
     }
   }
@@ -243,7 +278,7 @@ int main(int argc, char**argv)
   options.sas_server = "0.0.0.0";
   options.sas_system_name = "";
 
-  if (init_options(argc, argv, options) != 0)
+  if (init_logging_options(argc, argv, options) != 0)
   {
     return 1;
   }
@@ -261,13 +296,28 @@ int main(int argc, char**argv)
     Log::setLogger(new Logger(options.log_directory, prog_name));
   }
 
+  LOG_STATUS("Log level set to %d", options.log_level);
+
+  std::stringstream options_ss;
+  for (int ii = 0; ii < argc; ii++)
+  {
+    options_ss << argv[ii];
+    options_ss << " ";
+  }
+  std::string options_str = "Command-line options were: " + options_ss.str();
+
+  LOG_INFO(options_str.c_str());
+
+  if (init_options(argc, argv, options) != 0)
+  {
+    return 1;
+  }
+
   AccessLogger* access_logger = NULL;
   if (options.access_log_enabled)
   {
     access_logger = new AccessLogger(options.access_log_directory);
   }
-
-  LOG_STATUS("Log level set to %d", options.log_level);
 
   SAS::init(options.sas_system_name,
             "ralf",
