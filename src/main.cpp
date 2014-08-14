@@ -286,7 +286,7 @@ int main(int argc, char**argv)
   diameter_stack->configure(options.diameter_conf);
   dict = new Rf::Dictionary();
   diameter_stack->advertize_application(Diameter::Dictionary::Application::ACCT,
-                                        dict->TGPP, dict->RF);
+                                        dict->RF);
   diameter_stack->start();
 
   MemcachedStore* mstore = new MemcachedStore(false, "./cluster_settings");
