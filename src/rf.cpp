@@ -71,7 +71,7 @@ AccountingRequest::AccountingRequest(const Dictionary* dict,
     add_session_id(session_id);
   }
   add_origin();
-  add_acct_app_id(dict->RF);
+  add_app_id(Dictionary::Application::ACCT, dict->RF);
 
   // Fill in contributed fields
   Diameter::Dictionary::AVP dest_host_dict("Destination-Host");
