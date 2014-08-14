@@ -71,7 +71,7 @@ AccountingRequest::AccountingRequest(const Dictionary* dict,
     add_session_id(session_id);
   }
   add_origin();
-  add_app_id(Diameter::Dictionary::Application::ACCT, dict->TGPP, dict->RF);
+  add_acct_app_id(dict->RF);
 
   // Fill in contributed fields
   Diameter::Dictionary::AVP dest_host_dict("Destination-Host");
@@ -131,7 +131,7 @@ AccountingRequest::AccountingRequest(const Dictionary* dict,
     {
       LOG_WARNING("AVP %s not recognised, ignoring", it->name.GetString());
     }
-  }   
+  }
 }
 
 AccountingRequest::~AccountingRequest()
