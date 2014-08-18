@@ -34,6 +34,10 @@
  * as those licenses appear in the file LICENSE-OPENSSL.
  */
 
+ extern "C" {
+#include "syslog_facade.h"
+}
+
 #include <getopt.h>
 #include <signal.h>
 #include <semaphore.h>
@@ -150,6 +154,7 @@ int init_options(int argc, char**argv, struct options& options)
       }
       else
       {
+	syslog(SYSLOG_ERR, "Invalid --sas option in /etc/clearwater/config, SAS disabled");
         printf("Invalid --sas option, SAS disabled\n");
       }
     }
@@ -186,6 +191,7 @@ int init_options(int argc, char**argv, struct options& options)
       return -1;
 
     default:
+      syslog(SYSLOG_ERR, "Fatal - Unknown command line option %c.  Run with --help for options.", opt);
       printf("Unknown option: %d.  Run with --help for options.\n", opt);
       return -1;
     }
@@ -210,6 +216,8 @@ void exception_handler(int sig)
   signal(SIGSEGV, SIG_DFL);
 
   // Log the signal, along with a backtrace.
+  syslog(SYSLOG_ERR, "Fatal - Ralf has exited or crashed with signal %d", sig);
+  closelog();
   LOG_BACKTRACE("Signal %d caught", sig);
 
   // Ensure the log files are complete - the core file created by abort() below
@@ -243,8 +251,12 @@ int main(int argc, char**argv)
   options.sas_server = "0.0.0.0";
   options.sas_system_name = "";
 
+  openlog("ralf", SYSLOG_PID, SYSLOG_LOCAL6);
+  syslog(SYSLOG_NOTICE, "Ralf started");
+
   if (init_options(argc, argv, options) != 0)
   {
+    closelog();
     return 1;
   }
 
@@ -330,6 +342,7 @@ int main(int argc, char**argv)
   }
   catch (HttpStack::Exception& e)
   {
+    syslog(SYSLOG_ERR, "The Http stack has encountered an error in function %s with error %d", e._func, e._rc);
     fprintf(stderr, "Caught HttpStack::Exception - %s - %d\n", e._func, e._rc);
   }
 
@@ -351,6 +364,7 @@ int main(int argc, char**argv)
 
   sem_wait(&term_sem);
 
+  syslog(SYSLOG_ERR, "Ralf ended - Termination signal received - terminating");
   try
   {
     http_stack->stop();
@@ -358,6 +372,7 @@ int main(int argc, char**argv)
   }
   catch (HttpStack::Exception& e)
   {
+    syslog(SYSLOG_ERR, "Failed to stop HttpStack stack in function %s with error %d", e._func, e._rc);
     fprintf(stderr, "Caught HttpStack::Exception - %s - %d\n", e._func, e._rc);
   }
 
@@ -369,6 +384,7 @@ int main(int argc, char**argv)
 
   delete load_monitor; load_monitor = NULL;
 
+  closelog();
   signal(SIGTERM, SIG_DFL);
   sem_destroy(&term_sem);
 }
