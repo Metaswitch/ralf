@@ -122,7 +122,7 @@ AccountingRequest::AccountingRequest(const Dictionary* dict,
         {
           Diameter::Dictionary::AVP new_dict(VENDORS, it->name.GetString());
           Diameter::AVP avp(new_dict);
-          add(avp.val_json(VENDORS, new_dict, array_iter));
+          add(avp.val_json(VENDORS, new_dict, *array_iter));
         }
         break;
       }
