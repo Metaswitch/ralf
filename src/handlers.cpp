@@ -150,12 +150,10 @@ HTTPCode BillingTask::parse_body(std::string call_id,
   }
   else
   {
-    rapidjson::Value::MemberIterator role_of_node_json = (*body)
-                                                         ["event"]
-                                                         ["Service-Information"]
-                                                         ["IMS-Information"].
-                                                         FindMember("Role-Of-Node");
-    if ((&role_of_node_json == NULL) || !(role_of_node_json->value.IsInt()))
+
+    rapidjson::Value& ims_information_json = (*body)["event"]["Service-Information"]["IMS-Information"];
+    rapidjson::Value::MemberIterator role_of_node_json = ims_information_json.FindMember("Role-Of-Node");
+    if ((role_of_node_json == ims_information_json.MemberEnd()) || !(role_of_node_json->value.IsInt()))
     {
       LOG_ERROR("No Role-Of-Node in IMS-Information");
       delete body;
@@ -164,12 +162,8 @@ HTTPCode BillingTask::parse_body(std::string call_id,
 
     role_of_node = (role_of_node_t)role_of_node_json->value.GetInt();
 
-    rapidjson::Value::MemberIterator node_function_json = (*body)
-                                                          ["event"]
-                                                          ["Service-Information"]
-                                                          ["IMS-Information"].
-                                                          FindMember("Node-Functionality");
-    if ((&node_function_json == NULL) || !(node_function_json->value.IsInt()))
+    rapidjson::Value::MemberIterator node_function_json = ims_information_json.FindMember("Node-Functionality");
+    if ((node_function_json == ims_information_json.MemberEnd()) || !(node_function_json->value.IsInt()))
     {
       LOG_ERROR("No Node-Functionality in IMS-Information");
       delete body;
