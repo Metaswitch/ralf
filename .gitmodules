@@ -3,7 +3,7 @@
 	url = git@github.com:Metaswitch/clearwater-build-infra.git
 [submodule "modules/rapidjson"]
 	path = modules/rapidjson
-	url = git@github.com:zvelo/rapidjson.git
+	url = git@github.com:miloyip/rapidjson.git
 [submodule "modules/libevhtp"]
 	path = modules/libevhtp
 	url = git@github.com:Metaswitch/libevhtp.git
