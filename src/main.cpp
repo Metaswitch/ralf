@@ -1,5 +1,5 @@
 /**
- * @file main.cpp main function for homestead
+ * @file main.cpp main function for ralf
  *
  * Project Clearwater - IMS in the Cloud
  * Copyright (C) 2013  Metaswitch Networks Ltd
@@ -34,14 +34,12 @@
  * as those licenses appear in the file LICENSE-OPENSSL.
  */
 
- extern "C" {
-#include "syslog_facade.h"
-}
-
 #include <getopt.h>
 #include <signal.h>
 #include <semaphore.h>
 #include <strings.h>
+
+#include "ralfdcea.h"
 
 #include "ipv6utils.h"
 #include "memcachedstore.h"
@@ -190,7 +188,7 @@ int init_options(int argc, char**argv, struct options& options)
       }
       else
       {
-	syslog(SYSLOG_ERR, "Invalid --sas option in /etc/clearwater/config, SAS disabled");
+	CL_RALF_INVALID_SAS_OPTION.log();
         printf("Invalid --sas option, SAS disabled\n");
       }
     }
@@ -227,7 +225,7 @@ int init_options(int argc, char**argv, struct options& options)
       return -1;
 
     default:
-      syslog(SYSLOG_ERR, "Fatal - Unknown command line option %c.  Run with --help for options.", opt);
+      CL_RALF_INVALID_OPTION_C.log();
       printf("Unknown option: %d.  Run with --help for options.\n", opt);
       return -1;
     }
@@ -253,7 +251,7 @@ void exception_handler(int sig)
 
   // Log the signal, along with a backtrace.
   const char* signamep = (sig >= SIGHUP and sig <= SIGSYS) ? signal_description[sig-1] : "Unknown";
-  syslog(SYSLOG_ERR, "Fatal - Ralf has exited or crashed with signal %s", signamep);
+  CL_RALF_CRASHED.log(signamep);
   closelog();
   LOG_BACKTRACE("Signal %d caught", sig);
 
@@ -289,7 +287,7 @@ int main(int argc, char**argv)
   options.sas_system_name = "";
 
   openlog("ralf", SYSLOG_PID, SYSLOG_LOCAL6);
-  syslog(SYSLOG_NOTICE, "Ralf started");
+  CL_RALF_STARTED.log();
 
   if (init_options(argc, argv, options) != 0)
   {
@@ -379,7 +377,7 @@ int main(int argc, char**argv)
   }
   catch (HttpStack::Exception& e)
   {
-    syslog(SYSLOG_ERR, "The Http stack has encountered an error in function %s with error %d", e._func, e._rc);
+    CL_RALF_HTTP_ERROR.log(e._func, e._rc);
     fprintf(stderr, "Caught HttpStack::Exception - %s - %d\n", e._func, e._rc);
   }
 
@@ -401,7 +399,7 @@ int main(int argc, char**argv)
 
   sem_wait(&term_sem);
 
-  syslog(SYSLOG_ERR, "Ralf ended - Termination signal received - terminating");
+  CL_RALF_ENDED.log();;
   try
   {
     http_stack->stop();
@@ -409,7 +407,7 @@ int main(int argc, char**argv)
   }
   catch (HttpStack::Exception& e)
   {
-    syslog(SYSLOG_ERR, "Failed to stop HttpStack stack in function %s with error %d", e._func, e._rc);
+    CL_RALF_HTTP_STOP_ERROR.log(e._func, e._rc);
     fprintf(stderr, "Caught HttpStack::Exception - %s - %d\n", e._func, e._rc);
   }
 
