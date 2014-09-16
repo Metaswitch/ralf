@@ -36,7 +36,7 @@
 #include "craft_dcea.h"
 // Ralf syslog identities
 /*************************************************************/
-SysLog CL_RALF_INVALID_SAS_OPTION
+PDLog CL_RALF_INVALID_SAS_OPTION
 {
   CL_RALF_ID + 1,
   SYSLOG_ERR,
@@ -45,7 +45,7 @@ SysLog CL_RALF_INVALID_SAS_OPTION
   "",
   ""
 };
-SysLog CL_RALF_INVALID_OPTION_C
+PDLog CL_RALF_INVALID_OPTION_C
 {
   CL_RALF_ID + 2,
   SYSLOG_ERR,
@@ -54,7 +54,7 @@ SysLog CL_RALF_INVALID_OPTION_C
   "",
   ""
 };
-SysLog1<char*> CL_RALF_CRASHED
+PDLog1<char*> CL_RALF_CRASHED
 {
   CL_RALF_ID + 3,
   SYSLOG_ERR,
@@ -63,7 +63,7 @@ SysLog1<char*> CL_RALF_CRASHED
   "",
   ""
 };
-SysLog CL_RALF_STARTED
+PDLog CL_RALF_STARTED
 {
   CL_RALF_ID + 4,
   SYSLOG_ERR,
@@ -72,7 +72,7 @@ SysLog CL_RALF_STARTED
   "",
   ""
 };
-SysLog2<char*, int> CL_RALF_HTTP_ERROR
+PDLog2<char*, int> CL_RALF_HTTP_ERROR
 {
   CL_RALF_ID + 5,
   SYSLOG_ERR,
@@ -81,7 +81,7 @@ SysLog2<char*, int> CL_RALF_HTTP_ERROR
   "",
   ""
 };
-SysLog CL_RALF_ENDED
+PDLog CL_RALF_ENDED
 {
   CL_RALF_ID + 6,
   SYSLOG_ERR,
@@ -90,7 +90,7 @@ SysLog CL_RALF_ENDED
   "",
   ""
 };
-SysLog2<char*, int> CL_RALF_HTTP_STOP_ERROR
+PDLog2<char*, int> CL_RALF_HTTP_STOP_ERROR
 {
   CL_RALF_ID + 7,
   SYSLOG_ERR,
