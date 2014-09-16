@@ -37,14 +37,73 @@
 #ifndef _RALFDCEA_H__
 #define _RALFSTEADDCEA_H__
 
+#include <string>
 #include "craft_dcea.h"
 
-extern SysLog CL_RALF_INVALID_SAS_OPTION;
-extern SysLog CL_RALF_INVALID_OPTION_C;
-extern SysLog1<const char*> CL_RALF_CRASHED;
-extern SysLog CL_RALF_STARTED;
-extern SysLog2<const char*, int> CL_RALF_HTTP_ERROR;
-extern SysLog CL_RALF_ENDED;
-extern SysLog2<const char*, int> CL_RALF_HTTP_STOP_ERROR;
+// Ralf syslog identities
+/*************************************************************/
+const static PDLog CL_RALF_INVALID_SAS_OPTION
+{
+  PDLogBase::CL_RALF_ID + 1,
+  PDLOG_ERR,
+  "Invalid --sas option in /etc/clearwater/config, SAS disabled",
+  "",
+  "",
+  ""
+};
+const static PDLog CL_RALF_INVALID_OPTION_C
+{
+  PDLogBase::CL_RALF_ID + 2,
+  PDLOG_ERR,
+  "Fatal - Unknown command line option %c.  Run with --help for options.",
+  "",
+  "",
+  ""
+};
+const static PDLog1<const char*> CL_RALF_CRASHED
+{
+  PDLogBase::CL_RALF_ID + 3,
+  PDLOG_ERR,
+  "Fatal - Ralf has exited or crashed with signal %s",
+  "",
+  "",
+  ""
+};
+const static PDLog CL_RALF_STARTED
+{
+  PDLogBase::CL_RALF_ID + 4,
+  PDLOG_ERR,
+  "Ralf started",
+  "",
+  "",
+  ""
+};
+const static PDLog2<const char*, int> CL_RALF_HTTP_ERROR
+{
+  PDLogBase::CL_RALF_ID + 5,
+  PDLOG_ERR,
+  "The Http stack has encountered an error in function %s with error %d",
+  "",
+  "",
+  ""
+};
+const static PDLog CL_RALF_ENDED
+{
+  PDLogBase::CL_RALF_ID + 6,
+  PDLOG_ERR,
+  "Ralf ended - Termination signal received - terminating",
+  "",
+  "",
+  ""
+};
+const static PDLog2<const char*, int> CL_RALF_HTTP_STOP_ERROR
+{
+  PDLogBase::CL_RALF_ID + 7,
+  PDLOG_ERR,
+  "Failed to stop HttpStack stack in function %s with error %d",
+  "",
+  "",
+  ""
+};
 
 #endif

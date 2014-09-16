@@ -12,7 +12,6 @@ TARGET := ralf
 TARGET_TEST := ralf_test
 
 TARGET_SOURCES := accesslogger.cpp \
-                  cpp_common_dcea.cpp \
                   localstore.cpp \
                   memcachedstore.cpp \
                   memcachedstoreview.cpp \
@@ -23,7 +22,6 @@ TARGET_SOURCES := accesslogger.cpp \
                   diameterstack.cpp \
                   rf.cpp \
                   ralf_transaction.cpp \
-                  ralfdcea.cpp \
                   message.cpp \
                   httpstack.cpp \
                   httpstack_utils.cpp \

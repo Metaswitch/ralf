@@ -286,7 +286,7 @@ int main(int argc, char**argv)
   options.sas_server = "0.0.0.0";
   options.sas_system_name = "";
 
-  openlog("ralf", SYSLOG_PID, SYSLOG_LOCAL6);
+  openlog("ralf", PDLOG_PID, PDLOG_LOCAL6);
   CL_RALF_STARTED.log();
 
   if (init_options(argc, argv, options) != 0)
