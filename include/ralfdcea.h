@@ -1,5 +1,5 @@
 /**
- * @file homesteaddcea.h  Sprout Craft Log declarations.
+ * @file ralfdcea.h  Sprout Craft Log declarations.
  *
  * Project Clearwater - IMS in the Cloud
  * Copyright (C) 2013  Metaswitch Networks Ltd
@@ -68,10 +68,9 @@ const static PDLog1<const char*> CL_RALF_CRASHED
   PDLogBase::CL_RALF_ID + 3,
   PDLOG_ERR,
   "Fatal - Ralf has exited or crashed with signal %s",
-   "Fatal - Ralf has exited or crashed with signal %s",
    "Ralf has encountered a fatal software error or has been terminated",
    "The Ralf application will restart.",
-   4,
+   3,
    "This error can occur if Ralf has been terminated by operator command.",
    "Check the craft log to see if Monit has reported a ralf timeout.  This would be reported as a 'poll_ralf' failed.  Monit will restart ralf for this case.",
    "Actual crashes such as abort, segment trap, bus error trap, should be reported as a problem. "
