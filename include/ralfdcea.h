@@ -91,7 +91,7 @@ const static PDLog2<const char*, int> CL_RALF_HTTP_ERROR
   PDLOG_ERR,
   "The Http stack has encountered an error in function %s with error %d",
   "Ralf encountered an error when attempting to make an HTTP connection to Chronos.",
-  "The interface to Chronos has failed.  Ralf can't use tiemr services.",
+  "The interface to Chronos has failed.  Ralf can't use timer services.",
   1,
   "Report this issue."
 );
@@ -101,10 +101,10 @@ const static PDLog CL_RALF_ENDED
   PDLOG_ERR,
   "Ralf ended - Termination signal received - terminating",
   "Ralf has been terminated by monit or has exited",
-  "Chronos timer service is not longer available",
+  "Ralf billing service is not longer available",
    2,
-  "(1)This occurs normally when Chronos is stopped.",
-  "(2). If Chronos failed to respond then monit can restart Chronos.  Report this issue."
+  "(1). This occurs normally when Ralf is stopped.",
+  "(2). If Ralf failed to respond then monit can restart Ralf.  Report this issue."
 );
 const static PDLog2<const char*, int> CL_RALF_HTTP_STOP_ERROR
 (
