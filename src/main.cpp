@@ -58,6 +58,11 @@
 #include "realmmanager.h"
 #include "communicationmonitor.h"
 
+enum OptionTypes
+{
+  ALARMS_ENABLED=256+1
+};
+
 struct options
 {
   std::string local_host;
@@ -74,6 +79,7 @@ struct options
   int log_level;
   std::string sas_server;
   std::string sas_system_name;
+  bool alarms_enabled;
 };
 
 const static struct option long_opt[] =
@@ -88,6 +94,7 @@ const static struct option long_opt[] =
   {"log-file",          required_argument, NULL, 'F'},
   {"log-level",         required_argument, NULL, 'L'},
   {"sas",               required_argument, NULL, 's'},
+  {"alarms-enabled",    no_argument,       NULL, ALARMS_ENABLED},
   {"help",              no_argument,       NULL, 'h'},
   {NULL,                0,                 NULL, 0},
 };
@@ -114,6 +121,7 @@ void usage(void)
        " Use specified host as Service Assurance Server and specified\n"
        " system name to identify this system to SAS. If this option isn't\n"
        " specified, SAS is disabled\n"
+       "     --alarms-enabled       Whether SNMP alarms are enabled (default: false)\n"
        " -h, --help                 Show this help screen\n");
 }
 
@@ -217,6 +225,11 @@ int init_options(int argc, char**argv, struct options& options)
       // Ignore F and L - these are handled by init_logging_options
       break;
 
+    case ALARMS_ENABLED:
+      LOG_INFO("SNMP alarms are enabled");
+      options.alarms_enabled = true;
+      break;
+
     case 'h':
       usage();
       return -1;
@@ -258,17 +271,10 @@ void exception_handler(int sig)
 
 int main(int argc, char**argv)
 {
-  CommunicationMonitor cdf_comm_monitor("ralf", "RALF_CDF_COMM_ERROR_CLEAR",
-                                                "RALF_CDF_COMM_ERROR_CRITICAL");
-
-  CommunicationMonitor chronos_comm_monitor("ralf", "RALF_CHRONOS_COMM_ERROR_CLEAR",
-                                                    "RALF_CHRONOS_COMM_ERROR_CRITICAL");
-
-  CommunicationMonitor memcached_comm_monitor("ralf", "RALF_MEMCACHED_COMM_ERROR_CLEAR",
-                                                      "RALF_MEMCACHED_COMM_ERROR_CRITICAL");
-
-  AlarmPair vbucket_alarms("ralf", "RALF_VBUCKET_ERROR_CLEAR",
-                                   "RALF_VBUCKET_ERROR_MAJOR");
+  CommunicationMonitor* cdf_comm_monitor = NULL;
+  CommunicationMonitor* chronos_comm_monitor = NULL;
+  CommunicationMonitor* memcached_comm_monitor = NULL;
+  AlarmPair* vbucket_alarms = NULL;
 
   // Set up our exception signal handler for asserts and segfaults.
   signal(SIGABRT, exception_handler);
@@ -290,6 +296,7 @@ int main(int argc, char**argv)
   options.log_level = 0;
   options.sas_server = "0.0.0.0";
   options.sas_system_name = "";
+  options.alarms_enabled = false;
 
   if (init_logging_options(argc, argv, options) != 0)
   {
@@ -338,9 +345,25 @@ int main(int argc, char**argv)
             options.sas_server,
             sas_write);
 
-  // Start the alarm request agent
-  AlarmReqAgent::get_instance().start();
-  Alarm::clear_all("ralf");
+  if (options.alarms_enabled)
+  {
+    // Create Ralf's alarm objects
+    cdf_comm_monitor = new CommunicationMonitor("ralf", "RALF_CDF_COMM_ERROR_CLEAR",
+                                                        "RALF_CDF_COMM_ERROR_CRITICAL");
+
+    chronos_comm_monitor = new CommunicationMonitor("ralf", "RALF_CHRONOS_COMM_ERROR_CLEAR",
+                                                            "RALF_CHRONOS_COMM_ERROR_CRITICAL");
+
+    memcached_comm_monitor = new CommunicationMonitor("ralf", "RALF_MEMCACHED_COMM_ERROR_CLEAR",
+                                                              "RALF_MEMCACHED_COMM_ERROR_CRITICAL");
+
+    vbucket_alarms = new AlarmPair("ralf", "RALF_VBUCKET_ERROR_CLEAR",
+                                           "RALF_VBUCKET_ERROR_MAJOR");
+
+    // Start the alarm request agent
+    AlarmReqAgent::get_instance().start();
+    Alarm::clear_all("ralf");
+  }
 
   LoadMonitor* load_monitor = new LoadMonitor(100000, // Initial target latency (us)
                                               20, // Maximum token bucket size.
@@ -352,15 +375,15 @@ int main(int argc, char**argv)
   Rf::Dictionary* dict = NULL;
   diameter_stack->initialize();
   diameter_stack->configure(options.diameter_conf);
-  diameter_stack->set_comm_monitor(&cdf_comm_monitor);
+  diameter_stack->set_comm_monitor(cdf_comm_monitor);
   dict = new Rf::Dictionary();
   diameter_stack->advertize_application(Diameter::Dictionary::Application::ACCT,
                                         dict->RF);
   diameter_stack->start();
 
   MemcachedStore* mstore = new MemcachedStore(false, "./cluster_settings");
-  mstore->set_comm_monitor(&memcached_comm_monitor);
-  mstore->set_vbucket_alarms(&vbucket_alarms);
+  mstore->set_comm_monitor(memcached_comm_monitor);
+  mstore->set_vbucket_alarms(vbucket_alarms);
   SessionStore* store = new SessionStore(mstore);
   BillingHandlerConfig* cfg = new BillingHandlerConfig();
   PeerMessageSenderFactory* factory = new PeerMessageSenderFactory(options.billing_realm);
@@ -386,7 +409,7 @@ int main(int argc, char**argv)
   LOG_STATUS("Creating connection to Chronos at %s using %s as the callback URI", local_chronos.c_str(), chronos_callback_addr.c_str());
   HttpResolver* http_resolver = new HttpResolver(dns_resolver, http_af);
   ChronosConnection* timer_conn = new ChronosConnection(local_chronos, chronos_callback_addr, http_resolver);
-  timer_conn->set_comm_monitor(&chronos_comm_monitor);
+  timer_conn->set_comm_monitor(chronos_comm_monitor);
   cfg->mgr = new SessionManager(store, dict, factory, timer_conn, diameter_stack);
 
   HttpStack* http_stack = HttpStack::get_instance();
@@ -423,9 +446,6 @@ int main(int argc, char**argv)
 
   sem_wait(&term_sem);
 
-  // Stop the alarm request agent
-  AlarmReqAgent::get_instance().stop();
-
   try
   {
     http_stack->stop();
@@ -443,6 +463,18 @@ int main(int argc, char**argv)
   delete dns_resolver; dns_resolver = NULL;
 
   delete load_monitor; load_monitor = NULL;
+
+  if (options.alarms_enabled)
+  {
+    // Stop the alarm request agent
+    AlarmReqAgent::get_instance().stop();
+
+    // Delete Ralf's alarm objects
+    delete cdf_comm_monitor;
+    delete chronos_comm_monitor;
+    delete memcached_comm_monitor;
+    delete vbucket_alarms;
+  }
 
   signal(SIGTERM, SIG_DFL);
   sem_destroy(&term_sem);
