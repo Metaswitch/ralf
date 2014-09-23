@@ -51,7 +51,7 @@ const static PDLog CL_RALF_INVALID_SAS_OPTION
    "No call traces will appear in the sas",
    2,
    "Set the fully qualified sas hostname for the sas_server=<host> option.",
-   "Example: sas_server=sas-1.os3.richlab.datcon.co.uk.  The Sprout application must be restarted to take effect."
+   "Consult the Clearwater Core Installation document."
 );
 const static PDLog CL_RALF_INVALID_OPTION_C
 (
@@ -70,9 +70,8 @@ const static PDLog1<const char*> CL_RALF_CRASHED
   "Fatal - Ralf has exited or crashed with signal %s",
    "Ralf has encountered a fatal software error or has been terminated",
    "The Ralf application will restart.",
-   3,
+   2,
    "This error can occur if Ralf has been terminated by operator command.",
-   "Check the craft log to see if Monit has reported a ralf timeout.  This would be reported as a 'poll_ralf' failed.  Monit will restart ralf for this case.",
    "Actual crashes such as abort, segment trap, bus error trap, should be reported as a problem. "
 );
 const static PDLog CL_RALF_STARTED
