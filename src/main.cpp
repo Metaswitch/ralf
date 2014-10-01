@@ -39,7 +39,7 @@
 #include <semaphore.h>
 #include <strings.h>
 
-#include "ralfdcea.h"
+#include "ralf_ent_definitions.h"
 
 #include "ipv6utils.h"
 #include "memcachedstore.h"
@@ -76,42 +76,6 @@ struct options
   std::string sas_server;
   std::string sas_system_name;
 };
-
-static const char* signal_description[] =
-  {
-    "Hangup", // 1
-    "Terminal Interrupt",
-    "Terminal Quit",
-    "Illegal Instruction",
-    "Trace/Breakpoint",
-    "Process Abort",
-    "Bus Error",
-    "Arithmetic Error",
-    "Kill",
-    "USR1", // 10
-    "Segment Trap",
-    "USR2",
-    "PIPE",
-    "Alarm",
-    "Termination",
-    "Stack Fault",
-    "CHLD",
-    "CONT",
-    "Stop",
-    "Terminal stop", // 20
-    "TTIN",
-    "TTOU",
-    "URG",
-    "XCPU",
-    "XFSZ",
-    "VTALRM",
-    "PROF",
-    "WINCH",
-    "POLL",
-    "LOST",
-    "Power", // 30
-    "System"
-  };
 
 void usage(void)
 {
@@ -250,7 +214,7 @@ void exception_handler(int sig)
   signal(SIGSEGV, SIG_DFL);
 
   // Log the signal, along with a backtrace.
-  const char* signamep = (sig >= SIGHUP and sig <= SIGSYS) ? signal_description[sig-1] : "Unknown";
+  const char* signamep = (sig >= SIGHUP and sig <= SIGSYS) ? signalnames[sig-1] : "Unknown";
   CL_RALF_CRASHED.log(signamep);
   closelog();
   LOG_BACKTRACE("Signal %d caught", sig);
@@ -399,7 +363,7 @@ int main(int argc, char**argv)
 
   sem_wait(&term_sem);
 
-  CL_RALF_ENDED.log();;
+  CL_RALF_ENDED.log();
   try
   {
     http_stack->stop();
