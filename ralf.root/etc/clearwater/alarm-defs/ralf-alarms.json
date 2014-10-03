@@ -6,7 +6,7 @@
       "index" : 2000,
       "severity" : "CLEARED",
       "cause" : "SOFTWARE_ERROR",
-      "description" : "ralf: Process failure cleared",
+      "description" : "Ralf: Process failure cleared",
       "details" : "The Ralf process has been restored to normal operation."
     },
 
@@ -15,7 +15,7 @@
       "index" : 2000,
       "severity" : "CRITICAL",
       "cause" : "SOFTWARE_ERROR",
-      "description" : "ralf: Process failure",
+      "description" : "Ralf: Process failure",
       "details" : "Monit has detected that the Ralf process has failed. A restart will automatically be attempted. If this alarm does not clear, the Ralf process may have been stopped or an unrecoverable failure may have occurred."
     },
 
@@ -25,7 +25,7 @@
       "index" : 2001,
       "severity" : "CLEARED",
       "cause" : "UNDERLAYING_RESOURCE_UNAVAILABLE",
-      "description" : "ralf: Memcached communication error cleared",
+      "description" : "Ralf: Memcached communication error cleared",
       "details" : "Ralf communication to at least one Memcached has been restored."
     },
 
@@ -34,8 +34,8 @@
       "index" : 2001,
       "severity" : "CRITICAL",
       "cause" : "UNDERLAYING_RESOURCE_UNAVAILABLE",
-      "description" : "ralf: Memcached communication error",
-      "details" : "Ralf is unable to contact any Memcacheds. It will periodically attempt to reconnect. If this alarm does not clear, ensure that at least one Memcached is operationsl and that network connectivity exists between it and Ralf."
+      "description" : "Ralf: Memcached communication error",
+      "details" : "Ralf is unable to contact any Memcacheds. It will periodically attempt to reconnect. If this alarm does not clear, ensure that at least one Memcached is operational and that network connectivity exists between it and Ralf."
     },
 
 
@@ -44,7 +44,7 @@
       "index" : 2002,
       "severity" : "CLEARED",
       "cause" : "UNDERLAYING_RESOURCE_UNAVAILABLE",
-      "description" : "ralf: Chronos communication error cleared",
+      "description" : "Ralf: Chronos communication error cleared",
       "details" : "Ralf communication to at least one Chronos has been restored."
     },
 
@@ -53,8 +53,8 @@
       "index" : 2002,
       "severity" : "CRITICAL",
       "cause" : "UNDERLAYING_RESOURCE_UNAVAILABLE",
-      "description" : "ralf: Chronos communication error",
-      "details" : "Ralf is unable to contact any Chronos's. It will periodically attempt to reconnect. If this alarm does not clear, ensure that at least one Chronos is operationsl and that network connectivity exists between it and Ralf."
+      "description" : "Ralf: Chronos communication error",
+      "details" : "Ralf is unable to contact any Chronos's. It will periodically attempt to reconnect. If this alarm does not clear, ensure that at least one Chronos is operational and that network connectivity exists between it and Ralf."
     },
 
 
@@ -63,7 +63,7 @@
       "index" : 2003,
       "severity" : "CLEARED",
       "cause" : "UNDERLAYING_RESOURCE_UNAVAILABLE",
-      "description" : "ralf: CDF communication error cleared",
+      "description" : "Ralf: CDF communication error cleared",
       "details" : "Ralf communication to at least one CDF has been restored."
     },
 
@@ -72,8 +72,8 @@
       "index" : 2003,
       "severity" : "CRITICAL",
       "cause" : "UNDERLAYING_RESOURCE_UNAVAILABLE",
-      "description" : "ralf: CDF communication error",
-      "details" : "Ralf is unable to contact any CDFs. It will periodically attempt to reconnect. If this alarm does not clear, ensure that at least one HSS is operationsl and that network connectivity exists between it and Ralf."
+      "description" : "Ralf: CDF communication error",
+      "details" : "Ralf is unable to contact any CDFs. It will periodically attempt to reconnect. If this alarm does not clear, ensure that at least one HSS is operational and that network connectivity exists between it and Ralf."
     },
 
 
@@ -82,8 +82,8 @@
       "index" : 2004,
       "severity" : "CLEARED",
       "cause" : "UNDERLAYING_RESOURCE_UNAVAILABLE",
-      "description" : "ralf: Memcached vBucket inaccessible cleared",
-      "details" : "Ralf communication to Memcached for a vBucket has been restored."
+      "description" : "Ralf: Memcached vBucket communication error cleared",
+      "details" : "Ralf communication to Memcached for a piece of data has been restored."
     },
 
     {
@@ -91,8 +91,8 @@
       "index" : 2004,
       "severity" : "MAJOR",
       "cause" : "UNDERLAYING_RESOURCE_UNAVAILABLE",
-      "description" : "ralf: Memcached vBucket inaccessible",
-      "details" : "Ralf is unable to contact any Memcacheds for a vBucket. It will periodically attempt to reconnect. If this alarm does not clear, ensure that all Memcacheds are operationsl and that network connectivity exists between them and Ralf."
+      "description" : "Ralf: Memcached vBucket communication error",
+      "details" : "Ralf is unable to contact any Memcacheds for a piece of data. Some subscriber data will be unavailable. If this alarm does not clear, ensure that all Memcacheds are operational and that network connectivity exists between them and Ralf."
     }
 
   ]

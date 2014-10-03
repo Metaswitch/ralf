@@ -347,7 +347,9 @@ int main(int argc, char**argv)
 
   if (options.alarms_enabled)
   {
-    // Create Ralf's alarm objects
+    // Create Ralf's alarm objects. Note that the alarm identifier strings must match those
+    // in the alarm definition JSON file exactly.
+
     cdf_comm_monitor = new CommunicationMonitor("ralf", "RALF_CDF_COMM_ERROR_CLEAR",
                                                         "RALF_CDF_COMM_ERROR_CRITICAL");
 
@@ -369,7 +371,6 @@ int main(int argc, char**argv)
                                               20, // Maximum token bucket size.
                                               10.0, // Initial token fill rate (per sec).
                                               10.0); // Minimum token fill rate (pre sec).
-
 
   Diameter::Stack* diameter_stack = Diameter::Stack::get_instance();
   Rf::Dictionary* dict = NULL;

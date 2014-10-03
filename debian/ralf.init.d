@@ -113,7 +113,11 @@ get_settings()
     billing_realm="--billing-realm $home_domain"
   fi
 
-  [ ! -z "$snmp_ip" ] && alarms_enabled_arg="--alarms-enabled"
+  # Enable SNMP alarms if informsink(s) are configured
+  if [ ! -z "$snmp_ip" ]
+  then
+    alarms_enabled_arg="--alarms-enabled"
+  fi
 }
 
 #
