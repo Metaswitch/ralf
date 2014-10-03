@@ -66,4 +66,4 @@ EOF
 chmod 0644 /etc/monit/conf.d/ralf.monit
 
 # Force monit to reload its configuration
-service monit reload
+reload clearwater-monit
