@@ -74,7 +74,7 @@ environment variable to the user and server name.
 
 ## Running Unit Tests
 
-To run the homestead unit test suite, change to the `src` subdirectory below
+To run the ralf unit test suite, change to the `src` subdirectory below
 the top-level `ralf` directory and issue `make test`.
 
 Ralf unit tests use the [Google Test](https://code.google.com/p/googletest/)
