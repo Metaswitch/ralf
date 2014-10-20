@@ -375,16 +375,16 @@ int main(int argc, char**argv)
   Diameter::Stack* diameter_stack = Diameter::Stack::get_instance();
   Rf::Dictionary* dict = NULL;
   diameter_stack->initialize();
-  diameter_stack->configure(options.diameter_conf);
-  diameter_stack->set_comm_monitor(cdf_comm_monitor);
+  diameter_stack->configure(options.diameter_conf, cdf_comm_monitor);
   dict = new Rf::Dictionary();
   diameter_stack->advertize_application(Diameter::Dictionary::Application::ACCT,
                                         dict->RF);
   diameter_stack->start();
 
-  MemcachedStore* mstore = new MemcachedStore(false, "./cluster_settings");
-  mstore->set_comm_monitor(memcached_comm_monitor);
-  mstore->set_vbucket_alarms(vbucket_alarms);
+  MemcachedStore* mstore = new MemcachedStore(false, 
+                                              "./cluster_settings",
+                                              memcached_comm_monitor,
+                                              vbucket_alarms);
   SessionStore* store = new SessionStore(mstore);
   BillingHandlerConfig* cfg = new BillingHandlerConfig();
   PeerMessageSenderFactory* factory = new PeerMessageSenderFactory(options.billing_realm);
@@ -409,8 +409,7 @@ int main(int argc, char**argv)
   // Create a connection to Chronos.  This requires an HttpResolver.
   LOG_STATUS("Creating connection to Chronos at %s using %s as the callback URI", local_chronos.c_str(), chronos_callback_addr.c_str());
   HttpResolver* http_resolver = new HttpResolver(dns_resolver, http_af);
-  ChronosConnection* timer_conn = new ChronosConnection(local_chronos, chronos_callback_addr, http_resolver);
-  timer_conn->set_comm_monitor(chronos_comm_monitor);
+  ChronosConnection* timer_conn = new ChronosConnection(local_chronos, chronos_callback_addr, http_resolver, chronos_comm_monitor);
   cfg->mgr = new SessionManager(store, dict, factory, timer_conn, diameter_stack);
 
   HttpStack* http_stack = HttpStack::get_instance();
