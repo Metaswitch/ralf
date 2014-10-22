@@ -350,17 +350,17 @@ int main(int argc, char**argv)
     // Create Ralf's alarm objects. Note that the alarm identifier strings must match those
     // in the alarm definition JSON file exactly.
 
-    cdf_comm_monitor = new CommunicationMonitor("ralf", "RALF_CDF_COMM_ERROR_CLEAR",
-                                                        "RALF_CDF_COMM_ERROR_CRITICAL");
+    cdf_comm_monitor = new CommunicationMonitor("ralf", AlarmDef::RALF_CDF_COMM_ERROR,
+                                                        AlarmDef::CRITICAL);
 
-    chronos_comm_monitor = new CommunicationMonitor("ralf", "RALF_CHRONOS_COMM_ERROR_CLEAR",
-                                                            "RALF_CHRONOS_COMM_ERROR_CRITICAL");
+    chronos_comm_monitor = new CommunicationMonitor("ralf", AlarmDef::RALF_CHRONOS_COMM_ERROR,
+                                                            AlarmDef::CRITICAL);
 
-    memcached_comm_monitor = new CommunicationMonitor("ralf", "RALF_MEMCACHED_COMM_ERROR_CLEAR",
-                                                              "RALF_MEMCACHED_COMM_ERROR_CRITICAL");
+    memcached_comm_monitor = new CommunicationMonitor("ralf", AlarmDef::RALF_MEMCACHED_COMM_ERROR,
+                                                              AlarmDef::CRITICAL);
 
-    vbucket_alarms = new AlarmPair("ralf", "RALF_VBUCKET_ERROR_CLEAR",
-                                           "RALF_VBUCKET_ERROR_MAJOR");
+    vbucket_alarms = new AlarmPair("ralf", AlarmDef::RALF_VBUCKET_ERROR,
+                                           AlarmDef::MAJOR);
 
     // Start the alarm request agent
     AlarmReqAgent::get_instance().start();

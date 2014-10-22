@@ -92,9 +92,6 @@ case "$1" in
             $SCRIPT
         done
 
-        # Trigger snmpd restart to load Ralf alarm-defs
-        initctl emit --no-wait snmpd-config-change
-
         # Restart ralf.  Always do this by terminating ralf so monit will
         # restart it more-or-less immediately.  (monit restart seems to have
         # significant lag.)

@@ -51,9 +51,9 @@ check program poll_ralf with path "/usr/share/clearwater/bin/poll_ralf.sh"
 
 check process ralf pidfile /var/run/ralf.pid
 
-  start program   = "/bin/bash -c '/usr/share/clearwater/bin/issue_alarm.py monit RALF_PROC_FAIL_CRITICAL; /etc/init.d/ralf start'"
-  stop program    = "/bin/bash -c '/usr/share/clearwater/bin/issue_alarm.py monit RALF_PROC_FAIL_CRITICAL; /etc/init.d/ralf stop'"
-  restart program = "/bin/bash -c '/usr/share/clearwater/bin/issue_alarm.py monit RALF_PROC_FAIL_CRITICAL; /etc/init.d/ralf abort-restart'"
+  start program   = "/bin/bash -c '/usr/share/clearwater/bin/issue_alarm.py monit 2000.3; /etc/init.d/ralf start'"
+  stop program    = "/bin/bash -c '/usr/share/clearwater/bin/issue_alarm.py monit 2000.3; /etc/init.d/ralf stop'"
+  restart program = "/bin/bash -c '/usr/share/clearwater/bin/issue_alarm.py monit 2000.3; /etc/init.d/ralf abort-restart'"
 
 
 #  if failed host $local_ip port 80 type TCP protocol http and use the request "/ping"
@@ -61,9 +61,9 @@ check process ralf pidfile /var/run/ralf.pid
 
   if uptime < 30 seconds
      then exec "/bin/true"
-     else if succeeded then exec "/usr/share/clearwater/bin/issue_alarm.py monit RALF_PROC_FAIL_CLEAR"
+     else if succeeded then exec "/usr/share/clearwater/bin/issue_alarm.py monit 2000.1"
 EOF
 chmod 0644 /etc/monit/conf.d/ralf.monit
 
 # Force monit to reload its configuration
-reload clearwater-monit
+reload clearwater-monit || true
