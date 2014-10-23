@@ -38,22 +38,32 @@
 
 # Set up the monit configuration for ralf with the right IP addresses and ports
 cat > /etc/monit/conf.d/ralf.monit <<EOF
-# Poll every 10 seconds
-set daemon 10
-
 # Check the server's public interfaces.  We put this first so that we process
 # failed polls (and maybe kill the server) before we process the restart.
-check program poll_ralf with path "/usr/share/clearwater/bin/poll_ralf.sh"
-  if status != 0 for 2 cycles then exec "/etc/init.d/ralf abort"
 
-# Monitor the server's PID file and check its public interfaces.
+check program poll_ralf with path "/usr/share/clearwater/bin/poll_ralf.sh"
+
+  if status != 0 for 2 cycles
+     then exec "/etc/init.d/ralf abort"
+
+# Monitor the service's PID file. Issue an alarm for any restart, clear after
+# the process has run for 30s. 
+
 check process ralf pidfile /var/run/ralf.pid
-  start program = "/etc/init.d/ralf start"
-  stop program = "/etc/init.d/ralf stop"
-#  if failed host $local_ip port 80 type TCP protocol http
-#    and use the request "/ping" then exec "/etc/init.d/ralf abort-restart"
+
+  start program   = "/bin/bash -c '/usr/share/clearwater/bin/issue_alarm.py monit 2000.3; /etc/init.d/ralf start'"
+  stop program    = "/bin/bash -c '/usr/share/clearwater/bin/issue_alarm.py monit 2000.3; /etc/init.d/ralf stop'"
+  restart program = "/bin/bash -c '/usr/share/clearwater/bin/issue_alarm.py monit 2000.3; /etc/init.d/ralf abort-restart'"
+
+
+#  if failed host $local_ip port 80 type TCP protocol http and use the request "/ping"
+#     then restart
+
+  if uptime < 30 seconds
+     then exec "/bin/true"
+     else if succeeded then exec "/usr/share/clearwater/bin/issue_alarm.py monit 2000.1"
 EOF
 chmod 0644 /etc/monit/conf.d/ralf.monit
 
 # Force monit to reload its configuration
-service monit reload
+reload clearwater-monit || true
