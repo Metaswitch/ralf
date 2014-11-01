@@ -4,13 +4,13 @@ RALF_DIR := ${ROOT}/src
 RALF_TEST_DIR := ${ROOT}/tests
 
 ralf:
-	make -C ${RALF_DIR}
+	${MAKE} -C ${RALF_DIR}
 
 ralf_test:
-	make -C ${RALF_DIR} test
+	${MAKE} -C ${RALF_DIR} test
 
 ralf_clean:
-	make -C ${RALF_DIR} clean
+	${MAKE} -C ${RALF_DIR} clean
 
 ralf_distclean: ralf_clean
 

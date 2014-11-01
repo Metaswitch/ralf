@@ -1,6 +1,6 @@
 # Top level Makefile for building homestead
 
-# this should come first so make does the right thing by default
+# This should come first so make does the right thing by default
 all: build
 
 ROOT ?= ${PWD}
