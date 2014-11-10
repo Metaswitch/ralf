@@ -274,7 +274,7 @@ int main(int argc, char**argv)
   CommunicationMonitor* cdf_comm_monitor = NULL;
   CommunicationMonitor* chronos_comm_monitor = NULL;
   CommunicationMonitor* memcached_comm_monitor = NULL;
-  AlarmPair* vbucket_alarms = NULL;
+  Alarm* vbucket_alarm = NULL;
 
   // Set up our exception signal handler for asserts and segfaults.
   signal(SIGABRT, exception_handler);
@@ -350,21 +350,21 @@ int main(int argc, char**argv)
     // Create Ralf's alarm objects. Note that the alarm identifier strings must match those
     // in the alarm definition JSON file exactly.
 
-    cdf_comm_monitor = new CommunicationMonitor("ralf", AlarmDef::RALF_CDF_COMM_ERROR,
-                                                        AlarmDef::CRITICAL);
+    cdf_comm_monitor = new CommunicationMonitor(new Alarm("ralf", AlarmDef::RALF_CDF_COMM_ERROR,
+                                                                  AlarmDef::CRITICAL));
 
-    chronos_comm_monitor = new CommunicationMonitor("ralf", AlarmDef::RALF_CHRONOS_COMM_ERROR,
-                                                            AlarmDef::CRITICAL);
+    chronos_comm_monitor = new CommunicationMonitor(new Alarm("ralf", AlarmDef::RALF_CHRONOS_COMM_ERROR,
+                                                                      AlarmDef::CRITICAL));
 
-    memcached_comm_monitor = new CommunicationMonitor("ralf", AlarmDef::RALF_MEMCACHED_COMM_ERROR,
-                                                              AlarmDef::CRITICAL);
+    memcached_comm_monitor = new CommunicationMonitor(new Alarm("ralf", AlarmDef::RALF_MEMCACHED_COMM_ERROR,
+                                                                        AlarmDef::CRITICAL));
 
-    vbucket_alarms = new AlarmPair("ralf", AlarmDef::RALF_VBUCKET_ERROR,
-                                           AlarmDef::MAJOR);
+    vbucket_alarm = new Alarm("ralf", AlarmDef::RALF_VBUCKET_ERROR,
+                                      AlarmDef::MAJOR);
 
     // Start the alarm request agent
     AlarmReqAgent::get_instance().start();
-    Alarm::clear_all("ralf");
+    AlarmState::clear_all("ralf");
   }
 
   LoadMonitor* load_monitor = new LoadMonitor(100000, // Initial target latency (us)
@@ -384,7 +384,7 @@ int main(int argc, char**argv)
   MemcachedStore* mstore = new MemcachedStore(false, 
                                               "./cluster_settings",
                                               memcached_comm_monitor,
-                                              vbucket_alarms);
+                                              vbucket_alarm);
   SessionStore* store = new SessionStore(mstore);
   BillingHandlerConfig* cfg = new BillingHandlerConfig();
   PeerMessageSenderFactory* factory = new PeerMessageSenderFactory(options.billing_realm);
@@ -473,7 +473,7 @@ int main(int argc, char**argv)
     delete cdf_comm_monitor;
     delete chronos_comm_monitor;
     delete memcached_comm_monitor;
-    delete vbucket_alarms;
+    delete vbucket_alarm;
   }
 
   signal(SIGTERM, SIG_DFL);
