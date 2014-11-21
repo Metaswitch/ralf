@@ -41,7 +41,9 @@ TARGET_SOURCES := accesslogger.cpp \
                   dnscachedresolver.cpp \
                   dnsparser.cpp \
                   realmmanager.cpp \
-                  ipv6utils.cpp
+                  ipv6utils.cpp \
+                  alarm.cpp \
+                  communicationmonitor.cpp
 
 TARGET_SOURCES_BUILD := main.cpp
 

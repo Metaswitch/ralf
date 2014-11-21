@@ -112,6 +112,12 @@ get_settings()
   then
     billing_realm="--billing-realm $home_domain"
   fi
+
+  # Enable SNMP alarms if informsink(s) are configured
+  if [ ! -z "$snmp_ip" ]
+  then
+    alarms_enabled_arg="--alarms-enabled"
+  fi
 }
 
 #
@@ -141,6 +147,7 @@ do_start()
                      -F $log_directory
                      -L $log_level
                      $billing_realm
+                     $alarms_enabled_arg
                      --sas $sas_server,$NAME@$public_hostname"
 
         start-stop-daemon --start --quiet --background --make-pidfile --pidfile $PIDFILE --exec $DAEMON --chuid $NAME --chdir $HOME -- $DAEMON_ARGS \
