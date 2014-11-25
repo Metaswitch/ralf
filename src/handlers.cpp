@@ -67,7 +67,7 @@ void BillingTask::run()
   }
 
   Message* msg = NULL;
-  HTTPCode rc = parse_body(call_id(), timer_interim, _req.body(), &msg, trail());
+  HTTPCode rc = parse_body(call_id(), timer_interim, _req.get_rx_body(), &msg, trail());
 
   if (rc != HTTP_OK)
   {
