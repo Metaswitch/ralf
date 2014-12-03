@@ -1,5 +1,5 @@
 /**
- * @file main.cpp main function for homestead
+ * @file main.cpp main function for ralf
  *
  * Project Clearwater - IMS in the Cloud
  * Copyright (C) 2013  Metaswitch Networks Ltd
@@ -38,6 +38,8 @@
 #include <signal.h>
 #include <semaphore.h>
 #include <strings.h>
+
+#include "ralf_ent_definitions.h"
 
 #include "ipv6utils.h"
 #include "memcachedstore.h"
@@ -194,7 +196,7 @@ int init_options(int argc, char**argv, struct options& options)
       }
       else
       {
-        LOG_WARNING("Invalid --sas option, SAS disabled\n");
+	CL_RALF_INVALID_SAS_OPTION.log();
       }
     }
     break;
@@ -235,7 +237,7 @@ int init_options(int argc, char**argv, struct options& options)
       return -1;
 
     default:
-      LOG_ERROR("Unknown option: %d.  Run with --help for options.\n", opt);
+      CL_RALF_INVALID_OPTION_C.log();
       return -1;
     }
   }
@@ -259,6 +261,9 @@ void exception_handler(int sig)
   signal(SIGSEGV, SIG_DFL);
 
   // Log the signal, along with a backtrace.
+  const char* signamep = (sig >= SIGHUP and sig <= SIGSYS) ? signalnames[sig-1] : "Unknown";
+  CL_RALF_CRASHED.log(signamep);
+  closelog();
   LOG_BACKTRACE("Signal %d caught", sig);
 
   // Ensure the log files are complete - the core file created by abort() below
@@ -298,8 +303,12 @@ int main(int argc, char**argv)
   options.sas_system_name = "";
   options.alarms_enabled = false;
 
+  openlog("ralf", PDLOG_PID, PDLOG_LOCAL6);
+  CL_RALF_STARTED.log();
+
   if (init_logging_options(argc, argv, options) != 0)
   {
+    closelog();
     return 1;
   }
 
@@ -425,6 +434,7 @@ int main(int argc, char**argv)
   }
   catch (HttpStack::Exception& e)
   {
+    CL_RALF_HTTP_ERROR.log(e._func, e._rc);
     fprintf(stderr, "Caught HttpStack::Exception - %s - %d\n", e._func, e._rc);
   }
 
@@ -446,6 +456,7 @@ int main(int argc, char**argv)
 
   sem_wait(&term_sem);
 
+  CL_RALF_ENDED.log();
   try
   {
     http_stack->stop();
@@ -453,6 +464,7 @@ int main(int argc, char**argv)
   }
   catch (HttpStack::Exception& e)
   {
+    CL_RALF_HTTP_STOP_ERROR.log(e._func, e._rc);
     fprintf(stderr, "Caught HttpStack::Exception - %s - %d\n", e._func, e._rc);
   }
 
@@ -476,6 +488,7 @@ int main(int argc, char**argv)
     delete vbucket_alarm;
   }
 
+  closelog();
   signal(SIGTERM, SIG_DFL);
   sem_destroy(&term_sem);
 }
