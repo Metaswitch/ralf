@@ -1,5 +1,5 @@
 /**
- * @file ralf_ent_definitions.h  Sprout ENT Log declarations.
+ * @file ralf_ent_definitions.h  Ralf ENT declarations.
  *
  * Project Clearwater - IMS in the Cloud
  * Copyright (C) 2014  Metaswitch Networks Ltd
@@ -34,21 +34,28 @@
  * as those licenses appear in the file LICENSE-OPENSSL.
  */
 
-#ifndef _RALFDCEA_H__
-#define _RALFSTEADDCEA_H__
+#ifndef _RALF_ENT_DEFINITIONS_H__
+#define _RALF_ENT_DEFINITIONS_H__
 
 #include <string>
 #include "craft_ent_definitions.h"
 
-// Ralf syslog identities
-/*************************************************************/
+/// Description of the following PDLog definitions content
+/**********************************************************
+/ log_id
+/ severity
+/ Description: (formatted)
+/ Cause:
+/ Effect:
+/ Action: \n separated list
+**********************************************************/
 const static PDLog CL_RALF_INVALID_SAS_OPTION
 (
   PDLogBase::CL_RALF_ID + 1,
   PDLOG_ERR,
-  "The sas_server option in /etc/clearwater/config is invalid or not configured",
+  "The sas_server option in /etc/clearwater/config is invalid or not configured.",
   "The interface to the SAS is not specified.",
-  "No call traces will appear in the SAS",
+  "No call traces will appear in the SAS.",
   "Set the fully qualified sas hostname for the sas_server=<host> option. "
   "Consult the Installation document."
 );
@@ -58,14 +65,14 @@ const static PDLog CL_RALF_INVALID_OPTION_C
   PDLOG_ERR,
   "Fatal - Unknown command line option %c.  Run with --help for options.",
   "There was an invalid command line option in /etc/clearwater/config",
-  "Ralf will exit",
+  "Ralf will exit.",
   "Correct the /etc/clearwater/config file."
 );
 const static PDLog1<const char*> CL_RALF_CRASHED
 (
   PDLogBase::CL_RALF_ID + 3,
   PDLOG_ERR,
-  "Fatal - Ralf has exited or crashed with signal %s",
+  "Fatal - Ralf has exited or crashed with signal %s.",
   "Ralf has encountered a fatal software error or has been terminated",
   "The Ralf application will restart.",
   "This error can occur if Ralf has been terminated by operator command. "
@@ -75,16 +82,16 @@ const static PDLog CL_RALF_STARTED
 (
   PDLogBase::CL_RALF_ID + 4,
   PDLOG_ERR,
-  "Ralf started",
+  "Ralf started.",
   "The Ralf application is starting.",
-  "Normal",
-  "None"
+  "Normal.",
+  "None."
 );
 const static PDLog2<const char*, int> CL_RALF_HTTP_ERROR
 (
   PDLogBase::CL_RALF_ID + 5,
   PDLOG_ERR,
-  "The HTTP stack has encountered an error in function %s with error %d",
+  "The HTTP stack has encountered an error in function %s with error %d.",
   "Ralf encountered an error when attempting to make an HTTP connection to Chronos.",
   "The interface to Chronos has failed.  Ralf can't use timer services.",
   "Report this issue to support."
@@ -93,9 +100,9 @@ const static PDLog CL_RALF_ENDED
 (
   PDLogBase::CL_RALF_ID + 6,
   PDLOG_ERR,
-  "Ralf ended - Termination signal received - terminating",
-  "Ralf has been terminated by Monit or has exited",
-  "Ralf billing service is not longer available",
+  "Ralf ended - Termination signal received - terminating.",
+  "Ralf has been terminated by Monit or has exited.",
+  "Ralf billing service is not longer available.",
   "(1). This occurs normally when Ralf is stopped. "
   "(2). If Ralf failed to respond then monit can restart Ralf.  Report this issue to support."
 );
@@ -103,7 +110,7 @@ const static PDLog2<const char*, int> CL_RALF_HTTP_STOP_ERROR
 (
   PDLogBase::CL_RALF_ID + 7,
   PDLOG_ERR,
-  "Failed to stop HTTPStack stack in function %s with error %d",
+  "Failed to stop HTTPStack stack in function %s with error %d.",
   "When Ralf was exiting it encountered an error when shutting down the HTTP stack.",
   "Not critical as Ralf is exiting anyway.",
   "Report this issue to support."
