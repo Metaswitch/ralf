@@ -263,7 +263,6 @@ void exception_handler(int sig)
   // Log the signal, along with a backtrace.
   CL_RALF_CRASHED.log(strsignal(sig));
   closelog();
-  closelog();
   LOG_BACKTRACE("Signal %d caught", sig);
 
   // Ensure the log files are complete - the core file created by abort() below
@@ -302,9 +301,6 @@ int main(int argc, char**argv)
   options.sas_server = "0.0.0.0";
   options.sas_system_name = "";
   options.alarms_enabled = false;
-
-  openlog("ralf", PDLOG_PID, PDLOG_LOCAL6);
-  CL_RALF_STARTED.log();
 
   openlog("ralf", PDLOG_PID, PDLOG_LOCAL6);
   CL_RALF_STARTED.log();
