@@ -16,7 +16,6 @@ TARGET_SOURCES := accesslogger.cpp \
                   memcachedstore.cpp \
                   memcachedstoreview.cpp \
                   signalhandler.cpp \
-                  signalnames.cpp \
                   sessionstore.cpp \
                   session_manager.cpp \
                   peer_message_sender.cpp \
