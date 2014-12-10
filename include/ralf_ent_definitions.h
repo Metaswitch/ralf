@@ -59,6 +59,7 @@ const static PDLog CL_RALF_INVALID_SAS_OPTION
   "Set the fully qualified sas hostname for the sas_server=<host> option. "
   "Consult the Installation document."
 );
+
 const static PDLog CL_RALF_INVALID_OPTION_C
 (
   PDLogBase::CL_RALF_ID + 2,
@@ -68,6 +69,7 @@ const static PDLog CL_RALF_INVALID_OPTION_C
   "Ralf will exit.",
   "Correct the /etc/clearwater/config file."
 );
+
 const static PDLog1<const char*> CL_RALF_CRASHED
 (
   PDLogBase::CL_RALF_ID + 3,
@@ -78,6 +80,7 @@ const static PDLog1<const char*> CL_RALF_CRASHED
   "This error can occur if Ralf has been terminated by operator command. "
   "Crashes such as segment trap, bus error trap, should be reported to support. "
 );
+
 const static PDLog CL_RALF_STARTED
 (
   PDLogBase::CL_RALF_ID + 4,
@@ -87,6 +90,7 @@ const static PDLog CL_RALF_STARTED
   "Normal.",
   "None."
 );
+
 const static PDLog2<const char*, int> CL_RALF_HTTP_ERROR
 (
   PDLogBase::CL_RALF_ID + 5,
@@ -96,6 +100,7 @@ const static PDLog2<const char*, int> CL_RALF_HTTP_ERROR
   "The interface to Chronos has failed.  Ralf can't use timer services.",
   "Report this issue to support."
 );
+
 const static PDLog CL_RALF_ENDED
 (
   PDLogBase::CL_RALF_ID + 6,
@@ -106,6 +111,7 @@ const static PDLog CL_RALF_ENDED
   "(1). This occurs normally when Ralf is stopped. "
   "(2). If Ralf failed to respond then monit can restart Ralf.  Report this issue to support."
 );
+
 const static PDLog2<const char*, int> CL_RALF_HTTP_STOP_ERROR
 (
   PDLogBase::CL_RALF_ID + 7,
