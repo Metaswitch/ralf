@@ -24,7 +24,7 @@
 	url = git@github.com:Metaswitch/gmock-upstream.git
 [submodule "modules/sas-client"]
 	path = modules/sas-client
-	url = https://github.com/Metaswitch/sas-client.git
+	url = git@github.com:Metaswitch/sas-client.git
 [submodule "modules/jsoncpp"]
 	path = modules/jsoncpp
 	url = git@github.com:Metaswitch/jsoncpp-upstream.git
