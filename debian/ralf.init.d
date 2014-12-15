@@ -89,7 +89,7 @@ get_settings()
   [ -f /etc/clearwater/cluster_settings ] || echo "servers=$local_ip:11211" > /etc/clearwater/cluster_settings
 
   # If the remote cluster settings file exists then start sprout with geo-redundancy enabled
-  [ -f /etc/clearwater/remote_cluster_settings ] && remote_memstore_arg="--remote-memstore /etc/clearwater/remote_cluster_settings"
+  [ -f /etc/clearwater/remote_cluster_settings ] && remote_memstore_arg="--remote-memstore=/etc/clearwater/remote_cluster_settings"
 
   # Set up defaults for user settings then pull in any overrides.
   log_level=2
@@ -107,10 +107,10 @@ get_settings()
   # Set the destination realm correctly
   if [ ! -z $billing_realm ]
   then
-    billing_realm="--billing-realm $billing_realm"
+    billing_realm="--billing-realm=$billing_realm"
   elif [ ! -z $home_domain ]
   then
-    billing_realm="--billing-realm $home_domain"
+    billing_realm="--billing-realm=$home_domain"
   fi
 
   # Enable SNMP alarms if informsink(s) are configured
@@ -140,15 +140,15 @@ do_start()
         # enable gdb to dump a parent homestead process's stack
         echo 0 > /proc/sys/kernel/yama/ptrace_scope
         get_settings
-        DAEMON_ARGS="--localhost $local_ip
-                     --http $local_ip
-                     --http-threads $num_http_threads
-                     -a $log_directory
-                     -F $log_directory
-                     -L $log_level
+        DAEMON_ARGS="--localhost=$local_ip
+                     --http=$local_ip
+                     --http-threads=$num_http_threads
+                     --access-log=$log_directory
+                     --log-file=$log_directory
+                     --log-level=$log_level
                      $billing_realm
                      $alarms_enabled_arg
-                     --sas $sas_server,$NAME@$public_hostname"
+                     --sas=$sas_server,$NAME@$public_hostname"
 
         start-stop-daemon --start --quiet --background --make-pidfile --pidfile $PIDFILE --exec $DAEMON --chuid $NAME --chdir $HOME -- $DAEMON_ARGS \
                 || return 2
