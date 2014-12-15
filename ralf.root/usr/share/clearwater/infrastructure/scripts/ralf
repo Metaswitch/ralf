@@ -50,7 +50,7 @@ if [[ -z "$identity" ]];
 then
     if [[ -z "$public_hostname" ]];
     then
-        echo "Must have a public_hostname set in /etc/clearwater/config" >&2
+        echo "ERROR: must have a public_hostname set in /etc/clearwater/config" >&2
         exit 1
     fi
     identity=$public_hostname
@@ -58,7 +58,7 @@ fi
 
 if [[ -z "$ralf_hostname" ]];
 then
-    echo "Must have a ralf_hostname set in /etc/clearwater/config" >&2
+    echo "ERROR: must have a ralf_hostname set in /etc/clearwater/config" >&2
     exit 1
 fi
 
