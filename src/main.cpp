@@ -340,7 +340,7 @@ int main(int argc, char**argv)
 
   if (!(mstore->has_servers()))
   {
-    LOG_ERROR("cluster_settings file does not contain a valid set of servers");
+    LOG_ERROR("./cluster_settings file does not contain a valid set of servers");
     return 1;
   };
 
