@@ -60,13 +60,15 @@
 
 enum OptionTypes
 {
-  ALARMS_ENABLED=256+1
+  ALARMS_ENABLED=256+1,
+  DNS_SERVER
 };
 
 struct options
 {
   std::string local_host;
   std::string diameter_conf;
+  std::string dns_server;
   std::string http_address;
   unsigned short http_port;
   int http_threads;
@@ -86,6 +88,7 @@ const static struct option long_opt[] =
 {
   {"localhost",         required_argument, NULL, 'l'},
   {"diameter-conf",     required_argument, NULL, 'c'},
+  {"dns-server",        required_argument, NULL, DNS_SERVER},
   {"http",              required_argument, NULL, 'H'},
   {"http-threads",      required_argument, NULL, 't'},
   {"billing-realm",     required_argument, NULL, 'b'},
@@ -107,6 +110,7 @@ void usage(void)
        "\n"
        " -l, --localhost <hostname> Specify the local hostname or IP address\n"
        " -c, --diameter-conf <file> File name for Diameter configuration\n"
+       "     --dns-server <IP>      DNS server to use to resolve addresses\n"
        " -H, --http <address>[:<port>]\n"
        "                            Set HTTP bind address and port (default: 0.0.0.0:8888)\n"
        " -t, --http-threads N       Number of HTTP threads (default: 1)\n"
@@ -220,14 +224,19 @@ int init_options(int argc, char**argv, struct options& options)
       options.access_log_directory = std::string(optarg);
       break;
 
-    case 'F':
-    case 'L':
-      // Ignore F and L - these are handled by init_logging_options
-      break;
-
     case ALARMS_ENABLED:
       LOG_INFO("SNMP alarms are enabled");
       options.alarms_enabled = true;
+      break;
+
+    case DNS_SERVER:
+      LOG_INFO("DNS server set to %s", optarg);
+      options.dns_server = std::string(optarg);
+      break;
+
+    case 'F':
+    case 'L':
+      // Ignore F and L - these are handled by init_logging_options
       break;
 
     case 'h':
@@ -286,6 +295,7 @@ int main(int argc, char**argv)
   struct options options;
   options.local_host = "127.0.0.1";
   options.diameter_conf = "/var/lib/ralf/ralf.conf";
+  options.dns_server = "127.0.0.1";
   options.http_address = "0.0.0.0";
   options.http_port = 10888;
   options.http_threads = 1;
@@ -397,7 +407,7 @@ int main(int argc, char**argv)
   PeerMessageSenderFactory* factory = new PeerMessageSenderFactory(options.billing_realm);
 
   // Create a DNS resolver.  We'll use this both for HTTP and for Diameter.
-  DnsCachedResolver* dns_resolver = new DnsCachedResolver("127.0.0.1");
+  DnsCachedResolver* dns_resolver = new DnsCachedResolver(options.dns_server);
 
   std::string port_str = std::to_string(options.http_port);
 

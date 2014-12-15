@@ -82,6 +82,7 @@ get_settings()
 {
   # Set up defaults and then pull in the settings for this node.
   sas_server=0.0.0.0
+  signaling_dns_server=127.0.0.1
   num_http_threads=$(($(grep processor /proc/cpuinfo | wc -l) * 50))
   . /etc/clearwater/config
 
@@ -118,6 +119,8 @@ get_settings()
   then
     alarms_enabled_arg="--alarms-enabled"
   fi
+
+  [ -z $signaling_namespace ] || namespace_prefix="ip netns exec $signaling_namespace"
 }
 
 #
@@ -144,13 +147,14 @@ do_start()
                      --http=$local_ip
                      --http-threads=$num_http_threads
                      --access-log=$log_directory
+                     --dns-server=$signaling_dns_server
                      --log-file=$log_directory
                      --log-level=$log_level
                      $billing_realm
                      $alarms_enabled_arg
                      --sas=$sas_server,$NAME@$public_hostname"
 
-        start-stop-daemon --start --quiet --background --make-pidfile --pidfile $PIDFILE --exec $DAEMON --chuid $NAME --chdir $HOME -- $DAEMON_ARGS \
+        $namespace_prefix start-stop-daemon --start --quiet --background --make-pidfile --pidfile $PIDFILE --exec $DAEMON --chuid $NAME --chdir $HOME -- $DAEMON_ARGS \
                 || return 2
         # Add code here, if necessary, that waits for the process to be ready
         # to handle requests from services started subsequently which depend
