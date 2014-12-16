@@ -343,6 +343,17 @@ int main(int argc, char**argv)
     return 1;
   }
 
+  MemcachedStore* mstore = new MemcachedStore(false, 
+                                              "./cluster_settings",
+                                              memcached_comm_monitor,
+                                              vbucket_alarm);
+
+  if (!(mstore->has_servers()))
+  {
+    LOG_ERROR("./cluster_settings file does not contain a valid set of servers");
+    return 1;
+  };
+
   AccessLogger* access_logger = NULL;
   if (options.access_log_enabled)
   {
@@ -391,10 +402,6 @@ int main(int argc, char**argv)
                                         dict->RF);
   diameter_stack->start();
 
-  MemcachedStore* mstore = new MemcachedStore(false, 
-                                              "./cluster_settings",
-                                              memcached_comm_monitor,
-                                              vbucket_alarm);
   SessionStore* store = new SessionStore(mstore);
   BillingHandlerConfig* cfg = new BillingHandlerConfig();
   PeerMessageSenderFactory* factory = new PeerMessageSenderFactory(options.billing_realm);
