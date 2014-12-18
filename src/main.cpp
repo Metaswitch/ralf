@@ -38,8 +38,9 @@
 #include <signal.h>
 #include <semaphore.h>
 #include <strings.h>
+#include <boost/filesystem.hpp>
 
-#include "ralf_ent_definitions.h"
+#include "ralf_pd_definitions.h"
 
 #include "ipv6utils.h"
 #include "memcachedstore.h"
@@ -148,6 +149,7 @@ int init_logging_options(int argc, char**argv, struct options& options)
 
     default:
       // Ignore other options at this point
+      LOG_ERROR("Unknown option: %d.  Run with --help for options.\n", opt);
       break;
     }
   }
@@ -196,7 +198,8 @@ int init_options(int argc, char**argv, struct options& options)
       }
       else
       {
-	CL_RALF_INVALID_SAS_OPTION.log();
+        CL_RALF_INVALID_SAS_OPTION.log();
+	LOG_WARNING("Invalid --sas option, SAS disabled\n");
       }
     }
     break;
@@ -302,7 +305,8 @@ int main(int argc, char**argv)
   options.sas_system_name = "";
   options.alarms_enabled = false;
 
-  openlog("ralf", PDLOG_PID, PDLOG_LOCAL6);
+  boost::filesystem::path p = argv[0];
+  openlog(p.filename().c_str(), PDLOG_PID, PDLOG_LOCAL6);
   CL_RALF_STARTED.log();
 
   if (init_logging_options(argc, argv, options) != 0)
@@ -338,6 +342,7 @@ int main(int argc, char**argv)
 
   if (init_options(argc, argv, options) != 0)
   {
+    closelog();
     return 1;
   }
 
