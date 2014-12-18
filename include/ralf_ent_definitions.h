@@ -38,26 +38,46 @@
 #define _RALF_ENT_DEFINITIONS_H__
 
 #include <string>
-#include "craft_ent_definitions.h"
+#include "pdlog.h"
 
-/// Description of the following PDLog definitions content
-/**********************************************************
-/ log_id
-/ severity
-/ Description: (formatted)
-/ Cause:
-/ Effect:
-/ Action: \n separated list
-**********************************************************/
+// Defines instances of PDLog for Ralf
+
+// A PDLogBase defines the base class containing:
+//   Identity - Identifies the log id to be used in the syslog id field.
+//   Severity - One of Emergency, Alert, Critical, Error, Warning, Notice, 
+//              and Info.  Directly corresponds to the syslog severity types.
+//              Only Error and Notice are used.  See syslog_facade.h for 
+//              definitions.
+//   Message - Formatted description of the condition.
+//   Cause - The cause of the condition.
+//   Effect - The effect the condition.
+//   Action - A list of one or more actions to take to resolve the condition 
+//           if it is an error.
+// The elements of the class are used to format a syslog call.
+// The call to output to syslog is in the method,  dcealog.
+// By default syslog limits a total syslog message size to 2048 bytes.  
+// Anything above the limit is truncated.  The formatted message, cause, 
+// effect, and action(s) are concatenated into the syslog message.  Note, 
+// as an arbitrary convention, for more than a signle action, the actions 
+// are numbered as (1)., (2)., ...  to make the actions easier to read within 
+// the syslog message.  syslog removes extra whitespace and
+// carriage-returns/linefeeds before inserting the complete string into a 
+// message.  Note also, the action(s) are a list of strings with all but 
+// the last string having a space character at the end.  The space makes the 
+// actions more readable.  Most of the derived classes are templates.  
+// The paremeterized types being values that are output as a formatted string 
+// in the Message field.
+// PDLog definitions content
 const static PDLog CL_RALF_INVALID_SAS_OPTION
 (
   PDLogBase::CL_RALF_ID + 1,
-  PDLOG_ERR,
-  "The sas_server option in /etc/clearwater/config is invalid or not configured.",
+  PDLOG_INFO,
+  "The sas_server option in /etc/clearwater/config is invalid or "
+  "not configured.",
   "The interface to the SAS is not specified.",
   "No call traces will appear in the SAS.",
   "Set the fully qualified sas hostname for the sas_server=<host> option. "
-  "Consult the Installation document."
+  "Consult the installation instructions."
 );
 
 const static PDLog CL_RALF_INVALID_OPTION_C
@@ -66,7 +86,7 @@ const static PDLog CL_RALF_INVALID_OPTION_C
   PDLOG_ERR,
   "Fatal - Unknown command line option %c.  Run with --help for options.",
   "There was an invalid command line option in /etc/clearwater/config",
-  "Ralf will exit.",
+  "The application will exit and restart until the problem is fixed.",
   "Correct the /etc/clearwater/config file."
 );
 
@@ -78,7 +98,8 @@ const static PDLog1<const char*> CL_RALF_CRASHED
   "Ralf has encountered a fatal software error or has been terminated",
   "The Ralf application will restart.",
   "This error can occur if Ralf has been terminated by operator command. "
-  "Crashes such as segment trap, bus error trap, should be reported to support. "
+  "Crashes such as segment trap, bus error trap, should be "
+  "reported. "
 );
 
 const static PDLog CL_RALF_STARTED
@@ -96,9 +117,10 @@ const static PDLog2<const char*, int> CL_RALF_HTTP_ERROR
   PDLogBase::CL_RALF_ID + 5,
   PDLOG_ERR,
   "The HTTP stack has encountered an error in function %s with error %d.",
-  "Ralf encountered an error when attempting to make an HTTP connection to Chronos.",
+  "Ralf encountered an error when attempting to make an HTTP connection "
+  "to Chronos.",
   "The interface to Chronos has failed.  Ralf can't use timer services.",
-  "Report this issue to support."
+  "Report this issue."
 );
 
 const static PDLog CL_RALF_ENDED
@@ -109,17 +131,19 @@ const static PDLog CL_RALF_ENDED
   "Ralf has been terminated by Monit or has exited.",
   "Ralf billing service is not longer available.",
   "(1). This occurs normally when Ralf is stopped. "
-  "(2). If Ralf failed to respond then monit can restart Ralf.  Report this issue to support."
+  "(2). If Ralf failed to respond then monit can restart Ralf. "
+  " Report this issue."
 );
 
 const static PDLog2<const char*, int> CL_RALF_HTTP_STOP_ERROR
 (
   PDLogBase::CL_RALF_ID + 7,
   PDLOG_ERR,
-  "Failed to stop HTTPStack stack in function %s with error %d.",
-  "When Ralf was exiting it encountered an error when shutting down the HTTP stack.",
+  "Failed to stop HTTP stack in function %s with error %d.",
+  "When Ralf was exiting it encountered an error when shutting "
+  "down the HTTP stack.",
   "Not critical as Ralf is exiting anyway.",
-  "Report this issue to support."
+  "Report this issue."
 );
 
 #endif
