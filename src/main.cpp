@@ -149,7 +149,6 @@ int init_logging_options(int argc, char**argv, struct options& options)
 
     default:
       // Ignore other options at this point
-      LOG_ERROR("Unknown option: %d.  Run with --help for options.\n", opt);
       break;
     }
   }
@@ -199,7 +198,7 @@ int init_options(int argc, char**argv, struct options& options)
       else
       {
         CL_RALF_INVALID_SAS_OPTION.log();
-	LOG_WARNING("Invalid --sas option, SAS disabled\n");
+        LOG_WARNING("Invalid --sas option, SAS disabled\n");
       }
     }
     break;
@@ -241,6 +240,7 @@ int init_options(int argc, char**argv, struct options& options)
 
     default:
       CL_RALF_INVALID_OPTION_C.log();
+      LOG_ERROR("Unknown option: %d.  Run with --help for options.\n", opt);
       return -1;
     }
   }
