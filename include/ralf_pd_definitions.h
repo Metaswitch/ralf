@@ -82,8 +82,7 @@ const static PDLog1<const char*> CL_RALF_CRASHED
   "Ralf has encountered a fatal software error or has been terminated",
   "The Ralf application will restart.",
   "This error can occur if Ralf has been terminated by operator command. "
-  "Crashes such as segment trap or bus error trap, should be "
-  "reported. "
+  "Check your installation and configuration for other types of crashes."
 );
 
 const static PDLog CL_RALF_STARTED
