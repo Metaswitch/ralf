@@ -81,8 +81,8 @@ const static PDLog1<const char*> CL_RALF_CRASHED
   "Fatal - Ralf has exited or crashed with signal %s.",
   "Ralf has encountered a fatal software error or has been terminated",
   "The application will exit and restart until the problem is fixed.",
-  "This error can occur if Ralf has been terminated by operator command. "
-  "Check your installation and configuration for other types of crashes."
+  "Ensure that Ralf has been installed correctly and that it "
+  "has valid configuration."
 );
 
 const static PDLog CL_RALF_STARTED
