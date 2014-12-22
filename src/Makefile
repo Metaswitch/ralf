@@ -119,7 +119,10 @@ LDFLAGS += -lzmq \
            -lpthread \
            -lcares \
            -lboost_regex \
-           -lboost_date_time
+           -lboost_date_time \
+           -lc \
+           -lboost_system \
+           -lboost_filesystem
 
 # Test build uses just-built libraries, which may not be installed
 LDFLAGS_TEST += -Wl,-rpath=$(ROOT)/usr/lib
