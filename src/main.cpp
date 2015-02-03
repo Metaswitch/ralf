@@ -356,6 +356,28 @@ int main(int argc, char**argv)
     return 1;
   }
 
+  if (options.alarms_enabled)
+  {
+    // Create Ralf's alarm objects. Note that the alarm identifier strings must match those
+    // in the alarm definition JSON file exactly.
+
+    cdf_comm_monitor = new CommunicationMonitor(new Alarm("ralf", AlarmDef::RALF_CDF_COMM_ERROR,
+                                                                  AlarmDef::CRITICAL));
+
+    chronos_comm_monitor = new CommunicationMonitor(new Alarm("ralf", AlarmDef::RALF_CHRONOS_COMM_ERROR,
+                                                                      AlarmDef::CRITICAL));
+
+    memcached_comm_monitor = new CommunicationMonitor(new Alarm("ralf", AlarmDef::RALF_MEMCACHED_COMM_ERROR,
+                                                                        AlarmDef::CRITICAL));
+
+    vbucket_alarm = new Alarm("ralf", AlarmDef::RALF_VBUCKET_ERROR,
+                                      AlarmDef::MAJOR);
+
+    // Start the alarm request agent
+    AlarmReqAgent::get_instance().start();
+    AlarmState::clear_all("ralf");
+  }
+
   MemcachedStore* mstore = new MemcachedStore(false, 
                                               "./cluster_settings",
                                               memcached_comm_monitor,
@@ -378,28 +400,6 @@ int main(int argc, char**argv)
             SASEvent::CURRENT_RESOURCE_BUNDLE,
             options.sas_server,
             sas_write);
-
-  if (options.alarms_enabled)
-  {
-    // Create Ralf's alarm objects. Note that the alarm identifier strings must match those
-    // in the alarm definition JSON file exactly.
-
-    cdf_comm_monitor = new CommunicationMonitor(new Alarm("ralf", AlarmDef::RALF_CDF_COMM_ERROR,
-                                                                  AlarmDef::CRITICAL));
-
-    chronos_comm_monitor = new CommunicationMonitor(new Alarm("ralf", AlarmDef::RALF_CHRONOS_COMM_ERROR,
-                                                                      AlarmDef::CRITICAL));
-
-    memcached_comm_monitor = new CommunicationMonitor(new Alarm("ralf", AlarmDef::RALF_MEMCACHED_COMM_ERROR,
-                                                                        AlarmDef::CRITICAL));
-
-    vbucket_alarm = new Alarm("ralf", AlarmDef::RALF_VBUCKET_ERROR,
-                                      AlarmDef::MAJOR);
-
-    // Start the alarm request agent
-    AlarmReqAgent::get_instance().start();
-    AlarmState::clear_all("ralf");
-  }
 
   LoadMonitor* load_monitor = new LoadMonitor(100000, // Initial target latency (us)
                                               20, // Maximum token bucket size.
