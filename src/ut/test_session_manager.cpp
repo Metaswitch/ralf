@@ -295,6 +295,7 @@ TEST_F(SessionManagerTest, NewCallTest)
 
   // Re-using call-IDs should just work
   sess = store->get_session_data("CALL_ID_TWO", ORIGINATING, SCSCF, FAKE_TRAIL_ID);
+  ASSERT_NE((SessionStore::Session*)NULL, sess);
   ASSERT_EQ(1u, sess->acct_record_number);
   delete sess;
   sess = NULL;

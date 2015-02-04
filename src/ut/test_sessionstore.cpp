@@ -73,6 +73,7 @@ TEST_F(SessionStoreTest, SimpleTest)
 
   // Retrieve the session again.
   session = store->get_session_data("call_id", ORIGINATING, SCSCF, FAKE_TRAIL);
+  ASSERT_TRUE(session != NULL);
   EXPECT_EQ("session_id", session->session_id);
   EXPECT_EQ(2u, session->acct_record_number);
   EXPECT_EQ("timer_id", session->timer_id);

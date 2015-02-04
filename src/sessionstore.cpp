@@ -75,9 +75,20 @@ SessionStore::Session* SessionStore::get_session_data(const std::string& call_id
 
   if (status == Store::Status::OK && !data.empty())
   {
+    // Retrieved the data, so deserialize it.
     rc = deserialize_session(data);
-    rc->_cas = cas;
-    LOG_DEBUG("Retrieved record, CAS = %ld", rc->_cas);
+
+    if (rc != NULL)
+    {
+      rc->_cas = cas;
+      LOG_DEBUG("Retrieved record, CAS = %ld", rc->_cas);
+    }
+    else
+    {
+      // Could not deserialize the record. Treat it as not found.
+      LOG_INFO("Failed to deserialize record");
+      // TODO SAS logging
+    }
   }
 
   return rc;
@@ -201,25 +212,43 @@ SessionStore::Session* SessionStore::BinarySerializerDeserializer::
   std::istringstream iss(data, std::istringstream::in|std::istringstream::binary);
   Session* session = new Session();
 
+  // Helper macro that bails out if we unexpectedly hit the end of the input
+  // stream.
+#define ASSERT_NOT_EOF(STREAM)                                                 \
+if ((STREAM).eof())                                                            \
+{                                                                              \
+  LOG_INFO("Failed to deserialize binary document (hit EOF at %s:%d)",         \
+           __FILE__, __LINE__);                                                \
+  delete session; session = NULL;                                              \
+  return NULL;                                                                 \
+}
+
   getline(iss, session->session_id, '\0');
+  ASSERT_NOT_EOF(iss);
 
   int num_ccf;
   iss.read((char*)&num_ccf, sizeof(int));
+  ASSERT_NOT_EOF(iss);
 
   for (int ii = 0; ii < num_ccf; ii++)
   {
     std::string ccf;
     getline(iss, ccf, '\0');
+    ASSERT_NOT_EOF(iss);
     session->ccf.push_back(ccf);
   }
 
   iss.read((char*)&session->acct_record_number, sizeof(uint32_t));
+  ASSERT_NOT_EOF(iss);
 
   getline(iss, session->timer_id, '\0');
+  ASSERT_NOT_EOF(iss);
 
   iss.read((char*)&session->session_refresh_time, sizeof(uint32_t));
+  ASSERT_NOT_EOF(iss);
 
   iss.read((char*)&session->interim_interval, sizeof(uint32_t));
+  // This could legitimately be the end of the stream.
 
   return session;
 }
