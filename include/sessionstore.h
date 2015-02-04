@@ -91,7 +91,7 @@ public:
   {
   public:
     /// Virtual destructor.
-    virtual ~SerializerDeserializer();
+    virtual ~SerializerDeserializer() {};
 
     /// Serialize a Session object to the format used in the store.
     ///
@@ -109,6 +109,17 @@ public:
 
     /// @return the name of this (de)serializer.
     virtual std::string name() = 0;
+  };
+
+  /// A (de)serializer for the (deprecated) custom binary format.
+  class BinarySerializerDeserializer : public SerializerDeserializer
+  {
+  public:
+    ~BinarySerializerDeserializer() {};
+
+    std::string serialize_session(Session *data);
+    Session* deserialize_session(const std::string& data);
+    std::string name();
   };
 
   SessionStore(Store *);
@@ -134,7 +145,7 @@ public:
 
 private:
   // Serialise a session to a string, ready to store in the DB.
-  std::string serialize_session(Session *data);
+  std::string serialize_session(Session *session);
   Session* deserialize_session(const std::string& s);
 
   std::string create_key(const std::string& call_id,
@@ -142,6 +153,9 @@ private:
                          const node_functionality_t function);
 
   Store* _store;
+
+  SerializerDeserializer* _serializer;
+  std::vector<SerializerDeserializer*> _deserializers;
 };
 
 #endif

@@ -43,10 +43,20 @@
 
 SessionStore::SessionStore(Store* store) : _store(store)
 {
+  _serializer = new BinarySerializerDeserializer();
+  _deserializers.push_back(new BinarySerializerDeserializer());
 }
 
 SessionStore::~SessionStore()
 {
+  delete _serializer; _serializer = NULL;
+
+  for(std::vector<SerializerDeserializer*>::iterator it = _deserializers.begin();
+      it != _deserializers.end();
+      ++it)
+  {
+    delete *it; *it = NULL;
+  }
 }
 
 SessionStore::Session* SessionStore::get_session_data(const std::string& call_id,
@@ -111,6 +121,49 @@ bool SessionStore::delete_session_data(const std::string& call_id,
 // Serialize a session to a string that can later be loaded by deserialize_session().
 std::string SessionStore::serialize_session(Session* session)
 {
+  return _serializer->serialize_session(session);
+}
+
+// Deserialize a previously serialized session object.
+SessionStore::Session* SessionStore::deserialize_session(const std::string& data)
+{
+  Session* session = NULL;
+
+  for (std::vector<SerializerDeserializer*>::iterator it = _deserializers.begin();
+       it != _deserializers.end();
+       ++it)
+  {
+    SerializerDeserializer* deserializer = *it;
+
+    LOG_DEBUG("Try to deserialize record with '%s' deserializer",
+              deserializer->name().c_str());
+    session = deserializer->deserialize_session(data);
+
+    if (session != NULL)
+    {
+      LOG_DEBUG("Deserialization suceeded");
+      break;
+    }
+    else
+    {
+      LOG_DEBUG("Deserialization failed");
+    }
+  }
+
+  return session;
+}
+
+std::string SessionStore::create_key(const std::string& call_id,
+                                     const role_of_node_t role,
+                                     const node_functionality_t function)
+{
+  return call_id + std::to_string(role) + std::to_string(function);
+}
+
+
+std::string SessionStore::BinarySerializerDeserializer::
+  serialize_session(Session *session)
+{
   std::ostringstream oss(std::ostringstream::out|std::ostringstream::binary);
 
   oss << session->session_id << '\0';
@@ -136,8 +189,9 @@ std::string SessionStore::serialize_session(Session* session)
   return oss.str();
 }
 
-// Deserialize a previously serialized session object.
-SessionStore::Session* SessionStore::deserialize_session(const std::string& data)
+
+SessionStore::Session* SessionStore::BinarySerializerDeserializer::
+  deserialize_session(const std::string& data)
 {
   std::istringstream iss(data, std::istringstream::in|std::istringstream::binary);
   Session* session = new Session();
@@ -165,9 +219,8 @@ SessionStore::Session* SessionStore::deserialize_session(const std::string& data
   return session;
 }
 
-std::string SessionStore::create_key(const std::string& call_id,
-                                     const role_of_node_t role,
-                                     const node_functionality_t function)
+
+std::string SessionStore::BinarySerializerDeserializer::name()
 {
-  return call_id + std::to_string(role) + std::to_string(function);
+  return "binary";
 }
