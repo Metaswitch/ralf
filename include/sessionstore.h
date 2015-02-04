@@ -82,6 +82,35 @@ public:
     friend class SessionStore;
   };
 
+  /// Interface used by the SessionStore to serialize session from C++ objects
+  /// to the format used in the store, and deserialize them.
+  ///
+  /// This interface allows multiple (de)serializers to be defined and for the
+  /// SessionStore to use them in a pluggable fashion.
+  class SerializerDeserializer
+  {
+  public:
+    /// Virtual destructor.
+    virtual ~SerializerDeserializer();
+
+    /// Serialize a Session object to the format used in the store.
+    ///
+    /// @param data - The session to serialize
+    /// @return     - The serialized form.
+    virtual std::string serialize_session(Session *data) = 0;
+
+    /// Deserialize some data from the store into a Session object
+    ///
+    /// @param s - The data to deserialize.
+    ///
+    /// @return  - A session object, or NULL if the data could not be
+    ///            deserialized (e.g. because it is corrupt).
+    virtual Session* deserialize_session(const std::string& s) = 0;
+
+    /// @return the name of this (de)serializer.
+    virtual std::string name() = 0;
+  };
+
   SessionStore(Store *);
   ~SessionStore();
 
