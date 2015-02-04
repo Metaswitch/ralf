@@ -122,6 +122,17 @@ public:
     std::string name();
   };
 
+  /// A (de)serializer for the JSON format.
+  class JsonSerializerDeserializer : public SerializerDeserializer
+  {
+  public:
+    ~JsonSerializerDeserializer() {};
+
+    std::string serialize_session(Session *data);
+    Session* deserialize_session(const std::string& data);
+    std::string name();
+  };
+
   SessionStore(Store *);
   ~SessionStore();
 

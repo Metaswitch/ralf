@@ -40,6 +40,7 @@
 #include "sessionstore.h"
 #include "message.hpp"
 #include "log.h"
+#include "json_parse_utils.h"
 
 SessionStore::SessionStore(Store* store) : _store(store)
 {
@@ -161,6 +162,10 @@ std::string SessionStore::create_key(const std::string& call_id,
 }
 
 
+//
+// (De)serializer for the binary SessionStore format.
+//
+//
 std::string SessionStore::BinarySerializerDeserializer::
   serialize_session(Session *session)
 {
@@ -223,4 +228,102 @@ SessionStore::Session* SessionStore::BinarySerializerDeserializer::
 std::string SessionStore::BinarySerializerDeserializer::name()
 {
   return "binary";
+}
+
+
+//
+// (De)serializer for the JSON SessionStore format.
+//
+
+static const char* const JSON_SESSION_ID = "session_id";
+static const char* const JSON_CCFS = "ccfs";
+static const char* const JSON_ACCT_RECORD_NUM = "acct_record_num";
+static const char* const JSON_TIMER_ID = "timer_id";
+static const char* const JSON_REFRESH_TIME = "refresh_time";
+static const char* const JSON_INTERIM_INTERVAL = "interim_interval";
+
+
+std::string SessionStore::JsonSerializerDeserializer::
+  serialize_session(Session *session)
+{
+  rapidjson::StringBuffer sb;
+  rapidjson::Writer<rapidjson::StringBuffer> writer(sb);
+
+  writer.StartObject();
+  {
+    writer.String(JSON_SESSION_ID); writer.String(session->session_id.c_str());
+
+    writer.String(JSON_CCFS);
+    writer.StartArray();
+    {
+      for (std::vector<std::string>::const_iterator ccf = session->ccf.begin();
+           ccf != session->ccf.end();
+           ++ccf)
+      {
+        writer.String(ccf->c_str());
+      }
+    }
+    writer.EndArray();
+
+    writer.String(JSON_ACCT_RECORD_NUM); writer.Int(session->acct_record_number);
+    writer.String(JSON_TIMER_ID); writer.String(session->timer_id.c_str());
+    writer.String(JSON_REFRESH_TIME); writer.Int(session->session_refresh_time);
+    writer.String(JSON_INTERIM_INTERVAL); writer.Int(session->interim_interval);
+  }
+  writer.EndObject();
+
+  return sb.GetString();
+}
+
+
+SessionStore::Session* SessionStore::JsonSerializerDeserializer::
+  deserialize_session(const std::string& data)
+{
+  LOG_DEBUG("Deserialize JSON document: %s", data.c_str());
+
+  rapidjson::Document doc;
+  doc.Parse<0>(data.c_str());
+
+  if (doc.HasParseError())
+  {
+    LOG_DEBUG("Failed to parse document");
+    return NULL;
+  }
+
+  Session* session = new Session();
+
+  try
+  {
+    JSON_GET_STRING_MEMBER(doc, JSON_SESSION_ID, session->session_id);
+
+    JSON_ASSERT_CONTAINS(doc, JSON_CCFS);
+    JSON_ASSERT_ARRAY(doc[JSON_CCFS]);
+
+    for (rapidjson::Value::ConstValueIterator ccfs_it = doc[JSON_CCFS].Begin();
+         ccfs_it != doc[JSON_CCFS].End();
+         ++ccfs_it)
+    {
+      JSON_ASSERT_STRING(*ccfs_it);
+      session->ccf.push_back(ccfs_it->GetString());
+    }
+
+    JSON_GET_INT_MEMBER(doc, JSON_ACCT_RECORD_NUM, session->acct_record_number);
+    JSON_GET_STRING_MEMBER(doc, JSON_TIMER_ID, session->timer_id);
+    JSON_GET_INT_MEMBER(doc, JSON_REFRESH_TIME, session->session_refresh_time);
+    JSON_GET_INT_MEMBER(doc, JSON_INTERIM_INTERVAL, session->interim_interval);
+  }
+  catch(JsonFormatError err)
+  {
+    LOG_INFO("Failed to deserialize JSON document (hit error at %s:%d)",
+             err._file, err._line);
+    delete session; session = NULL;
+  }
+
+  return session;
+}
+
+
+std::string SessionStore::JsonSerializerDeserializer::name()
+{
+  return "JSON";
 }
