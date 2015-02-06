@@ -128,7 +128,7 @@ LDFLAGS += -lzmq \
 LDFLAGS_TEST += -Wl,-rpath=$(ROOT)/usr/lib
 
 # Test build also uses libcurl (to verify HttpStack operation)
-LDFLAGS_TEST += -lcurl
+LDFLAGS_TEST += -lcurl -ldl
 
 # Now the GMock / GTest boilerplate.
 GTEST_HEADERS := $(GTEST_DIR)/include/gtest/*.h \
