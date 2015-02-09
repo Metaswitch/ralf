@@ -103,7 +103,8 @@ CPPFLAGS_TEST  += -DUNIT_TEST \
                   -fprofile-arcs -ftest-coverage \
                   -O0 \
                   -fno-access-control \
-                  -I$(GTEST_DIR)/include -I$(GMOCK_DIR)/include
+                  -I$(GTEST_DIR)/include -I$(GMOCK_DIR)/include \
+                  -I${ROOT}/modules/cpp-common/test_utils
 
 LDFLAGS += -L${ROOT}/usr/lib
 LDFLAGS += -lzmq \
