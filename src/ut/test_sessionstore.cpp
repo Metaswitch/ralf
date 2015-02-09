@@ -46,17 +46,22 @@ class SessionStoreTest : public ::testing::Test
 {
   SessionStoreTest()
   {
+    _memstore = new LocalStore();
+    _store = new SessionStore(_memstore);
   }
 
   virtual ~SessionStoreTest()
   {
+    delete _store; _store = NULL;
+    delete _memstore; _memstore = NULL;
   }
+
+  LocalStore* _memstore;
+  SessionStore* _store;
 };
 
 TEST_F(SessionStoreTest, SimpleTest)
 {
-  LocalStore* memstore = new LocalStore();
-  SessionStore* store = new SessionStore(memstore);
   SessionStore::Session* session = new SessionStore::Session();
   session->session_id = "session_id";
   session->ccf.push_back("ccf1");
@@ -66,13 +71,12 @@ TEST_F(SessionStoreTest, SimpleTest)
   session->session_refresh_time = 5 * 60;
 
   // Save the session in the store
-  bool rc = store->set_session_data("call_id", ORIGINATING, SCSCF, session, FAKE_TRAIL);
+  bool rc = _store->set_session_data("call_id", ORIGINATING, SCSCF, session, FAKE_TRAIL);
   EXPECT_EQ(true, rc);
-  delete session;
-  session = NULL;
+  delete session; session = NULL;
 
   // Retrieve the session again.
-  session = store->get_session_data("call_id", ORIGINATING, SCSCF, FAKE_TRAIL);
+  session = _store->get_session_data("call_id", ORIGINATING, SCSCF, FAKE_TRAIL);
   ASSERT_TRUE(session != NULL);
   EXPECT_EQ("session_id", session->session_id);
   EXPECT_EQ(2u, session->acct_record_number);
@@ -80,15 +84,11 @@ TEST_F(SessionStoreTest, SimpleTest)
   EXPECT_EQ(5u * 60, session->session_refresh_time);
   EXPECT_EQ(2u, session->ccf.size());
 
-  delete session;
-  delete store;
-  delete memstore;
+  delete session; session = NULL;
 }
 
 TEST_F(SessionStoreTest, DeletionTest)
 {
-  LocalStore* memstore = new LocalStore();
-  SessionStore* store = new SessionStore(memstore);
   SessionStore::Session* session = new SessionStore::Session();
   session->session_id = "session_id";
   session->ccf.push_back("ccf1");
@@ -98,18 +98,15 @@ TEST_F(SessionStoreTest, DeletionTest)
   session->session_refresh_time = 5 * 60;
 
   // Save the session in the store
-  bool rc = store->set_session_data("call_id", ORIGINATING, SCSCF, session, FAKE_TRAIL);
+  bool rc = _store->set_session_data("call_id", ORIGINATING, SCSCF, session, FAKE_TRAIL);
   EXPECT_EQ(true, rc);
-  delete session;
-  session = NULL;
+  delete session; session = NULL;
 
-  store->delete_session_data("call_id", ORIGINATING, SCSCF, FAKE_TRAIL);
+  _store->delete_session_data("call_id", ORIGINATING, SCSCF, FAKE_TRAIL);
 
   // Retrieve the session again.
-  session = store->get_session_data("call_id", ORIGINATING, SCSCF, FAKE_TRAIL);
+  session = _store->get_session_data("call_id", ORIGINATING, SCSCF, FAKE_TRAIL);
   EXPECT_EQ(NULL, session);
 
-  delete session;
-  delete store;
-  delete memstore;
+  delete session; session = NULL;
 }
