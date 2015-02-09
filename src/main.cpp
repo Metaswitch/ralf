@@ -64,7 +64,13 @@
 enum OptionTypes
 {
   ALARMS_ENABLED=256+1,
-  DNS_SERVER
+  DNS_SERVER,
+  MEMCACHED_WRITE_FORMAT
+};
+
+enum struct MemcachedWriteFormat
+{
+  BINARY, JSON
 };
 
 struct options
@@ -85,24 +91,26 @@ struct options
   std::string sas_server;
   std::string sas_system_name;
   bool alarms_enabled;
+  MemcachedWriteFormat memcached_write_format;
 };
 
 const static struct option long_opt[] =
 {
-  {"localhost",         required_argument, NULL, 'l'},
-  {"diameter-conf",     required_argument, NULL, 'c'},
-  {"dns-server",        required_argument, NULL, DNS_SERVER},
-  {"http",              required_argument, NULL, 'H'},
-  {"http-threads",      required_argument, NULL, 't'},
-  {"billing-realm",     required_argument, NULL, 'b'},
-  {"max-peers",         required_argument, NULL, 'p'},
-  {"access-log",        required_argument, NULL, 'a'},
-  {"log-file",          required_argument, NULL, 'F'},
-  {"log-level",         required_argument, NULL, 'L'},
-  {"sas",               required_argument, NULL, 's'},
-  {"alarms-enabled",    no_argument,       NULL, ALARMS_ENABLED},
-  {"help",              no_argument,       NULL, 'h'},
-  {NULL,                0,                 NULL, 0},
+  {"localhost",              required_argument, NULL, 'l'},
+  {"diameter-conf",          required_argument, NULL, 'c'},
+  {"dns-server",             required_argument, NULL, DNS_SERVER},
+  {"http",                   required_argument, NULL, 'H'},
+  {"http-threads",           required_argument, NULL, 't'},
+  {"billing-realm",          required_argument, NULL, 'b'},
+  {"max-peers",              required_argument, NULL, 'p'},
+  {"access-log",             required_argument, NULL, 'a'},
+  {"log-file",               required_argument, NULL, 'F'},
+  {"log-level",              required_argument, NULL, 'L'},
+  {"sas",                    required_argument, NULL, 's'},
+  {"alarms-enabled",         no_argument,       NULL, ALARMS_ENABLED},
+  {"help",                   no_argument,       NULL, 'h'},
+  {"memcached-write-format", required_argument, 0,    MEMCACHED_WRITE_FORMAT},
+  {NULL,                     0,                 NULL, 0},
 };
 
 static std::string options_description = "l:c:H:t:b:p:a:F:L:s:h";
@@ -129,7 +137,12 @@ void usage(void)
        " system name to identify this system to SAS. If this option isn't\n"
        " specified, SAS is disabled\n"
        "     --alarms-enabled       Whether SNMP alarms are enabled (default: false)\n"
-       " -h, --help                 Show this help screen\n");
+       " -h, --help                 Show this help screen\n"
+       "     --memcached-write-format\n"
+       "                            The data format to use when writing sessions\n"
+       "                            to memcached. Values are 'binary' and 'json'\n"
+       "                            (defaults to 'binary')\n"
+      );
 }
 
 int init_logging_options(int argc, char**argv, struct options& options)
@@ -247,6 +260,27 @@ int init_options(int argc, char**argv, struct options& options)
       usage();
       return -1;
 
+    case MEMCACHED_WRITE_FORMAT:
+      if (strcmp(optarg, "binary") == 0)
+      {
+        LOG_INFO("Memcached write format set to 'binary'");
+        options.memcached_write_format = MemcachedWriteFormat::BINARY;
+      }
+      else if (strcmp(optarg, "json") == 0)
+      {
+        LOG_INFO("Memcached write format set to 'json'");
+        options.memcached_write_format = MemcachedWriteFormat::JSON;
+      }
+      else
+      {
+        LOG_WARNING("Invalid value for memcached-write-format, using '%s'."
+                    "Got '%s', valid vales are 'json' and 'binary'",
+                    ((options.memcached_write_format == MemcachedWriteFormat::JSON) ?
+                     "json" : "binary"),
+                    optarg);
+      }
+      break;
+
     default:
       CL_RALF_INVALID_OPTION_C.log();
       LOG_ERROR("Unknown option: %d.  Run with --help for options.\n", opt);
@@ -314,6 +348,7 @@ int main(int argc, char**argv)
   options.sas_server = "0.0.0.0";
   options.sas_system_name = "";
   options.alarms_enabled = false;
+  options.memcached_write_format = MemcachedWriteFormat::BINARY;
 
   boost::filesystem::path p = argv[0];
   openlog(p.filename().c_str(), PDLOG_PID, PDLOG_LOCAL6);
@@ -356,7 +391,7 @@ int main(int argc, char**argv)
     return 1;
   }
 
-  MemcachedStore* mstore = new MemcachedStore(false, 
+  MemcachedStore* mstore = new MemcachedStore(false,
                                               "./cluster_settings",
                                               memcached_comm_monitor,
                                               vbucket_alarm);
@@ -415,7 +450,22 @@ int main(int argc, char**argv)
                                         dict->RF);
   diameter_stack->start();
 
-  SessionStore* store = new SessionStore(mstore);
+  SessionStore::SerializerDeserializer* serializer;
+  std::vector<SessionStore::SerializerDeserializer*> deserializers;
+
+  if (options.memcached_write_format == MemcachedWriteFormat::JSON)
+  {
+    serializer = new SessionStore::JsonSerializerDeserializer();
+  }
+  else
+  {
+    serializer = new SessionStore::BinarySerializerDeserializer();
+  }
+
+  deserializers.push_back(new SessionStore::JsonSerializerDeserializer());
+  deserializers.push_back(new SessionStore::BinarySerializerDeserializer());
+
+  SessionStore* store = new SessionStore(mstore, serializer, deserializers);
   BillingHandlerConfig* cfg = new BillingHandlerConfig();
   PeerMessageSenderFactory* factory = new PeerMessageSenderFactory(options.billing_realm);
 
