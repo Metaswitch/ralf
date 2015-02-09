@@ -133,15 +133,15 @@ void usage(void)
        "                            Log to file in specified directory\n"
        " -L, --log-level N          Set log level to N (default: 4)\n"
        " -s, --sas <host>,<system name>\n"
-       " Use specified host as Service Assurance Server and specified\n"
-       " system name to identify this system to SAS. If this option isn't\n"
-       " specified, SAS is disabled\n"
+       "                            Use specified host as Service Assurance Server and specified\n"
+       "                            system name to identify this system to SAS. If this option isn't\n"
+       "                            specified, SAS is disabled\n"
        "     --alarms-enabled       Whether SNMP alarms are enabled (default: false)\n"
-       " -h, --help                 Show this help screen\n"
        "     --memcached-write-format\n"
        "                            The data format to use when writing sessions\n"
        "                            to memcached. Values are 'binary' and 'json'\n"
        "                            (defaults to 'binary')\n"
+       " -h, --help                 Show this help screen\n"
       );
 }
 
