@@ -133,7 +133,29 @@ public:
     std::string name();
   };
 
-  SessionStore(Store *);
+  /// Constructor that allows the user to specify which serializer and
+  /// deserializers to use.
+  ///
+  /// @param store              - Pointer to the underlying data store.
+  /// @param serializer         - The serializer to use when writing records.
+  ///                             The SessionStore takes ownership of it.
+  /// @param deserializer       - A vector of deserializers to when reading
+  ///                             records. The order of this vector is
+  ///                             important - each deserializer is
+  ///                             tried in turn until one successfully parses
+  ///                             the record. The SessionStore takes ownership
+  ///                             of the entries in the vector.
+  SessionStore(Store *store,
+               SerializerDeserializer*& serializer,
+               std::vector<SerializerDeserializer*>& deserializers);
+
+  /// Alternative constructor that creates a SessionStore with just the default
+  /// (de)serializer.
+  ///
+  /// @param store              - Pointer to the underlying data store.
+  SessionStore(Store *store);
+
+  /// Destructor
   ~SessionStore();
 
   // Retrieve session state for a given Call-ID.

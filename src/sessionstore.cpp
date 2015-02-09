@@ -42,6 +42,18 @@
 #include "log.h"
 #include "json_parse_utils.h"
 
+SessionStore::SessionStore(Store *store,
+                           SerializerDeserializer*& serializer,
+                           std::vector<SerializerDeserializer*>& deserializers) :
+  _store(store),
+  _serializer(serializer),
+  _deserializers(deserializers)
+{
+  // We have taken ownership of the (de)serializers.
+  serializer = NULL;
+  deserializers.clear();
+}
+
 SessionStore::SessionStore(Store* store) : _store(store)
 {
   _serializer = new BinarySerializerDeserializer();
