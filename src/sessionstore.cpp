@@ -99,7 +99,10 @@ SessionStore::Session* SessionStore::get_session_data(const std::string& call_id
     {
       // Could not deserialize the record. Treat it as not found.
       LOG_INFO("Failed to deserialize record");
-      // TODO SAS logging
+      SAS::Event event(trail, SASEvent::SESSION_DESERIALIZATION_FAILED, 0);
+      event.add_var_param(call_id);
+      event.add_var_param(data);
+      SAS::report_event(event);
     }
   }
 

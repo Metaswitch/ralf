@@ -64,6 +64,8 @@ namespace SASEvent
   const int BILLING_REQUEST_REJECTED = RALF_BASE + 0xB00;
   const int BILLING_REQUEST_SUCCEEDED = RALF_BASE + 0xC00;
 
+  const int SESSION_DESERIALIZATION_FAILED = RALF_BASE + 0xD00;
+
 } // namespace SASEvent
 
 
