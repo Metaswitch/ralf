@@ -41,6 +41,7 @@
 #include "message.hpp"
 #include "log.h"
 #include "json_parse_utils.h"
+#include "ralfsasevent.h"
 
 SessionStore::SessionStore(Store *store,
                            SerializerDeserializer*& serializer,
