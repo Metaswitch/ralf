@@ -82,7 +82,7 @@ public:
     friend class SessionStore;
   };
 
-  /// Interface used by the SessionStore to serialize session from C++ objects
+  /// Interface used by the SessionStore to serialize sessions from C++ objects
   /// to the format used in the store, and deserialize them.
   ///
   /// This interface allows multiple (de)serializers to be defined and for the
@@ -139,7 +139,7 @@ public:
   /// @param store              - Pointer to the underlying data store.
   /// @param serializer         - The serializer to use when writing records.
   ///                             The SessionStore takes ownership of it.
-  /// @param deserializer       - A vector of deserializers to when reading
+  /// @param deserializer       - A vector of deserializers to try when reading
   ///                             records. The order of this vector is
   ///                             important - each deserializer is
   ///                             tried in turn until one successfully parses
