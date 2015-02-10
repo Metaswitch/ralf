@@ -169,7 +169,7 @@ SessionStore::Session* SessionStore::deserialize_session(const std::string& data
 
     if (session != NULL)
     {
-      LOG_DEBUG("Deserialization suceeded");
+      LOG_DEBUG("Deserialization succeeded");
       break;
     }
     else
