@@ -274,7 +274,7 @@ int init_options(int argc, char**argv, struct options& options)
       else
       {
         LOG_WARNING("Invalid value for memcached-write-format, using '%s'."
-                    "Got '%s', valid vales are 'json' and 'binary'",
+                    "Got '%s', valid values are 'json' and 'binary'",
                     ((options.memcached_write_format == MemcachedWriteFormat::JSON) ?
                      "json" : "binary"),
                     optarg);

@@ -80,7 +80,7 @@ SessionStore::Session* SessionStore::get_session_data(const std::string& call_id
 {
   std::string key = create_key(call_id, role, function);
   LOG_DEBUG("Retrieving session data for %s", key.c_str());
-  Session* rc = NULL;
+  Session* session = NULL;
 
   std::string data;
   uint64_t cas;
@@ -89,12 +89,12 @@ SessionStore::Session* SessionStore::get_session_data(const std::string& call_id
   if (status == Store::Status::OK && !data.empty())
   {
     // Retrieved the data, so deserialize it.
-    rc = deserialize_session(data);
+    LOG_DEBUG("Retrieved record, CAS = %ld", cas);
+    session = deserialize_session(data);
 
-    if (rc != NULL)
+    if (session != NULL)
     {
-      rc->_cas = cas;
-      LOG_DEBUG("Retrieved record, CAS = %ld", rc->_cas);
+      session->_cas = cas;
     }
     else
     {
@@ -107,7 +107,7 @@ SessionStore::Session* SessionStore::get_session_data(const std::string& call_id
     }
   }
 
-  return rc;
+  return session;
 }
 
 bool SessionStore::set_session_data(const std::string& call_id,
