@@ -47,7 +47,7 @@ void RalfTransaction::on_response(Diameter::Message& rsp)
 {
   int result_code = 0;
   int interim_interval = 0;
-  std::string session_id;
+  std::string session_id = "Unknown";
 
   rsp.result_code(result_code);
   rsp.get_str_from_avp(_dict->SESSION_ID, session_id);
