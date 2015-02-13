@@ -140,7 +140,7 @@ void usage(void)
        "     --memcached-write-format\n"
        "                            The data format to use when writing sessions\n"
        "                            to memcached. Values are 'binary' and 'json'\n"
-       "                            (defaults to 'binary')\n"
+       "                            (defaults to 'json')\n"
        " -h, --help                 Show this help screen\n"
       );
 }
@@ -348,7 +348,7 @@ int main(int argc, char**argv)
   options.sas_server = "0.0.0.0";
   options.sas_system_name = "";
   options.alarms_enabled = false;
-  options.memcached_write_format = MemcachedWriteFormat::BINARY;
+  options.memcached_write_format = MemcachedWriteFormat::JSON;
 
   boost::filesystem::path p = argv[0];
   openlog(p.filename().c_str(), PDLOG_PID, PDLOG_LOCAL6);
