@@ -120,6 +120,11 @@ get_settings()
     alarms_enabled_arg="--alarms-enabled"
   fi
 
+  [ -z "$target_latency_us" ] || target_latency_us_arg="--target-latency-us=$target_latency_us"
+  [ -z "$max_tokens" ] || max_tokens_arg="--max-tokens=$max_tokens"
+  [ -z "$init_token_rate" ] || init_token_rate_arg="--init-token-rate=$init_token_rate"
+  [ -z "$min_token_rate" ] || min_token_rate_arg="--min-token-rate=$min_token_rate"
+
   [ -z $signaling_namespace ] || namespace_prefix="ip netns exec $signaling_namespace"
 }
 
@@ -152,7 +157,11 @@ do_start()
                      --log-level=$log_level
                      $billing_realm
                      $alarms_enabled_arg
-                     --sas=$sas_server,$NAME@$public_hostname"
+                     $target_latency_us_arg
+                     $max_tokens_arg
+                     $init_token_rate_arg
+                     $min_token_rate_arg
+                   --sas=$sas_server,$NAME@$public_hostname"
 
         $namespace_prefix start-stop-daemon --start --quiet --background --make-pidfile --pidfile $PIDFILE --exec $DAEMON --chuid $NAME --chdir $HOME -- $DAEMON_ARGS \
                 || return 2
