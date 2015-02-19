@@ -60,6 +60,7 @@
 #include "diameterresolver.h"
 #include "realmmanager.h"
 #include "communicationmonitor.h"
+#include "handle_exception.h"
 
 enum OptionTypes
 {
@@ -69,7 +70,8 @@ enum OptionTypes
   TARGET_LATENCY_US,
   MAX_TOKENS,
   INIT_TOKEN_RATE,
-  MIN_TOKEN_RATE
+  MIN_TOKEN_RATE,
+  EXCEPTION_MAX_TTL
 };
 
 enum struct MemcachedWriteFormat
@@ -100,6 +102,7 @@ struct options
   int max_tokens;
   float init_token_rate;
   float min_token_rate;
+  int exception_max_ttl;
 };
 
 const static struct option long_opt[] =
@@ -122,6 +125,7 @@ const static struct option long_opt[] =
   {"max-tokens",             required_argument, NULL, MAX_TOKENS},
   {"init-token-rate",        required_argument, NULL, INIT_TOKEN_RATE},
   {"min-token-rate",         required_argument, NULL, MIN_TOKEN_RATE},
+  {"exception-max-ttl",      required_argument, NULL, EXCEPTION_MAX_TTL},
   {NULL,                     0,                 NULL, 0},
 };
 
@@ -161,6 +165,9 @@ void usage(void)
        "                            the throttling code (default: 100.0))\n"
        "     --min-token-rate N     Minimum token refill rate of tokens in the token bucket (used by\n"
        "                            the throttling code (default: 10.0))\n"
+       "     --exception-max-ttl <secs>\n"
+       "                            The maximum time before the process restarts if it hits an exception.\n"
+       "                            The actual time is randomised.\n"
        " -h, --help                 Show this help screen\n"
       );
 }
@@ -337,6 +344,12 @@ int init_options(int argc, char**argv, struct options& options)
       }
       break;
 
+    case EXCEPTION_MAX_TTL:
+      options.exception_max_ttl = atoi(optarg);
+      LOG_INFO("Max TTL after an exception set to %d",
+               options.exception_max_ttl);
+      break;
+
     default:
       CL_RALF_INVALID_OPTION_C.log();
       LOG_ERROR("Unknown option: %d.  Run with --help for options.\n", opt);
@@ -501,10 +514,17 @@ int main(int argc, char**argv)
                                               options.init_token_rate,
                                               options.min_token_rate); 
 
+  // Create an exception handler. The exception handler doesn't need 
+  // to quiesce the process before killing it.
+  HandleException* handle_exception = new HandleException(options.exception_max_ttl,
+                                                          false);
+
   Diameter::Stack* diameter_stack = Diameter::Stack::get_instance();
   Rf::Dictionary* dict = NULL;
   diameter_stack->initialize();
-  diameter_stack->configure(options.diameter_conf, cdf_comm_monitor);
+  diameter_stack->configure(options.diameter_conf, 
+                            handle_exception, 
+                            cdf_comm_monitor);
   dict = new Rf::Dictionary();
   diameter_stack->advertize_application(Diameter::Dictionary::Application::ACCT,
                                         dict->RF);
@@ -558,7 +578,13 @@ int main(int argc, char**argv)
   try
   {
     http_stack->initialize();
-    http_stack->configure(options.http_address, options.http_port, options.http_threads, access_logger, load_monitor);
+    http_stack->configure(options.http_address, 
+                          options.http_port, 
+                          options.http_threads, 
+                          access_logger, 
+                          load_monitor, 
+                          NULL,                 // No stats interface for Ralf
+                          handle_exception);
     http_stack->register_handler("^/ping$", & ping_handler);
     http_stack->register_handler("^/call-id/[^/]*$", &billing_handler);
     http_stack->start();
@@ -604,7 +630,7 @@ int main(int argc, char**argv)
   delete diameter_resolver; diameter_resolver = NULL;
   delete http_resolver; http_resolver = NULL;
   delete dns_resolver; dns_resolver = NULL;
-
+  delete handle_exception; handle_exception = NULL;
   delete load_monitor; load_monitor = NULL;
 
   if (options.alarms_enabled)

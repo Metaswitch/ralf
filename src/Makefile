@@ -43,7 +43,8 @@ TARGET_SOURCES := accesslogger.cpp \
                   realmmanager.cpp \
                   ipv6utils.cpp \
                   alarm.cpp \
-                  communicationmonitor.cpp
+                  communicationmonitor.cpp \
+                  handle_exception.cpp
 
 TARGET_SOURCES_BUILD := main.cpp
 
