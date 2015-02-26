@@ -640,16 +640,16 @@ int main(int argc, char**argv)
 
   realm_manager->stop();
 
-  hc->terminate();
-  pthread_join(health_check_thread, NULL);
-
   delete realm_manager; realm_manager = NULL;
   delete diameter_resolver; diameter_resolver = NULL;
   delete http_resolver; http_resolver = NULL;
   delete dns_resolver; dns_resolver = NULL;
-  delete exception_handler; exception_handler = NULL;
   delete load_monitor; load_monitor = NULL;
+
+  hc->terminate();
+  pthread_join(health_check_thread, NULL);
   delete hc; hc = NULL;
+  delete exception_handler; exception_handler = NULL;
 
   if (options.alarms_enabled)
   {
