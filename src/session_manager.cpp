@@ -269,6 +269,8 @@ void SessionManager::on_ccf_response (bool accepted, uint32_t interim_interval, 
       delete sess; sess = NULL;
     }
 
+    // Successful ACAs are an indication of healthy behaviour
+    _health_checker->health_check_passed();
   }
   else
   {

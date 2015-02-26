@@ -576,7 +576,14 @@ int main(int argc, char**argv)
   LOG_STATUS("Creating connection to Chronos at %s using %s as the callback URI", local_chronos.c_str(), chronos_callback_addr.c_str());
   HttpResolver* http_resolver = new HttpResolver(dns_resolver, http_af);
   ChronosConnection* timer_conn = new ChronosConnection(local_chronos, chronos_callback_addr, http_resolver, chronos_comm_monitor);
-  cfg->mgr = new SessionManager(store, dict, factory, timer_conn, diameter_stack);
+  HealthChecker* hc = new HealthChecker();
+  pthread_t health_check_thread;
+  pthread_create(&health_check_thread,
+                 NULL,
+                 &HealthChecker::static_main_thread_function,
+                 (void*)hc);
+  
+  cfg->mgr = new SessionManager(store, dict, factory, timer_conn, diameter_stack, hc);
 
   HttpStack* http_stack = HttpStack::get_instance();
   HttpStackUtils::PingHandler ping_handler;
@@ -631,13 +638,18 @@ int main(int argc, char**argv)
   }
 
   realm_manager->stop();
+
+  hc->terminate();
+  pthread_join(health_check_thread, NULL);
+  
   delete realm_manager; realm_manager = NULL;
   delete diameter_resolver; diameter_resolver = NULL;
   delete http_resolver; http_resolver = NULL;
   delete dns_resolver; dns_resolver = NULL;
   delete exception_handler; exception_handler = NULL;
   delete load_monitor; load_monitor = NULL;
-
+  delete hc; hc = NULL;
+  
   if (options.alarms_enabled)
   {
     // Stop the alarm request agent

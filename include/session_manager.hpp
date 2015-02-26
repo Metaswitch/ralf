@@ -40,6 +40,7 @@
 #include "sessionstore.h"
 #include "chronosconnection.h"
 #include "rf.h"
+#include "health_checker.h"
 
 class PeerMessageSenderFactory;
 
@@ -50,11 +51,13 @@ public:
                  Rf::Dictionary* dict,
                  PeerMessageSenderFactory* factory,
                  ChronosConnection* timer_conn,
-                 Diameter::Stack* diameter_stack): _store(store),
-                                                   _timer_conn(timer_conn),
-                                                   _dict(dict),
-                                                   _factory(factory),
-                                                   _diameter_stack(diameter_stack) {};
+                 Diameter::Stack* diameter_stack,
+                 HealthChecker* hc): _store(store),
+                                     _timer_conn(timer_conn),
+                                     _dict(dict),
+                                     _factory(factory),
+                                     _diameter_stack(diameter_stack),
+                                     _health_checker(hc) {};
   ~SessionManager() {};
   void handle(Message* msg);
   void on_ccf_response (bool accepted, uint32_t interim_interval, std::string session_id, int rc, Message* msg);
@@ -74,6 +77,7 @@ private:
   Rf::Dictionary* _dict;
   PeerMessageSenderFactory* _factory;
   Diameter::Stack* _diameter_stack;
+  HealthChecker* _health_checker;
 };
 
 #endif /* SESSION_MANAGER_HPP_ */
