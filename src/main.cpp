@@ -375,14 +375,18 @@ void signal_handler(int sig)
   signal(SIGABRT, SIG_DFL);
   signal(SIGSEGV, signal_handler);
 
+  // Check if there's a stored jmp_buf on the thread and handle if there is
+  exception_handler->handle_exception();
+
   // Log the signal, along with a backtrace.
-  CL_RALF_CRASHED.log(strsignal(sig));
-  closelog();
   LOG_BACKTRACE("Signal %d caught", sig);
 
   // Ensure the log files are complete - the core file created by abort() below
   // will trigger the log files to be copied to the diags bundle
   LOG_COMMIT();
+
+  CL_RALF_CRASHED.log(strsignal(sig));
+  closelog();
 
   // Dump a core.
   abort();
