@@ -648,8 +648,8 @@ int main(int argc, char**argv)
 
   hc->terminate();
   pthread_join(health_check_thread, NULL);
-  delete hc; hc = NULL;
   delete exception_handler; exception_handler = NULL;
+  delete hc; hc = NULL;
 
   if (options.alarms_enabled)
   {
