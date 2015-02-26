@@ -44,7 +44,8 @@ TARGET_SOURCES := accesslogger.cpp \
                   ipv6utils.cpp \
                   alarm.cpp \
                   communicationmonitor.cpp \
-                  handle_exception.cpp
+                  exception_handler.cpp \
+                  health_checker.cpp
 
 TARGET_SOURCES_BUILD := main.cpp
 

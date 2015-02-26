@@ -60,7 +60,7 @@
 #include "diameterresolver.h"
 #include "realmmanager.h"
 #include "communicationmonitor.h"
-#include "handle_exception.h"
+#include "exception_handler.h"
 
 enum OptionTypes
 {
@@ -166,7 +166,7 @@ void usage(void)
        "     --min-token-rate N     Minimum token refill rate of tokens in the token bucket (used by\n"
        "                            the throttling code (default: 10.0))\n"
        "     --exception-max-ttl <secs>\n"
-       "                            The maximum time before the process restarts if it hits an exception.\n"
+       "                            The maximum time before the process exits if it hits an exception.\n"
        "                            The actual time is randomised.\n"
        " -h, --help                 Show this help screen\n"
       );
@@ -369,11 +369,11 @@ void terminate_handler(int sig)
 }
 
 // Signal handler that simply dumps the stack and then crashes out.
-void exception_handler(int sig)
+void signal_handler(int sig)
 {
   // Reset the signal handlers so that another exception will cause a crash.
   signal(SIGABRT, SIG_DFL);
-  signal(SIGSEGV, SIG_DFL);
+  signal(SIGSEGV, signal_handler);
 
   // Log the signal, along with a backtrace.
   CL_RALF_CRASHED.log(strsignal(sig));
@@ -396,8 +396,8 @@ int main(int argc, char**argv)
   Alarm* vbucket_alarm = NULL;
 
   // Set up our exception signal handler for asserts and segfaults.
-  signal(SIGABRT, exception_handler);
-  signal(SIGSEGV, exception_handler);
+  signal(SIGABRT, signal_handler);
+  signal(SIGSEGV, signal_handler);
 
   sem_init(&term_sem, 0, 0);
   signal(SIGTERM, terminate_handler);
@@ -512,18 +512,19 @@ int main(int argc, char**argv)
   LoadMonitor* load_monitor = new LoadMonitor(options.target_latency_us,
                                               options.max_tokens,
                                               options.init_token_rate,
-                                              options.min_token_rate); 
+                                              options.min_token_rate);
 
-  // Create an exception handler. The exception handler doesn't need 
+  // Create an exception handler. The exception handler doesn't need
   // to quiesce the process before killing it.
-  HandleException* handle_exception = new HandleException(options.exception_max_ttl,
-                                                          false);
+  ExceptionHandler* exception_handler = new ExceptionHandler(options.exception_max_ttl,
+                                                             false,
+                                                             NULL); // TODO
 
   Diameter::Stack* diameter_stack = Diameter::Stack::get_instance();
   Rf::Dictionary* dict = NULL;
   diameter_stack->initialize();
-  diameter_stack->configure(options.diameter_conf, 
-                            handle_exception, 
+  diameter_stack->configure(options.diameter_conf,
+                            exception_handler,
                             cdf_comm_monitor);
   dict = new Rf::Dictionary();
   diameter_stack->advertize_application(Diameter::Dictionary::Application::ACCT,
@@ -578,13 +579,12 @@ int main(int argc, char**argv)
   try
   {
     http_stack->initialize();
-    http_stack->configure(options.http_address, 
-                          options.http_port, 
-                          options.http_threads, 
-                          access_logger, 
-                          load_monitor, 
-                          NULL,                 // No stats interface for Ralf
-                          handle_exception);
+    http_stack->configure(options.http_address,
+                          options.http_port,
+                          options.http_threads,
+                          exception_handler,
+                          access_logger,
+                          load_monitor);
     http_stack->register_handler("^/ping$", & ping_handler);
     http_stack->register_handler("^/call-id/[^/]*$", &billing_handler);
     http_stack->start();
@@ -630,7 +630,7 @@ int main(int argc, char**argv)
   delete diameter_resolver; diameter_resolver = NULL;
   delete http_resolver; http_resolver = NULL;
   delete dns_resolver; dns_resolver = NULL;
-  delete handle_exception; handle_exception = NULL;
+  delete exception_handler; exception_handler = NULL;
   delete load_monitor; load_monitor = NULL;
 
   if (options.alarms_enabled)

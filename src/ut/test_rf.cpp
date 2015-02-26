@@ -51,7 +51,7 @@ class RfTest : public ::testing::Test
   {
     _real_stack = Diameter::Stack::get_instance();
     _real_stack->initialize();
-    _real_stack->configure(UT_DIR + "/diameterstack.conf");
+    _real_stack->configure(UT_DIR + "/diameterstack.conf", NULL);
     _dict = new Rf::Dictionary();
   }
 
