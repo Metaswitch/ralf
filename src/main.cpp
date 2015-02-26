@@ -376,15 +376,15 @@ void signal_handler(int sig)
   signal(SIGABRT, SIG_DFL);
   signal(SIGSEGV, signal_handler);
 
-  // Check if there's a stored jmp_buf on the thread and handle if there is
-  exception_handler->handle_exception();
-
   // Log the signal, along with a backtrace.
   LOG_BACKTRACE("Signal %d caught", sig);
 
   // Ensure the log files are complete - the core file created by abort() below
   // will trigger the log files to be copied to the diags bundle
   LOG_COMMIT();
+
+  // Check if there's a stored jmp_buf on the thread and handle if there is
+  exception_handler->handle_exception();
 
   CL_RALF_CRASHED.log(strsignal(sig));
   closelog();
@@ -519,11 +519,18 @@ int main(int argc, char**argv)
                                               options.init_token_rate,
                                               options.min_token_rate);
 
+  HealthChecker* hc = new HealthChecker();
+  pthread_t health_check_thread;
+  pthread_create(&health_check_thread,
+                 NULL,
+                 &HealthChecker::static_main_thread_function,
+                 (void*)hc);
+
   // Create an exception handler. The exception handler doesn't need
   // to quiesce the process before killing it.
   exception_handler = new ExceptionHandler(options.exception_max_ttl,
                                            false,
-                                           NULL); // TODO
+                                           hc);
 
   Diameter::Stack* diameter_stack = Diameter::Stack::get_instance();
   Rf::Dictionary* dict = NULL;
@@ -576,13 +583,7 @@ int main(int argc, char**argv)
   LOG_STATUS("Creating connection to Chronos at %s using %s as the callback URI", local_chronos.c_str(), chronos_callback_addr.c_str());
   HttpResolver* http_resolver = new HttpResolver(dns_resolver, http_af);
   ChronosConnection* timer_conn = new ChronosConnection(local_chronos, chronos_callback_addr, http_resolver, chronos_comm_monitor);
-  HealthChecker* hc = new HealthChecker();
-  pthread_t health_check_thread;
-  pthread_create(&health_check_thread,
-                 NULL,
-                 &HealthChecker::static_main_thread_function,
-                 (void*)hc);
-  
+
   cfg->mgr = new SessionManager(store, dict, factory, timer_conn, diameter_stack, hc);
 
   HttpStack* http_stack = HttpStack::get_instance();
@@ -641,7 +642,7 @@ int main(int argc, char**argv)
 
   hc->terminate();
   pthread_join(health_check_thread, NULL);
-  
+
   delete realm_manager; realm_manager = NULL;
   delete diameter_resolver; diameter_resolver = NULL;
   delete http_resolver; http_resolver = NULL;
@@ -649,7 +650,7 @@ int main(int argc, char**argv)
   delete exception_handler; exception_handler = NULL;
   delete load_monitor; load_monitor = NULL;
   delete hc; hc = NULL;
-  
+
   if (options.alarms_enabled)
   {
     // Stop the alarm request agent
