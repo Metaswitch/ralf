@@ -361,6 +361,7 @@ int init_options(int argc, char**argv, struct options& options)
 }
 
 static sem_t term_sem;
+ExceptionHandler* exception_handler;
 
 // Signal handler that triggers homestead termination.
 void terminate_handler(int sig)
@@ -520,9 +521,9 @@ int main(int argc, char**argv)
 
   // Create an exception handler. The exception handler doesn't need
   // to quiesce the process before killing it.
-  ExceptionHandler* exception_handler = new ExceptionHandler(options.exception_max_ttl,
-                                                             false,
-                                                             NULL); // TODO
+  exception_handler = new ExceptionHandler(options.exception_max_ttl,
+                                           false,
+                                           NULL); // TODO
 
   Diameter::Stack* diameter_stack = Diameter::Stack::get_instance();
   Rf::Dictionary* dict = NULL;
