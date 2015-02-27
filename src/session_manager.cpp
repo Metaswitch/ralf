@@ -326,14 +326,17 @@ void SessionManager::update_timer_id(Message* msg, std::string timer_id)
                                                          msg->role,
                                                          msg->function,
                                                          msg->trail);
-  sess->timer_id = timer_id;
-  msg->timer_id = timer_id;
+  if (sess != NULL)
+  {
+    sess->timer_id = timer_id;
+    msg->timer_id = timer_id;
 
-  _store->set_session_data(msg->call_id,
-                           msg->role,
-                           msg->function,
-                           sess,
-                           msg->trail);
+    _store->set_session_data(msg->call_id,
+                             msg->role,
+                             msg->function,
+                             sess,
+                             msg->trail);
+  }
 
   delete sess; sess = NULL;
 }
