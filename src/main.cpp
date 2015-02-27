@@ -65,7 +65,11 @@ enum OptionTypes
 {
   ALARMS_ENABLED=256+1,
   DNS_SERVER,
-  MEMCACHED_WRITE_FORMAT
+  MEMCACHED_WRITE_FORMAT,
+  TARGET_LATENCY_US,
+  MAX_TOKENS,
+  INIT_TOKEN_RATE,
+  MIN_TOKEN_RATE
 };
 
 enum struct MemcachedWriteFormat
@@ -92,6 +96,10 @@ struct options
   std::string sas_system_name;
   bool alarms_enabled;
   MemcachedWriteFormat memcached_write_format;
+  int target_latency_us;
+  int max_tokens;
+  float init_token_rate;
+  float min_token_rate;
 };
 
 const static struct option long_opt[] =
@@ -110,6 +118,10 @@ const static struct option long_opt[] =
   {"alarms-enabled",         no_argument,       NULL, ALARMS_ENABLED},
   {"help",                   no_argument,       NULL, 'h'},
   {"memcached-write-format", required_argument, 0,    MEMCACHED_WRITE_FORMAT},
+  {"target-latency-us",      required_argument, NULL, TARGET_LATENCY_US},
+  {"max-tokens",             required_argument, NULL, MAX_TOKENS},
+  {"init-token-rate",        required_argument, NULL, INIT_TOKEN_RATE},
+  {"min-token-rate",         required_argument, NULL, MIN_TOKEN_RATE},
   {NULL,                     0,                 NULL, 0},
 };
 
@@ -141,6 +153,14 @@ void usage(void)
        "                            The data format to use when writing sessions\n"
        "                            to memcached. Values are 'binary' and 'json'\n"
        "                            (defaults to 'json')\n"
+       "     --target-latency-us <usecs>\n"
+       "                            Target latency above which throttling applies (default: 100000)\n"
+       "     --max-tokens N         Maximum number of tokens allowed in the token bucket (used by\n"
+       "                            the throttling code (default: 20))\n"
+       "     --init-token-rate N    Initial token refill rate of tokens in the token bucket (used by\n"
+       "                            the throttling code (default: 100.0))\n"
+       "     --min-token-rate N     Minimum token refill rate of tokens in the token bucket (used by\n"
+       "                            the throttling code (default: 10.0))\n"
        " -h, --help                 Show this help screen\n"
       );
 }
@@ -281,6 +301,42 @@ int init_options(int argc, char**argv, struct options& options)
       }
       break;
 
+    case TARGET_LATENCY_US:
+      options.target_latency_us = atoi(optarg);
+      if (options.target_latency_us <= 0)
+      {
+        LOG_ERROR("Invalid --target-latency-us option %s", optarg);
+        return -1;
+      }
+      break;
+
+    case MAX_TOKENS:
+      options.max_tokens = atoi(optarg);
+      if (options.max_tokens <= 0)
+      {
+        LOG_ERROR("Invalid --max-tokens option %s", optarg);
+        return -1;
+      }
+      break;
+
+    case INIT_TOKEN_RATE:
+      options.init_token_rate = atoi(optarg);
+      if (options.init_token_rate <= 0)
+      {
+        LOG_ERROR("Invalid --init-token-rate option %s", optarg);
+        return -1;
+      }
+      break;
+
+    case MIN_TOKEN_RATE:
+      options.min_token_rate = atoi(optarg);
+      if (options.min_token_rate <= 0)
+      {
+        LOG_ERROR("Invalid --min-token-rate option %s", optarg);
+        return -1;
+      }
+      break;
+
     default:
       CL_RALF_INVALID_OPTION_C.log();
       LOG_ERROR("Unknown option: %d.  Run with --help for options.\n", opt);
@@ -349,6 +405,10 @@ int main(int argc, char**argv)
   options.sas_system_name = "";
   options.alarms_enabled = false;
   options.memcached_write_format = MemcachedWriteFormat::JSON;
+  options.target_latency_us = 100000;
+  options.max_tokens = 20;
+  options.init_token_rate = 100.0;
+  options.min_token_rate = 10.0;
 
   boost::filesystem::path p = argv[0];
   openlog(p.filename().c_str(), PDLOG_PID, PDLOG_LOCAL6);
@@ -436,10 +496,10 @@ int main(int argc, char**argv)
     AlarmState::clear_all("ralf");
   }
 
-  LoadMonitor* load_monitor = new LoadMonitor(100000, // Initial target latency (us)
-                                              20, // Maximum token bucket size.
-                                              10.0, // Initial token fill rate (per sec).
-                                              10.0); // Minimum token fill rate (pre sec).
+  LoadMonitor* load_monitor = new LoadMonitor(options.target_latency_us,
+                                              options.max_tokens,
+                                              options.init_token_rate,
+                                              options.min_token_rate);
 
   Diameter::Stack* diameter_stack = Diameter::Stack::get_instance();
   Rf::Dictionary* dict = NULL;

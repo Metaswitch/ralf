@@ -150,7 +150,6 @@ HTTPCode BillingTask::parse_body(std::string call_id,
   }
   else
   {
-
     rapidjson::Value& ims_information_json = (*body)["event"]["Service-Information"]["IMS-Information"];
     rapidjson::Value::MemberIterator role_of_node_json = ims_information_json.FindMember("Role-Of-Node");
     if ((role_of_node_json == ims_information_json.MemberEnd()) || !(role_of_node_json->value.IsInt()))
@@ -193,7 +192,7 @@ HTTPCode BillingTask::parse_body(std::string call_id,
 
   // Get the Acct-Interim-Interval if present
   if ((*body)["event"].HasMember("Acct-Interim-Interval") &&
-        ((*body)["event"]["Acct-Interim-Interval"].IsInt()))
+      (*body)["event"]["Acct-Interim-Interval"].IsInt())
   {
     session_refresh_time = (*body)["event"]["Acct-Interim-Interval"].GetInt();
   }
@@ -216,7 +215,9 @@ HTTPCode BillingTask::parse_body(std::string call_id,
       return HTTP_OK;
     }
 
-    if (!((*body)["peers"].HasMember("ccf")) ||(!(*body)["peers"]["ccf"].IsArray()) || ((*body)["peers"]["ccf"].Size() == 0))
+    if (!((*body)["peers"].HasMember("ccf")) ||
+        !((*body)["peers"]["ccf"].IsArray()) ||
+        ((*body)["peers"]["ccf"].Size() == 0))
     {
       LOG_ERROR("JSON lacked a 'ccf' array, or the array was empty (mandatory for START/EVENT)");
       delete body;
