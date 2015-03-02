@@ -66,6 +66,7 @@ class DummyPeerMessageSenderFactory : public PeerMessageSenderFactory
 {
 public:
   DummyPeerMessageSenderFactory(const std::string& dest_realm) : PeerMessageSenderFactory(dest_realm) {}
+  virtual ~DummyPeerMessageSenderFactory(){}
 
   PeerMessageSender* newSender(SAS::TrailId trail) {return new DummyPeerMessageSender(trail, BILLING_REALM);}
 };
@@ -87,6 +88,7 @@ class DummyErrorPeerMessageSenderFactory : public PeerMessageSenderFactory
 {
 public:
   DummyErrorPeerMessageSenderFactory(const std::string& dest_realm) : PeerMessageSenderFactory(dest_realm) {}
+  virtual ~DummyErrorPeerMessageSenderFactory(){}
 
   PeerMessageSender* newSender(SAS::TrailId trail) {return new DummyErrorPeerMessageSender(trail, BILLING_REALM);}
 };
@@ -108,6 +110,7 @@ class DummyUnknownErrorPeerMessageSenderFactory : public PeerMessageSenderFactor
 {
 public:
   DummyUnknownErrorPeerMessageSenderFactory(const std::string& dest_realm) : PeerMessageSenderFactory(dest_realm) {}
+  virtual ~DummyUnknownErrorPeerMessageSenderFactory(){}
 
   PeerMessageSender* newSender(SAS::TrailId trail) {return new DummyUnknownErrorPeerMessageSender(trail, BILLING_REALM);}
 };
