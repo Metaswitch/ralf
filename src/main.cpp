@@ -60,6 +60,7 @@
 #include "diameterresolver.h"
 #include "realmmanager.h"
 #include "communicationmonitor.h"
+#include "exception_handler.h"
 
 enum OptionTypes
 {
@@ -69,7 +70,8 @@ enum OptionTypes
   TARGET_LATENCY_US,
   MAX_TOKENS,
   INIT_TOKEN_RATE,
-  MIN_TOKEN_RATE
+  MIN_TOKEN_RATE,
+  EXCEPTION_MAX_TTL
 };
 
 enum struct MemcachedWriteFormat
@@ -100,6 +102,7 @@ struct options
   int max_tokens;
   float init_token_rate;
   float min_token_rate;
+  int exception_max_ttl;
 };
 
 const static struct option long_opt[] =
@@ -122,6 +125,7 @@ const static struct option long_opt[] =
   {"max-tokens",             required_argument, NULL, MAX_TOKENS},
   {"init-token-rate",        required_argument, NULL, INIT_TOKEN_RATE},
   {"min-token-rate",         required_argument, NULL, MIN_TOKEN_RATE},
+  {"exception-max-ttl",      required_argument, NULL, EXCEPTION_MAX_TTL},
   {NULL,                     0,                 NULL, 0},
 };
 
@@ -161,6 +165,9 @@ void usage(void)
        "                            the throttling code (default: 100.0))\n"
        "     --min-token-rate N     Minimum token refill rate of tokens in the token bucket (used by\n"
        "                            the throttling code (default: 10.0))\n"
+       "     --exception-max-ttl <secs>\n"
+       "                            The maximum time before the process exits if it hits an exception.\n"
+       "                            The actual time is randomised.\n"
        " -h, --help                 Show this help screen\n"
       );
 }
@@ -337,6 +344,12 @@ int init_options(int argc, char**argv, struct options& options)
       }
       break;
 
+    case EXCEPTION_MAX_TTL:
+      options.exception_max_ttl = atoi(optarg);
+      LOG_INFO("Max TTL after an exception set to %d",
+               options.exception_max_ttl);
+      break;
+
     default:
       CL_RALF_INVALID_OPTION_C.log();
       LOG_ERROR("Unknown option: %d.  Run with --help for options.\n", opt);
@@ -348,6 +361,7 @@ int init_options(int argc, char**argv, struct options& options)
 }
 
 static sem_t term_sem;
+ExceptionHandler* exception_handler;
 
 // Signal handler that triggers homestead termination.
 void terminate_handler(int sig)
@@ -356,20 +370,24 @@ void terminate_handler(int sig)
 }
 
 // Signal handler that simply dumps the stack and then crashes out.
-void exception_handler(int sig)
+void signal_handler(int sig)
 {
   // Reset the signal handlers so that another exception will cause a crash.
   signal(SIGABRT, SIG_DFL);
-  signal(SIGSEGV, SIG_DFL);
+  signal(SIGSEGV, signal_handler);
 
   // Log the signal, along with a backtrace.
-  CL_RALF_CRASHED.log(strsignal(sig));
-  closelog();
   LOG_BACKTRACE("Signal %d caught", sig);
 
   // Ensure the log files are complete - the core file created by abort() below
   // will trigger the log files to be copied to the diags bundle
   LOG_COMMIT();
+
+  // Check if there's a stored jmp_buf on the thread and handle if there is
+  exception_handler->handle_exception();
+
+  CL_RALF_CRASHED.log(strsignal(sig));
+  closelog();
 
   // Dump a core.
   abort();
@@ -383,8 +401,8 @@ int main(int argc, char**argv)
   Alarm* vbucket_alarm = NULL;
 
   // Set up our exception signal handler for asserts and segfaults.
-  signal(SIGABRT, exception_handler);
-  signal(SIGSEGV, exception_handler);
+  signal(SIGABRT, signal_handler);
+  signal(SIGSEGV, signal_handler);
 
   sem_init(&term_sem, 0, 0);
   signal(SIGTERM, terminate_handler);
@@ -409,6 +427,7 @@ int main(int argc, char**argv)
   options.max_tokens = 20;
   options.init_token_rate = 100.0;
   options.min_token_rate = 10.0;
+  options.exception_max_ttl = 600;
 
   boost::filesystem::path p = argv[0];
   openlog(p.filename().c_str(), PDLOG_PID, PDLOG_LOCAL6);
@@ -501,10 +520,25 @@ int main(int argc, char**argv)
                                               options.init_token_rate,
                                               options.min_token_rate);
 
+  HealthChecker* hc = new HealthChecker();
+  pthread_t health_check_thread;
+  pthread_create(&health_check_thread,
+                 NULL,
+                 &HealthChecker::static_main_thread_function,
+                 (void*)hc);
+
+  // Create an exception handler. The exception handler doesn't need
+  // to quiesce the process before killing it.
+  exception_handler = new ExceptionHandler(options.exception_max_ttl,
+                                           false,
+                                           hc);
+
   Diameter::Stack* diameter_stack = Diameter::Stack::get_instance();
   Rf::Dictionary* dict = NULL;
   diameter_stack->initialize();
-  diameter_stack->configure(options.diameter_conf, cdf_comm_monitor);
+  diameter_stack->configure(options.diameter_conf,
+                            exception_handler,
+                            cdf_comm_monitor);
   dict = new Rf::Dictionary();
   diameter_stack->advertize_application(Diameter::Dictionary::Application::ACCT,
                                         dict->RF);
@@ -550,7 +584,8 @@ int main(int argc, char**argv)
   LOG_STATUS("Creating connection to Chronos at %s using %s as the callback URI", local_chronos.c_str(), chronos_callback_addr.c_str());
   HttpResolver* http_resolver = new HttpResolver(dns_resolver, http_af);
   ChronosConnection* timer_conn = new ChronosConnection(local_chronos, chronos_callback_addr, http_resolver, chronos_comm_monitor);
-  cfg->mgr = new SessionManager(store, dict, factory, timer_conn, diameter_stack);
+
+  cfg->mgr = new SessionManager(store, dict, factory, timer_conn, diameter_stack, hc);
 
   HttpStack* http_stack = HttpStack::get_instance();
   HttpStackUtils::PingHandler ping_handler;
@@ -558,7 +593,12 @@ int main(int argc, char**argv)
   try
   {
     http_stack->initialize();
-    http_stack->configure(options.http_address, options.http_port, options.http_threads, access_logger, load_monitor);
+    http_stack->configure(options.http_address,
+                          options.http_port,
+                          options.http_threads,
+                          exception_handler,
+                          access_logger,
+                          load_monitor);
     http_stack->register_handler("^/ping$", & ping_handler);
     http_stack->register_handler("^/call-id/[^/]*$", &billing_handler);
     http_stack->start();
@@ -600,12 +640,17 @@ int main(int argc, char**argv)
   }
 
   realm_manager->stop();
+
   delete realm_manager; realm_manager = NULL;
   delete diameter_resolver; diameter_resolver = NULL;
   delete http_resolver; http_resolver = NULL;
   delete dns_resolver; dns_resolver = NULL;
-
   delete load_monitor; load_monitor = NULL;
+
+  hc->terminate();
+  pthread_join(health_check_thread, NULL);
+  delete exception_handler; exception_handler = NULL;
+  delete hc; hc = NULL;
 
   if (options.alarms_enabled)
   {
