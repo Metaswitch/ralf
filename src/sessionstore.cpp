@@ -57,8 +57,8 @@ SessionStore::SessionStore(Store *store,
 
 SessionStore::SessionStore(Store* store) : _store(store)
 {
-  _serializer = new BinarySerializerDeserializer();
-  _deserializers.push_back(new BinarySerializerDeserializer());
+  _serializer = new JsonSerializerDeserializer();
+  _deserializers.push_back(new JsonSerializerDeserializer());
 }
 
 SessionStore::~SessionStore()

@@ -156,7 +156,7 @@ void usage(void)
        "     --memcached-write-format\n"
        "                            The data format to use when writing sessions\n"
        "                            to memcached. Values are 'binary' and 'json'\n"
-       "                            (defaults to 'binary')\n"
+       "                            (defaults to 'json')\n"
        "     --target-latency-us <usecs>\n"
        "                            Target latency above which throttling applies (default: 100000)\n"
        "     --max-tokens N         Maximum number of tokens allowed in the token bucket (used by\n"
@@ -422,7 +422,7 @@ int main(int argc, char**argv)
   options.sas_server = "0.0.0.0";
   options.sas_system_name = "";
   options.alarms_enabled = false;
-  options.memcached_write_format = MemcachedWriteFormat::BINARY;
+  options.memcached_write_format = MemcachedWriteFormat::JSON;
   options.target_latency_us = 100000;
   options.max_tokens = 20;
   options.init_token_rate = 100.0;
