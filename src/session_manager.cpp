@@ -170,6 +170,13 @@ std::string SessionManager::create_opaque_data(Message* msg)
   return body;
 }
 
+// This function generates a SAS event based on the response from the CCF. This
+// describes the *logical* impact of the event (other events cover the protocol
+// flows).
+//
+// EVENT ACRs are explicitly *not* logged by this function. They have no impact
+// beyond the current transaction and can be debugged sufficiently using the
+// protocol flow.
 void SessionManager::sas_log_ccf_response(bool accepted,
                                           const std::string& session_id,
                                           Message* msg)
