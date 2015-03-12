@@ -75,10 +75,6 @@ void SessionManager::handle(Message* msg)
 
     if (msg->record_type.isInterim())
     {
-      SAS::Event continued_rf(msg->trail, SASEvent::CONTINUED_RF_SESSION, 0);
-      continued_rf.add_var_param(sess->session_id);
-      SAS::report_event(continued_rf);
-
       sess->acct_record_number += 1;
       // Update the store with the incremented accounting record number
       bool success = _store->set_session_data(msg->call_id,
@@ -94,10 +90,6 @@ void SessionManager::handle(Message* msg)
     }
     else if  (msg->record_type.isStop())
     {
-      SAS::Event end_rf(msg->trail, SASEvent::END_RF_SESSION, 0);
-      end_rf.add_var_param(sess->session_id);
-      SAS::report_event(end_rf);
-
       // Delete the session from the store and cancel the timer
       _store->delete_session_data(msg->call_id,
                                   msg->role,
@@ -182,18 +174,20 @@ void SessionManager::sas_log_ccf_response(bool accepted,
                                           const std::string& session_id,
                                           Message* msg)
 {
+  int event_id;
+
   // Work out what event to log.
   if (msg->record_type.isStart())
   {
-    event_id = accepted ? NEW_RF_SESSION_OK : NEW_RF_SESSION_ERR;
+    event_id = accepted ? SASEvent::NEW_RF_SESSION_OK : SASEvent::NEW_RF_SESSION_ERR;
   }
   else if (msg->record_type.isInterim())
   {
-    event_id = accepted ? CONTINUED_RF_SESSION_OK : CONTINUED_RF_SESSION_ERR;
+    event_id = accepted ? SASEvent::CONTINUED_RF_SESSION_OK : SASEvent::CONTINUED_RF_SESSION_ERR;
   }
   else if (msg->record_type.isStop())
   {
-    event_id = accepted ? END_RF_SESSION_OK : END_RF_SESSION_ERR;
+    event_id = accepted ? SASEvent::END_RF_SESSION_OK : SASEvent::END_RF_SESSION_ERR;
   }
   else
   {
@@ -214,7 +208,7 @@ void SessionManager::on_ccf_response(bool accepted,
                                      int rc,
                                      Message* msg)
 {
-  sas_log_ccf_session_response(accepted, session_id, msg);
+  sas_log_ccf_response(accepted, session_id, msg);
 
   if (interim_interval == 0)
   {
