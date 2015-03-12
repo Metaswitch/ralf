@@ -178,13 +178,43 @@ std::string SessionManager::create_opaque_data(Message* msg)
   return body;
 }
 
-void SessionManager::on_ccf_response (bool accepted, uint32_t interim_interval, std::string session_id, int rc, Message* msg)
+void SessionManager::sas_log_ccf_response(bool accepted,
+                                          const std::string& session_id,
+                                          Message* msg)
 {
-  // Log this here, as it's the first time we have access to the
-  // session ID for a new session
-  SAS::Event new_rf(msg->trail, SASEvent::NEW_RF_SESSION, 0);
-  new_rf.add_var_param(session_id);
-  SAS::report_event(new_rf);
+  // Work out what event to log.
+  if (msg->record_type.isStart())
+  {
+    event_id = accepted ? NEW_RF_SESSION_OK : NEW_RF_SESSION_ERR;
+  }
+  else if (msg->record_type.isInterim())
+  {
+    event_id = accepted ? CONTINUED_RF_SESSION_OK : CONTINUED_RF_SESSION_ERR;
+  }
+  else if (msg->record_type.isStop())
+  {
+    event_id = accepted ? END_RF_SESSION_OK : END_RF_SESSION_ERR;
+  }
+  else
+  {
+    // No special log required for event-based billing.
+    return;
+  }
+
+  SAS::Event event(msg->trail, event_id, 0);
+  event.add_static_param(msg->role);
+  event.add_static_param(msg->function);
+  event.add_var_param(session_id);
+  SAS::report_event(event);
+}
+
+void SessionManager::on_ccf_response(bool accepted,
+                                     uint32_t interim_interval,
+                                     std::string session_id,
+                                     int rc,
+                                     Message* msg)
+{
+  sas_log_ccf_session_response(accepted, session_id, msg);
 
   if (interim_interval == 0)
   {
