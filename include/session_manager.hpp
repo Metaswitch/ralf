@@ -71,6 +71,9 @@ private:
                            const std::string& callback_uri,
                            const std::string& opaque_data,
                            SAS::TrailId trail);
+  void sas_log_ccf_response(bool accepted,
+                            const std::string& session_id,
+                            Message* msg);
 
   SessionStore* _store;
   ChronosConnection* _timer_conn;

@@ -45,9 +45,12 @@ namespace SASEvent
   // Ralf events
   //----------------------------------------------------------------------------
 
-  const int NEW_RF_SESSION = RALF_BASE + 0x000;
-  const int CONTINUED_RF_SESSION = RALF_BASE + 0x100;
-  const int END_RF_SESSION = RALF_BASE + 0x200;
+  const int NEW_RF_SESSION_OK = RALF_BASE + 0x000;
+  const int NEW_RF_SESSION_ERR = RALF_BASE + 0x001;
+  const int CONTINUED_RF_SESSION_OK = RALF_BASE + 0x100;
+  const int CONTINUED_RF_SESSION_ERR = RALF_BASE + 0x101;
+  const int END_RF_SESSION_OK = RALF_BASE + 0x200;
+  const int END_RF_SESSION_ERR = RALF_BASE + 0x201;
 
   const int BILLING_REQUEST_SENT = RALF_BASE + 0x300;
 
