@@ -190,6 +190,12 @@ HTTPCode BillingTask::parse_body(std::string call_id,
     return HTTP_BAD_RESULT;
   }
 
+  // Parsed enough to SAS-log the message.
+  SAS::Event incoming(trail, SASEvent::INCOMING_REQUEST, 0);
+  incoming.add_static_param(record_type.code());
+  incoming.add_static_param(node_functionality);
+  SAS::report_event(incoming);
+
   // Get the Acct-Interim-Interval if present
   if ((*body)["event"].HasMember("Acct-Interim-Interval") &&
       (*body)["event"]["Acct-Interim-Interval"].IsInt())
@@ -236,11 +242,6 @@ HTTPCode BillingTask::parse_body(std::string call_id,
       ccfs.push_back((*body)["peers"]["ccf"][i].GetString());
     }
   }
-
-  SAS::Event incoming(trail, SASEvent::INCOMING_REQUEST, 0);
-  incoming.add_static_param(record_type.code());
-  incoming.add_static_param(node_functionality);
-  SAS::report_event(incoming);
 
   *msg = new Message(call_id,
                      role_of_node,
