@@ -40,15 +40,7 @@
 cat > /etc/monit/conf.d/ralf.monit <<EOF
 # Check the Ralf process.
 
-# Check the HTTP interface. This depends on the Ralf process (and so won't run
-# unless the Ralf process is running)
-check program poll_ralf with path "/usr/share/clearwater/bin/poll_ralf.sh"
-  depends on ralf
-
-  # Aborting generates a core file and triggers diagnostic collection.
-  if status != 0 for 2 cycles then exec "/bin/bash -c '/usr/share/clearwater/bin/issue_alarm.py monit 2000.3; /etc/init.d/ralf abort'"
-
-# Monitor the service's PID file, CPU and memory use.
+# Monitor the service's PID file and memory use.
 check process ralf with pidfile /var/run/ralf.pid
 
   # The start, stop and restart commands are linked to alarms
@@ -58,13 +50,20 @@ check process ralf with pidfile /var/run/ralf.pid
 
   # Check the service's resource usage, and abort the process if it's too high. This will
   # generate a core file and trigger diagnostics collection.
-  if cpu > 80% for 6 cycles then exec "/bin/bash -c '/usr/share/clearwater/bin/issue_alarm.py monit 2000.3; /etc/init.d/ralf abort'"
   if memory > 80% for 6 cycles then exec "/bin/bash -c '/usr/share/clearwater/bin/issue_alarm.py monit 2000.3; /etc/init.d/ralf abort'"
 
   # Clear any alarms if the process has been running for 30 seconds
   if uptime < 30 seconds
      then exec "/bin/true"
      else if succeeded then exec "/usr/share/clearwater/bin/issue_alarm.py monit 2000.1"
+
+# Check the HTTP interface. This depends on the Ralf process (and so won't run
+# unless the Ralf process is running)
+check program poll_ralf with path "/usr/share/clearwater/bin/poll_ralf.sh"
+  depends on ralf
+
+  # Aborting generates a core file and triggers diagnostic collection.
+  if status != 0 for 2 cycles then exec "/bin/bash -c '/usr/share/clearwater/bin/issue_alarm.py monit 2000.3; /etc/init.d/ralf abort'"
 EOF
 chmod 0644 /etc/monit/conf.d/ralf.monit
 
