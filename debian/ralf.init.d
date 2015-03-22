@@ -125,6 +125,7 @@ get_settings()
   [ -z "$init_token_rate" ] || init_token_rate_arg="--init-token-rate=$init_token_rate"
   [ -z "$min_token_rate" ] || min_token_rate_arg="--min-token-rate=$min_token_rate"
   [ -z "$exception_max_ttl" ] || exception_max_ttl_arg="--exception-max-ttl=$exception_max_ttl"
+  [ -z "$cdf_identity" ] || billing_peer_arg="--billing-peer=$cdf_identity"
   [ -z $signaling_namespace ] || namespace_prefix="ip netns exec $signaling_namespace"
 }
 
@@ -156,6 +157,7 @@ do_start()
                      --log-file=$log_directory
                      --log-level=$log_level
                      $billing_realm
+                     $billing_peer_arg
                      $alarms_enabled_arg
                      $target_latency_us_arg
                      $max_tokens_arg

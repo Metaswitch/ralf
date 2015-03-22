@@ -71,7 +71,8 @@ enum OptionTypes
   MAX_TOKENS,
   INIT_TOKEN_RATE,
   MIN_TOKEN_RATE,
-  EXCEPTION_MAX_TTL
+  EXCEPTION_MAX_TTL,
+  BILLING_PEER
 };
 
 enum struct MemcachedWriteFormat
@@ -88,6 +89,7 @@ struct options
   unsigned short http_port;
   int http_threads;
   std::string billing_realm;
+  std::string billing_peer;
   int max_peers;
   bool access_log_enabled;
   std::string access_log_directory;
@@ -113,6 +115,7 @@ const static struct option long_opt[] =
   {"http",                   required_argument, NULL, 'H'},
   {"http-threads",           required_argument, NULL, 't'},
   {"billing-realm",          required_argument, NULL, 'b'},
+  {"billing-peer",           required_argument, NULL, BILLING_PEER},
   {"max-peers",              required_argument, NULL, 'p'},
   {"access-log",             required_argument, NULL, 'a'},
   {"log-file",               required_argument, NULL, 'F'},
@@ -142,6 +145,8 @@ void usage(void)
        "                            Set HTTP bind address and port (default: 0.0.0.0:8888)\n"
        " -t, --http-threads N       Number of HTTP threads (default: 1)\n"
        " -b, --billing-realm <name> Set Destination-Realm on Rf messages\n"
+       "     --billing-peer <name> If Ralf can't find a CDF by resolving the --billing-realm,\n"
+       "                           it will try and connect to this Diameter peer.\n"
        " -p, --max-peers N          Number of peers to connect to (default: 2)\n"
        " -a, --access-log <directory>\n"
        "                            Generate access logs in specified directory\n"
@@ -255,6 +260,11 @@ int init_options(int argc, char**argv, struct options& options)
     case 'b':
       LOG_INFO("Billing realm: %s", optarg);
       options.billing_realm = std::string(optarg);
+      break;
+
+    case BILLING_PEER:
+      LOG_INFO("Fallback Diameter peer to connect to: %s", optarg);
+      options.billing_peer = std::string(optarg);
       break;
 
     case 'p':
@@ -415,6 +425,7 @@ int main(int argc, char**argv)
   options.http_port = 10888;
   options.http_threads = 1;
   options.billing_realm = "dest-realm.unknown";
+  options.billing_peer = "";
   options.max_peers = 2;
   options.access_log_enabled = false;
   options.log_to_file = false;
@@ -621,6 +632,7 @@ int main(int argc, char**argv)
   DiameterResolver* diameter_resolver = new DiameterResolver(dns_resolver, diameter_af);
   RealmManager* realm_manager = new RealmManager(diameter_stack,
                                                  options.billing_realm,
+                                                 options.billing_peer,
                                                  options.max_peers,
                                                  diameter_resolver);
   realm_manager->start();
