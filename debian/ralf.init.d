@@ -108,10 +108,10 @@ get_settings()
   # Set the destination realm correctly
   if [ ! -z $billing_realm ]
   then
-    billing_realm="--billing-realm=$billing_realm"
+    billing_realm_arg="--billing-realm=$billing_realm"
   elif [ ! -z $home_domain ]
   then
-    billing_realm="--billing-realm=$home_domain"
+    billing_realm_arg="--billing-realm=$home_domain"
   fi
 
   # Enable SNMP alarms if informsink(s) are configured
@@ -156,7 +156,7 @@ do_start()
                      --dns-server=$signaling_dns_server
                      --log-file=$log_directory
                      --log-level=$log_level
-                     $billing_realm
+                     $billing_realm_arg
                      $billing_peer_arg
                      $alarms_enabled_arg
                      $target_latency_us_arg
