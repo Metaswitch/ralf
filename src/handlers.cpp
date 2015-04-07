@@ -134,7 +134,7 @@ HTTPCode BillingTask::parse_body(std::string call_id,
   {
     LOG_WARNING("JSON document was either not valid or did not have an 'event' key");
     delete body;
-    return HTTP_BAD_RESULT;
+    return HTTP_BAD_REQUEST;
   }
 
   // Verify the Role-Of-Node and Node-Functionality AVPs are present (we use these
@@ -146,7 +146,7 @@ HTTPCode BillingTask::parse_body(std::string call_id,
   {
     LOG_ERROR("IMS-Information not included in the event description");
     delete body;
-    return HTTP_BAD_RESULT;
+    return HTTP_BAD_REQUEST;
   }
   else
   {
@@ -156,7 +156,7 @@ HTTPCode BillingTask::parse_body(std::string call_id,
     {
       LOG_ERROR("No Role-Of-Node in IMS-Information");
       delete body;
-      return HTTP_BAD_RESULT;
+      return HTTP_BAD_REQUEST;
     }
 
     role_of_node = (role_of_node_t)role_of_node_json->value.GetInt();
@@ -166,7 +166,7 @@ HTTPCode BillingTask::parse_body(std::string call_id,
     {
       LOG_ERROR("No Node-Functionality in IMS-Information");
       delete body;
-      return HTTP_BAD_RESULT;
+      return HTTP_BAD_REQUEST;
     }
 
     node_functionality = (node_functionality_t)node_function_json->value.GetInt();
@@ -179,7 +179,7 @@ HTTPCode BillingTask::parse_body(std::string call_id,
   {
     LOG_WARNING("Accounting-Record-Type not available in JSON");
     delete body;
-    return HTTP_BAD_RESULT;
+    return HTTP_BAD_REQUEST;
   }
 
   Rf::AccountingRecordType record_type((*body)["event"]["Accounting-Record-Type"].GetInt());
@@ -187,7 +187,7 @@ HTTPCode BillingTask::parse_body(std::string call_id,
   {
     LOG_ERROR("Accounting-Record-Type was not one of START/INTERIM/STOP/EVENT");
     delete body;
-    return HTTP_BAD_RESULT;
+    return HTTP_BAD_REQUEST;
   }
 
   // Parsed enough to SAS-log the message.
@@ -227,7 +227,7 @@ HTTPCode BillingTask::parse_body(std::string call_id,
     {
       LOG_ERROR("JSON lacked a 'ccf' array, or the array was empty (mandatory for START/EVENT)");
       delete body;
-      return HTTP_BAD_RESULT;
+      return HTTP_BAD_REQUEST;
     }
 
     for (rapidjson::SizeType i = 0; i < (*body)["peers"]["ccf"].Size(); i++)
@@ -236,7 +236,7 @@ HTTPCode BillingTask::parse_body(std::string call_id,
       {
         LOG_ERROR("JSON contains a 'ccf' array but not all the elements are strings");
         delete body;
-        return HTTP_BAD_RESULT;
+        return HTTP_BAD_REQUEST;
       }
       LOG_DEBUG("Adding CCF %s", (*body)["peers"]["ccf"][i].GetString());
       ccfs.push_back((*body)["peers"]["ccf"][i].GetString());
