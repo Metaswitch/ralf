@@ -108,10 +108,10 @@ get_settings()
   # Set the destination realm correctly
   if [ ! -z $billing_realm ]
   then
-    billing_realm="--billing-realm=$billing_realm"
+    billing_realm_arg="--billing-realm=$billing_realm"
   elif [ ! -z $home_domain ]
   then
-    billing_realm="--billing-realm=$home_domain"
+    billing_realm_arg="--billing-realm=$home_domain"
   fi
 
   # Enable SNMP alarms if informsink(s) are configured
@@ -125,6 +125,7 @@ get_settings()
   [ -z "$init_token_rate" ] || init_token_rate_arg="--init-token-rate=$init_token_rate"
   [ -z "$min_token_rate" ] || min_token_rate_arg="--min-token-rate=$min_token_rate"
   [ -z "$exception_max_ttl" ] || exception_max_ttl_arg="--exception-max-ttl=$exception_max_ttl"
+  [ -z "$cdf_identity" ] || billing_peer_arg="--billing-peer=$cdf_identity"
   [ -z $signaling_namespace ] || namespace_prefix="ip netns exec $signaling_namespace"
 }
 
@@ -155,7 +156,8 @@ do_start()
                      --dns-server=$signaling_dns_server
                      --log-file=$log_directory
                      --log-level=$log_level
-                     $billing_realm
+                     $billing_realm_arg
+                     $billing_peer_arg
                      $alarms_enabled_arg
                      $target_latency_us_arg
                      $max_tokens_arg
