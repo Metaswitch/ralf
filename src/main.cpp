@@ -72,7 +72,9 @@ enum OptionTypes
   INIT_TOKEN_RATE,
   MIN_TOKEN_RATE,
   EXCEPTION_MAX_TTL,
-  BILLING_PEER
+  BILLING_PEER,
+  HTTP_BLACKLIST_DURATION,
+  DIAMETER_BLACKLIST_DURATION
 };
 
 enum struct MemcachedWriteFormat
@@ -105,31 +107,35 @@ struct options
   float init_token_rate;
   float min_token_rate;
   int exception_max_ttl;
+  int http_blacklist_duration;
+  int diameter_blacklist_duration;
 };
 
 const static struct option long_opt[] =
 {
-  {"localhost",              required_argument, NULL, 'l'},
-  {"diameter-conf",          required_argument, NULL, 'c'},
-  {"dns-server",             required_argument, NULL, DNS_SERVER},
-  {"http",                   required_argument, NULL, 'H'},
-  {"http-threads",           required_argument, NULL, 't'},
-  {"billing-realm",          required_argument, NULL, 'b'},
-  {"billing-peer",           required_argument, NULL, BILLING_PEER},
-  {"max-peers",              required_argument, NULL, 'p'},
-  {"access-log",             required_argument, NULL, 'a'},
-  {"log-file",               required_argument, NULL, 'F'},
-  {"log-level",              required_argument, NULL, 'L'},
-  {"sas",                    required_argument, NULL, 's'},
-  {"alarms-enabled",         no_argument,       NULL, ALARMS_ENABLED},
-  {"help",                   no_argument,       NULL, 'h'},
-  {"memcached-write-format", required_argument, 0,    MEMCACHED_WRITE_FORMAT},
-  {"target-latency-us",      required_argument, NULL, TARGET_LATENCY_US},
-  {"max-tokens",             required_argument, NULL, MAX_TOKENS},
-  {"init-token-rate",        required_argument, NULL, INIT_TOKEN_RATE},
-  {"min-token-rate",         required_argument, NULL, MIN_TOKEN_RATE},
-  {"exception-max-ttl",      required_argument, NULL, EXCEPTION_MAX_TTL},
-  {NULL,                     0,                 NULL, 0},
+  {"localhost",                   required_argument, NULL, 'l'},
+  {"diameter-conf",               required_argument, NULL, 'c'},
+  {"dns-server",                  required_argument, NULL, DNS_SERVER},
+  {"http",                        required_argument, NULL, 'H'},
+  {"http-threads",                required_argument, NULL, 't'},
+  {"billing-realm",               required_argument, NULL, 'b'},
+  {"billing-peer",                required_argument, NULL, BILLING_PEER},
+  {"max-peers",                   required_argument, NULL, 'p'},
+  {"access-log",                  required_argument, NULL, 'a'},
+  {"log-file",                    required_argument, NULL, 'F'},
+  {"log-level",                   required_argument, NULL, 'L'},
+  {"sas",                         required_argument, NULL, 's'},
+  {"alarms-enabled",              no_argument,       NULL, ALARMS_ENABLED},
+  {"help",                        no_argument,       NULL, 'h'},
+  {"memcached-write-format",      required_argument, 0,    MEMCACHED_WRITE_FORMAT},
+  {"target-latency-us",           required_argument, NULL, TARGET_LATENCY_US},
+  {"max-tokens",                  required_argument, NULL, MAX_TOKENS},
+  {"init-token-rate",             required_argument, NULL, INIT_TOKEN_RATE},
+  {"min-token-rate",              required_argument, NULL, MIN_TOKEN_RATE},
+  {"exception-max-ttl",           required_argument, NULL, EXCEPTION_MAX_TTL},
+  {"http-blacklist-duration",     required_argument, NULL, HTTP_BLACKLIST_DURATION},
+  {"diameter-blacklist-duration", required_argument, NULL, DIAMETER_BLACKLIST_DURATION},
+  {NULL,                          0,                 NULL, 0},
 };
 
 static std::string options_description = "l:c:H:t:b:p:a:F:L:s:h";
@@ -173,6 +179,10 @@ void usage(void)
        "     --exception-max-ttl <secs>\n"
        "                            The maximum time before the process exits if it hits an exception.\n"
        "                            The actual time is randomised.\n"
+       "     --http-blacklist-duration <secs>\n"
+       "                            The amount of time to blacklist an HTTP peer when it is unresponsive.\n"
+       "     --diameter-blacklist-duration <secs>\n"
+       "                            The amount of time to blacklist a Diameter peer when it is unresponsive.\n"
        " -h, --help                 Show this help screen\n"
       );
 }
@@ -358,6 +368,18 @@ int init_options(int argc, char**argv, struct options& options)
       options.exception_max_ttl = atoi(optarg);
       LOG_INFO("Max TTL after an exception set to %d",
                options.exception_max_ttl);
+      break;
+
+    case HTTP_BLACKLIST_DURATION:
+      options.http_blacklist_duration = atoi(optarg);
+      LOG_INFO("HTTP blacklist duration set to %d",
+               options.http_blacklist_duration);
+      break;
+
+    case DIAMETER_BLACKLIST_DURATION:
+      options.diameter_blacklist_duration = atoi(optarg);
+      LOG_INFO("Diameter blacklist duration set to %d",
+               options.diameter_blacklist_duration);
       break;
 
     default:
@@ -596,7 +618,9 @@ int main(int argc, char**argv)
 
   // Create a connection to Chronos.  This requires an HttpResolver.
   LOG_STATUS("Creating connection to Chronos at %s using %s as the callback URI", local_chronos.c_str(), chronos_callback_addr.c_str());
-  HttpResolver* http_resolver = new HttpResolver(dns_resolver, http_af);
+  HttpResolver* http_resolver = new HttpResolver(dns_resolver,
+                                                 http_af,
+                                                 options.http_blacklist_duration);
   ChronosConnection* timer_conn = new ChronosConnection(local_chronos, chronos_callback_addr, http_resolver, chronos_comm_monitor);
 
   cfg->mgr = new SessionManager(store, dict, factory, timer_conn, diameter_stack, hc);
@@ -632,7 +656,9 @@ int main(int argc, char**argv)
     diameter_af = AF_INET6;
   }
 
-  DiameterResolver* diameter_resolver = new DiameterResolver(dns_resolver, diameter_af);
+  DiameterResolver* diameter_resolver = new DiameterResolver(dns_resolver,
+                                                             diameter_af,
+                                                             options.diameter_blacklist_duration);
   RealmManager* realm_manager = new RealmManager(diameter_stack,
                                                  options.billing_realm,
                                                  options.billing_peer,
