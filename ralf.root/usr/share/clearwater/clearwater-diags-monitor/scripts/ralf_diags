@@ -60,3 +60,7 @@ if [ ! -z "$billing_realm" ]; then
   # forever).
   ping -c1 -w2 $billing_realm               >> $billing_realm_file 2>&1
 fi
+
+if [ ! -z "$cdf_identity" ]; then
+  check_connectivity_to_domain "$cdf_identity" 3868
+fi
