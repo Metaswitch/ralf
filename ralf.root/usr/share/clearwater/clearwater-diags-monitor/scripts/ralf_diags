@@ -35,4 +35,28 @@
 # This script is executed in the context of the clearwater_diags_monitor script
 # (in the clearwater-infrastructure project).
 
+. /etc/clearwater/config
+
 copy_to_dump "/var/lib/ralf/ralf.conf"
+
+# Check if ralf can connect to the billing realm.
+billing_realm_file=$CURRENT_DUMP_DIR/connectivity_to_billing_realm.txt
+
+# Work out what the configured billing realm is.
+[ ! -z "$billing_realm" ] || billing_realm=$home_domain
+
+if [ ! -z "$billing_realm" ]; then
+  # A billing realm is configured. Replicating ralf's full connection logic is
+  # difficult as it involves a chain of DNS queries. Instead we do the more
+  # obvious DNS queries, which is better than nothing.
+  dig -t NAPTR $billing_realm               >> $billing_realm_file 2>&1
+  dig -t SRV _diameter._tcp.$billing_realm  >> $billing_realm_file 2>&1
+  dig -t SRV _diameter._sctp.$billing_realm >> $billing_realm_file 2>&1
+  dig -t A $billing_realm                   >> $billing_realm_file 2>&1
+
+  # The billing realm realm might map to a collection of A records, so try
+  # pinging it.  Only wait for at most 2s (to avoid blocking for a long time if
+  # it's not ping-able). Also only do one ping (by default `ping` carries on
+  # forever).
+  ping -c1 -w2 $billing_realm               >> $billing_realm_file 2>&1
+fi
