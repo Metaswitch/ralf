@@ -82,4 +82,5 @@ class RalfRemoteMemcachedPlugin(SynchroniserPluginBase):
 
 
 def load_as_plugin(ip, local_site, remote_site):
-    return RalfRemoteMemcachedPlugin(ip, local_site, remote_site)
+    if remote_site != "":
+        return RalfRemoteMemcachedPlugin(ip, local_site, remote_site)
