@@ -128,4 +128,16 @@ const static PDLog2<const char*, int> CL_RALF_HTTP_STOP_ERROR
   "None."
 );
 
+static const PDLog2<const char*, int> CL_RALF_DIAMETER_INIT_FAIL
+(
+  PDLogBase::CL_HOMESTEAD_ID + 7,
+  PDLOG_ERR,
+  "Fatal - Failed to initialize Diameter stack in function %s with error %d.",
+  "The Diameter interface could not be initialized or encountered an "
+  "error while running.",
+  "The application will exit and restart until the problem is fixed.",
+  "(1). Check the configuration for the Diameter destination hosts. "
+  "(2). Check the connectivity to the Diameter host using Wireshark."
+);
+
 #endif

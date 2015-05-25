@@ -571,14 +571,25 @@ int main(int argc, char**argv)
 
   Diameter::Stack* diameter_stack = Diameter::Stack::get_instance();
   Rf::Dictionary* dict = NULL;
-  diameter_stack->initialize();
-  diameter_stack->configure(options.diameter_conf,
-                            exception_handler,
-                            cdf_comm_monitor);
-  dict = new Rf::Dictionary();
-  diameter_stack->advertize_application(Diameter::Dictionary::Application::ACCT,
-                                        dict->RF);
-  diameter_stack->start();
+
+  try
+  {
+    diameter_stack->initialize();
+    diameter_stack->configure(options.diameter_conf,
+                              exception_handler,
+                              cdf_comm_monitor);
+    dict = new Rf::Dictionary();
+    diameter_stack->advertize_application(Diameter::Dictionary::Application::ACCT,
+                                          dict->RF);
+    diameter_stack->start();
+  }
+  catch (Diameter::Stack::Exception& e)
+  {
+    CL_RALF_DIAMETER_INIT_FAIL.log(e._func, e._rc);
+    closelog();
+    LOG_ERROR("Failed to initialize Diameter stack - function %s, rc %d", e._func, e._rc);
+    exit(2);
+  }
 
   SessionStore::SerializerDeserializer* serializer;
   std::vector<SessionStore::SerializerDeserializer*> deserializers;
