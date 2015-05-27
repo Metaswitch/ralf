@@ -44,9 +44,9 @@ _log = logging.getLogger("ralf_remote_memcached_plugin")
 
 
 class RalfRemoteMemcachedPlugin(SynchroniserPluginBase):
-    def __init__(self, _ip, local_site, remote_site):
-        self._key = "/clearwater/{}/ralf/clustering/memcached".format(remote_site)
-        self._remote_site = remote_site
+    def __init__(self, params):
+        self._key = "/clearwater/{}/ralf/clustering/memcached".format(params.remote_site)
+        self._remote_site = params.remote_site
 
     def key(self):
         return self._key
@@ -81,6 +81,6 @@ class RalfRemoteMemcachedPlugin(SynchroniserPluginBase):
         pass
 
 
-def load_as_plugin(ip, local_site, remote_site):
+def load_as_plugin(params):
     if remote_site != "":
-        return RalfRemoteMemcachedPlugin(ip, local_site, remote_site)
+        return RalfRemoteMemcachedPlugin(params)
