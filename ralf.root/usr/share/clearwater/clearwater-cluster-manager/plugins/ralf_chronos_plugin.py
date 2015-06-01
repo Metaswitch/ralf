@@ -44,9 +44,9 @@ _log = logging.getLogger("ralf_chronos_plugin")
 
 
 class RalfChronosPlugin(SynchroniserPluginBase):
-    def __init__(self, local_server, local_site, _remote_site):
-        self.local_server = local_server
-        self._key = "/clearwater/{}/ralf/clustering/chronos".format(local_site)
+    def __init__(self, params):
+        self.local_server = params.ip
+        self._key = "/clearwater/{}/ralf/clustering/chronos".format(params.local_site)
         _log.debug("Raising not-clustered alarm")
         issue_alarm(constants.RAISE_CHRONOS_NOT_YET_CLUSTERED)
 
@@ -82,5 +82,5 @@ class RalfChronosPlugin(SynchroniserPluginBase):
         pass
 
 
-def load_as_plugin(local_server, local_site, remote_site):
-    return RalfChronosPlugin(local_server, local_site, remote_site)
+def load_as_plugin(params):
+    return RalfChronosPlugin(params)
