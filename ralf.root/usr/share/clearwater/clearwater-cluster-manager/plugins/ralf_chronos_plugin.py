@@ -56,6 +56,9 @@ class RalfChronosPlugin(SynchroniserPluginBase):
     def files(self):
         return ["/etc/chronos/chronos_cluster.conf"]
 
+    def cluster_description(self):
+        return "local Chronos cluster"
+
     def on_cluster_changing(self, cluster_view):
         _log.debug("Ralf's Chronos cluster is changing")
         write_chronos_cluster_settings("/etc/chronos/chronos_cluster.conf",

@@ -54,6 +54,9 @@ class RalfMemcachedPlugin(SynchroniserPluginBase):
     def files(self):
         return ["/etc/clearwater/cluster_settings"]
 
+    def cluster_description(self):
+        return "local Ralf memcached cluster"
+
     def on_cluster_changing(self, cluster_view):
         write_memcached_cluster_settings("/etc/clearwater/cluster_settings",
                                          cluster_view)
