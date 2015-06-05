@@ -37,7 +37,7 @@ from metaswitch.clearwater.cluster_manager.plugin_base import \
 from metaswitch.clearwater.cluster_manager.plugin_utils import \
     write_chronos_cluster_settings, run_command
 from metaswitch.clearwater.cluster_manager.alarms import issue_alarm
-from metaswitch.clearwater.cluster_manager import constants
+from metaswitch.clearwater.cluster_manager import pdlogs, constants
 import logging
 
 _log = logging.getLogger("ralf_chronos_plugin")
@@ -49,6 +49,7 @@ class RalfChronosPlugin(SynchroniserPluginBase):
         self._key = "/clearwater/{}/ralf/clustering/chronos".format(params.local_site)
         _log.debug("Raising not-clustered alarm")
         issue_alarm(constants.RAISE_CHRONOS_NOT_YET_CLUSTERED)
+        pdlogs.NOT_YET_CLUSTERED_ALARM.log(cluster_desc=self.cluster_description())
 
     def key(self):
         return self._key
