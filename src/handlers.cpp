@@ -81,7 +81,7 @@ void BillingTask::run()
 
     if (msg != NULL)
     {
-      LOG_DEBUG("Handle the received message");
+      TRC_DEBUG("Handle the received message");
 
       // The session manager takes ownership of the message object and is
       // responsible for deleting it.
@@ -115,14 +115,14 @@ HTTPCode BillingTask::parse_body(std::string call_id,
     {
       // Print the body from the source string.  We can't pretty print an
       // invalid document.
-      LOG_DEBUG("Handling request, Body:\n%s", reqbody.c_str());
+      TRC_DEBUG("Handling request, Body:\n%s", reqbody.c_str());
     }
     else
     {
       rapidjson::StringBuffer s;
       rapidjson::PrettyWriter<rapidjson::StringBuffer> w(s);
       body->Accept(w);
-      LOG_DEBUG("Handling request, body:\n%s", s.GetString());
+      TRC_DEBUG("Handling request, body:\n%s", s.GetString());
     }
   }
 
@@ -132,7 +132,7 @@ HTTPCode BillingTask::parse_body(std::string call_id,
       !(*body).HasMember("event") ||
       !(*body)["event"].IsObject())
   {
-    LOG_WARNING("JSON document was either not valid or did not have an 'event' key");
+    TRC_WARNING("JSON document was either not valid or did not have an 'event' key");
     delete body;
     return HTTP_BAD_REQUEST;
   }
@@ -144,7 +144,7 @@ HTTPCode BillingTask::parse_body(std::string call_id,
       (!(*body)["event"]["Service-Information"].HasMember("IMS-Information")) ||
       (!(*body)["event"]["Service-Information"]["IMS-Information"].IsObject()))
   {
-    LOG_ERROR("IMS-Information not included in the event description");
+    TRC_ERROR("IMS-Information not included in the event description");
     delete body;
     return HTTP_BAD_REQUEST;
   }
@@ -154,7 +154,7 @@ HTTPCode BillingTask::parse_body(std::string call_id,
     rapidjson::Value::MemberIterator role_of_node_json = ims_information_json.FindMember("Role-Of-Node");
     if ((role_of_node_json == ims_information_json.MemberEnd()) || !(role_of_node_json->value.IsInt()))
     {
-      LOG_ERROR("No Role-Of-Node in IMS-Information");
+      TRC_ERROR("No Role-Of-Node in IMS-Information");
       delete body;
       return HTTP_BAD_REQUEST;
     }
@@ -164,7 +164,7 @@ HTTPCode BillingTask::parse_body(std::string call_id,
     rapidjson::Value::MemberIterator node_function_json = ims_information_json.FindMember("Node-Functionality");
     if ((node_function_json == ims_information_json.MemberEnd()) || !(node_function_json->value.IsInt()))
     {
-      LOG_ERROR("No Node-Functionality in IMS-Information");
+      TRC_ERROR("No Node-Functionality in IMS-Information");
       delete body;
       return HTTP_BAD_REQUEST;
     }
@@ -177,7 +177,7 @@ HTTPCode BillingTask::parse_body(std::string call_id,
   if (!((*body)["event"].HasMember("Accounting-Record-Type") &&
         ((*body)["event"]["Accounting-Record-Type"].IsInt())))
   {
-    LOG_WARNING("Accounting-Record-Type not available in JSON");
+    TRC_WARNING("Accounting-Record-Type not available in JSON");
     delete body;
     return HTTP_BAD_REQUEST;
   }
@@ -185,7 +185,7 @@ HTTPCode BillingTask::parse_body(std::string call_id,
   Rf::AccountingRecordType record_type((*body)["event"]["Accounting-Record-Type"].GetInt());
   if (!record_type.isValid())
   {
-    LOG_ERROR("Accounting-Record-Type was not one of START/INTERIM/STOP/EVENT");
+    TRC_ERROR("Accounting-Record-Type was not one of START/INTERIM/STOP/EVENT");
     delete body;
     return HTTP_BAD_REQUEST;
   }
@@ -212,7 +212,7 @@ HTTPCode BillingTask::parse_body(std::string call_id,
   {
     if (!((body->HasMember("peers")) && (*body)["peers"].IsObject()))
     {
-      LOG_ERROR("JSON lacked a 'peers' object (mandatory for START/EVENT)");
+      TRC_ERROR("JSON lacked a 'peers' object (mandatory for START/EVENT)");
       SAS::Event missing_peers(trail, SASEvent::INCOMING_REQUEST_NO_PEERS, 0);
       missing_peers.add_static_param(record_type.code());
       SAS::report_event(missing_peers);
@@ -225,7 +225,7 @@ HTTPCode BillingTask::parse_body(std::string call_id,
         !((*body)["peers"]["ccf"].IsArray()) ||
         ((*body)["peers"]["ccf"].Size() == 0))
     {
-      LOG_ERROR("JSON lacked a 'ccf' array, or the array was empty (mandatory for START/EVENT)");
+      TRC_ERROR("JSON lacked a 'ccf' array, or the array was empty (mandatory for START/EVENT)");
       delete body;
       return HTTP_BAD_REQUEST;
     }
@@ -234,11 +234,11 @@ HTTPCode BillingTask::parse_body(std::string call_id,
     {
       if (!(*body)["peers"]["ccf"][i].IsString())
       {
-        LOG_ERROR("JSON contains a 'ccf' array but not all the elements are strings");
+        TRC_ERROR("JSON contains a 'ccf' array but not all the elements are strings");
         delete body;
         return HTTP_BAD_REQUEST;
       }
-      LOG_DEBUG("Adding CCF %s", (*body)["peers"]["ccf"][i].GetString());
+      TRC_DEBUG("Adding CCF %s", (*body)["peers"]["ccf"][i].GetString());
       ccfs.push_back((*body)["peers"]["ccf"][i].GetString());
     }
   }

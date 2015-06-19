@@ -59,7 +59,7 @@ AccountingRequest::AccountingRequest(const Dictionary* dict,
                                      const rapidjson::Value& contents) :
   Diameter::Message(dict, dict->ACCOUNTING_REQUEST, diameter_stack)
 {
-  LOG_DEBUG("Building an Accounting-Request");
+  TRC_DEBUG("Building an Accounting-Request");
 
   // Fill in the default fields
   if (session_id == "")
@@ -88,7 +88,7 @@ AccountingRequest::AccountingRequest(const Dictionary* dict,
 
   if (contents.GetType() != rapidjson::kObjectType)
   {
-    LOG_ERROR("Cannot build ACR from JSON type %d", contents.GetType());
+    TRC_ERROR("Cannot build ACR from JSON type %d", contents.GetType());
     return;
   }
 
@@ -104,7 +104,7 @@ AccountingRequest::AccountingRequest(const Dictionary* dict,
       case rapidjson::kFalseType:
       case rapidjson::kTrueType:
       case rapidjson::kNullType:
-        LOG_ERROR("Invalid format (true/false) in JSON block, ignoring");
+        TRC_ERROR("Invalid format (true/false) in JSON block, ignoring");
         continue;
       case rapidjson::kStringType:
       case rapidjson::kNumberType:
@@ -129,7 +129,7 @@ AccountingRequest::AccountingRequest(const Dictionary* dict,
     }
     catch (Diameter::Stack::Exception e)
     {
-      LOG_WARNING("AVP %s not recognised, ignoring", it->name.GetString());
+      TRC_WARNING("AVP %s not recognised, ignoring", it->name.GetString());
     }
   }
 }
@@ -142,7 +142,7 @@ AccountingResponse::AccountingResponse(const Dictionary* dict,
                                        Diameter::Stack* diameter_stack) :
     Diameter::Message(dict, dict->ACCOUNTING_RESPONSE, diameter_stack)
 {
-  LOG_DEBUG("Building an Accounting-Response");
+  TRC_DEBUG("Building an Accounting-Response");
 }
 
 AccountingResponse::~AccountingResponse()
