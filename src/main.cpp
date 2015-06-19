@@ -226,17 +226,17 @@ int init_options(int argc, char**argv, struct options& options)
     switch (opt)
     {
     case 'l':
-      LOG_INFO("Local host: %s", optarg);
+      TRC_INFO("Local host: %s", optarg);
       options.local_host = std::string(optarg);
       break;
 
     case 'c':
-      LOG_INFO("Diameter configuration file: %s", optarg);
+      TRC_INFO("Diameter configuration file: %s", optarg);
       options.diameter_conf = std::string(optarg);
       break;
 
     case 'H':
-      LOG_INFO("HTTP address: %s", optarg);
+      TRC_INFO("HTTP address: %s", optarg);
       options.http_address = std::string(optarg);
       // TODO: Parse optional HTTP port.
       break;
@@ -251,50 +251,50 @@ int init_options(int argc, char**argv, struct options& options)
       {
         options.sas_server = sas_options[0];
         options.sas_system_name = sas_options[1];
-        LOG_INFO("SAS set to %s\n", options.sas_server.c_str());
-        LOG_INFO("System name is set to %s\n", options.sas_system_name.c_str());
+        TRC_INFO("SAS set to %s\n", options.sas_server.c_str());
+        TRC_INFO("System name is set to %s\n", options.sas_system_name.c_str());
       }
       else
       {
         CL_RALF_INVALID_SAS_OPTION.log();
-        LOG_WARNING("Invalid --sas option, SAS disabled\n");
+        TRC_WARNING("Invalid --sas option, SAS disabled\n");
       }
     }
     break;
 
     case 't':
-      LOG_INFO("HTTP threads: %s", optarg);
+      TRC_INFO("HTTP threads: %s", optarg);
       options.http_threads = atoi(optarg);
       break;
 
     case 'b':
-      LOG_INFO("Billing realm: %s", optarg);
+      TRC_INFO("Billing realm: %s", optarg);
       options.billing_realm = std::string(optarg);
       break;
 
     case BILLING_PEER:
-      LOG_INFO("Fallback Diameter peer to connect to: %s", optarg);
+      TRC_INFO("Fallback Diameter peer to connect to: %s", optarg);
       options.billing_peer = std::string(optarg);
       break;
 
     case 'p':
-      LOG_INFO("Maximum peers: %s", optarg);
+      TRC_INFO("Maximum peers: %s", optarg);
       options.max_peers = atoi(optarg);
       break;
 
     case 'a':
-      LOG_INFO("Access log: %s", optarg);
+      TRC_INFO("Access log: %s", optarg);
       options.access_log_enabled = true;
       options.access_log_directory = std::string(optarg);
       break;
 
     case ALARMS_ENABLED:
-      LOG_INFO("SNMP alarms are enabled");
+      TRC_INFO("SNMP alarms are enabled");
       options.alarms_enabled = true;
       break;
 
     case DNS_SERVER:
-      LOG_INFO("DNS server set to %s", optarg);
+      TRC_INFO("DNS server set to %s", optarg);
       options.dns_server = std::string(optarg);
       break;
 
@@ -310,17 +310,17 @@ int init_options(int argc, char**argv, struct options& options)
     case MEMCACHED_WRITE_FORMAT:
       if (strcmp(optarg, "binary") == 0)
       {
-        LOG_INFO("Memcached write format set to 'binary'");
+        TRC_INFO("Memcached write format set to 'binary'");
         options.memcached_write_format = MemcachedWriteFormat::BINARY;
       }
       else if (strcmp(optarg, "json") == 0)
       {
-        LOG_INFO("Memcached write format set to 'json'");
+        TRC_INFO("Memcached write format set to 'json'");
         options.memcached_write_format = MemcachedWriteFormat::JSON;
       }
       else
       {
-        LOG_WARNING("Invalid value for memcached-write-format, using '%s'."
+        TRC_WARNING("Invalid value for memcached-write-format, using '%s'."
                     "Got '%s', valid values are 'json' and 'binary'",
                     ((options.memcached_write_format == MemcachedWriteFormat::JSON) ?
                      "json" : "binary"),
@@ -332,7 +332,7 @@ int init_options(int argc, char**argv, struct options& options)
       options.target_latency_us = atoi(optarg);
       if (options.target_latency_us <= 0)
       {
-        LOG_ERROR("Invalid --target-latency-us option %s", optarg);
+        TRC_ERROR("Invalid --target-latency-us option %s", optarg);
         return -1;
       }
       break;
@@ -341,7 +341,7 @@ int init_options(int argc, char**argv, struct options& options)
       options.max_tokens = atoi(optarg);
       if (options.max_tokens <= 0)
       {
-        LOG_ERROR("Invalid --max-tokens option %s", optarg);
+        TRC_ERROR("Invalid --max-tokens option %s", optarg);
         return -1;
       }
       break;
@@ -350,7 +350,7 @@ int init_options(int argc, char**argv, struct options& options)
       options.init_token_rate = atoi(optarg);
       if (options.init_token_rate <= 0)
       {
-        LOG_ERROR("Invalid --init-token-rate option %s", optarg);
+        TRC_ERROR("Invalid --init-token-rate option %s", optarg);
         return -1;
       }
       break;
@@ -359,32 +359,32 @@ int init_options(int argc, char**argv, struct options& options)
       options.min_token_rate = atoi(optarg);
       if (options.min_token_rate <= 0)
       {
-        LOG_ERROR("Invalid --min-token-rate option %s", optarg);
+        TRC_ERROR("Invalid --min-token-rate option %s", optarg);
         return -1;
       }
       break;
 
     case EXCEPTION_MAX_TTL:
       options.exception_max_ttl = atoi(optarg);
-      LOG_INFO("Max TTL after an exception set to %d",
+      TRC_INFO("Max TTL after an exception set to %d",
                options.exception_max_ttl);
       break;
 
     case HTTP_BLACKLIST_DURATION:
       options.http_blacklist_duration = atoi(optarg);
-      LOG_INFO("HTTP blacklist duration set to %d",
+      TRC_INFO("HTTP blacklist duration set to %d",
                options.http_blacklist_duration);
       break;
 
     case DIAMETER_BLACKLIST_DURATION:
       options.diameter_blacklist_duration = atoi(optarg);
-      LOG_INFO("Diameter blacklist duration set to %d",
+      TRC_INFO("Diameter blacklist duration set to %d",
                options.diameter_blacklist_duration);
       break;
 
     default:
       CL_RALF_INVALID_OPTION_C.log();
-      LOG_ERROR("Unknown option: %d.  Run with --help for options.\n", opt);
+      TRC_ERROR("Unknown option: %d.  Run with --help for options.\n", opt);
       return -1;
     }
   }
@@ -409,11 +409,11 @@ void signal_handler(int sig)
   signal(SIGSEGV, signal_handler);
 
   // Log the signal, along with a backtrace.
-  LOG_BACKTRACE("Signal %d caught", sig);
+  TRC_BACKTRACE("Signal %d caught", sig);
 
   // Ensure the log files are complete - the core file created by abort() below
   // will trigger the log files to be copied to the diags bundle
-  LOG_COMMIT();
+  TRC_COMMIT();
 
   // Check if there's a stored jmp_buf on the thread and handle if there is
   exception_handler->handle_exception();
@@ -490,7 +490,7 @@ int main(int argc, char**argv)
     Log::setLogger(new Logger(options.log_directory, prog_name));
   }
 
-  LOG_STATUS("Log level set to %d", options.log_level);
+  TRC_STATUS("Log level set to %d", options.log_level);
 
   std::stringstream options_ss;
   for (int ii = 0; ii < argc; ii++)
@@ -500,7 +500,7 @@ int main(int argc, char**argv)
   }
   std::string options_str = "Command-line options were: " + options_ss.str();
 
-  LOG_INFO(options_str.c_str());
+  TRC_INFO(options_str.c_str());
 
   if (init_options(argc, argv, options) != 0)
   {
@@ -515,7 +515,7 @@ int main(int argc, char**argv)
 
   if (!(mstore->has_servers()))
   {
-    LOG_ERROR("./cluster_settings file does not contain a valid set of servers");
+    TRC_ERROR("./cluster_settings file does not contain a valid set of servers");
     return 1;
   };
 
@@ -589,7 +589,7 @@ int main(int argc, char**argv)
   {
     CL_RALF_DIAMETER_INIT_FAIL.log(e._func, e._rc);
     closelog();
-    LOG_ERROR("Failed to initialize Diameter stack - function %s, rc %d", e._func, e._rc);
+    TRC_ERROR("Failed to initialize Diameter stack - function %s, rc %d", e._func, e._rc);
     exit(2);
   }
 
@@ -630,7 +630,7 @@ int main(int argc, char**argv)
   }
 
   // Create a connection to Chronos.  This requires an HttpResolver.
-  LOG_STATUS("Creating connection to Chronos at %s using %s as the callback URI", local_chronos.c_str(), chronos_callback_addr.c_str());
+  TRC_STATUS("Creating connection to Chronos at %s using %s as the callback URI", local_chronos.c_str(), chronos_callback_addr.c_str());
   HttpResolver* http_resolver = new HttpResolver(dns_resolver,
                                                  http_af,
                                                  options.http_blacklist_duration);
@@ -665,7 +665,7 @@ int main(int argc, char**argv)
   struct in6_addr dummy_addr;
   if (inet_pton(AF_INET6, options.local_host.c_str(), &dummy_addr) == 1)
   {
-    LOG_DEBUG("Local host is an IPv6 address");
+    TRC_DEBUG("Local host is an IPv6 address");
     diameter_af = AF_INET6;
   }
 

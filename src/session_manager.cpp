@@ -68,7 +68,7 @@ void SessionManager::handle(Message* msg)
     if (sess == NULL)
     {
       // No record of the session - ignore the request
-      LOG_INFO("Session for %s not found in database, ignoring message", msg->call_id.c_str());
+      TRC_INFO("Session for %s not found in database, ignoring message", msg->call_id.c_str());
       delete msg; msg = NULL;
       return;
     }
@@ -95,7 +95,7 @@ void SessionManager::handle(Message* msg)
                                   msg->role,
                                   msg->function,
                                   msg->trail);
-      LOG_INFO("Received STOP for session %s, deleting session and timer using timer ID %s", msg->call_id.c_str(), sess->timer_id.c_str());
+      TRC_INFO("Received STOP for session %s, deleting session and timer using timer ID %s", msg->call_id.c_str(), sess->timer_id.c_str());
 
       if (sess->timer_id != "NO_TIMER")
       {
@@ -165,7 +165,7 @@ std::string SessionManager::create_opaque_data(Message* msg)
   doc.Accept(w);
   std::string body = s.GetString();
 
-  LOG_DEBUG("Built INTERIM request body: %s", body.c_str());
+  TRC_DEBUG("Built INTERIM request body: %s", body.c_str());
 
   return body;
 }
@@ -270,7 +270,7 @@ void SessionManager::on_ccf_response(bool accepted,
          if (status != HTTP_OK)
          {
            // LCOV_EXCL_START
-           LOG_ERROR("Chronos POST failed");
+           TRC_ERROR("Chronos POST failed");
            // LCOV_EXCL_STOP
          }
       };
@@ -279,7 +279,7 @@ void SessionManager::on_ccf_response(bool accepted,
       new_timer.add_static_param(interim_interval);
       SAS::report_event(new_timer);
 
-      LOG_INFO("Writing session to store");
+      TRC_INFO("Writing session to store");
       SessionStore::Session* sess = new SessionStore::Session();
       sess->session_id = session_id;
       sess->interim_interval = interim_interval;
@@ -305,14 +305,14 @@ void SessionManager::on_ccf_response(bool accepted,
   }
   else
   {
-    LOG_WARNING("Session for %s received error from CDF", msg->call_id.c_str());
+    TRC_WARNING("Session for %s received error from CDF", msg->call_id.c_str());
     if (msg->record_type.isInterim())
     {
       if (rc == 5002)
       {
         // 5002 means the CDF has no record of this session. It's pointless to send any
         // more messages - delete the session from the store.
-        LOG_INFO("Session for %s received 5002 error from CDF, deleting", msg->call_id.c_str());
+        TRC_INFO("Session for %s received 5002 error from CDF, deleting", msg->call_id.c_str());
         _store->delete_session_data(msg->call_id,
                                     msg->role,
                                     msg->function,
@@ -325,7 +325,7 @@ void SessionManager::on_ccf_response(bool accepted,
 
         if (msg->session_refresh_time > interim_interval)
         {
-          LOG_INFO("Received INTERIM for session %s, updating timer using timer ID %s", msg->call_id.c_str(), msg->timer_id.c_str());
+          TRC_INFO("Received INTERIM for session %s, updating timer using timer ID %s", msg->call_id.c_str(), msg->timer_id.c_str());
 
           std::string timer_id = msg->timer_id;
           send_chronos_update(timer_id,

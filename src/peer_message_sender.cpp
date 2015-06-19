@@ -81,7 +81,7 @@ void PeerMessageSender::send(Message* msg, SessionManager* sm, Rf::Dictionary* d
 void PeerMessageSender::int_send_msg()
 {
   std::string ccf = _ccfs[_which];
-  LOG_DEBUG("Sending message to %s (number %d)", ccf.c_str(), _which);
+  TRC_DEBUG("Sending message to %s (number %d)", ccf.c_str(), _which);
 
   SAS::Event msg_sent(_msg->trail, SASEvent::BILLING_REQUEST_SENT, 0);
   msg_sent.add_var_param(ccf);
@@ -122,7 +122,7 @@ void PeerMessageSender::send_cb(int result_code,
   else
   {
     // Send failed
-    LOG_WARNING("Failed to send ACR to %s (number %d)", _ccfs[_which].c_str(), _which);
+    TRC_WARNING("Failed to send ACR to %s (number %d)", _ccfs[_which].c_str(), _which);
     SAS::Event cdf_failed(_msg->trail, SASEvent::BILLING_REQUEST_NOT_SENT, 0);
     cdf_failed.add_var_param(_ccfs[_which]);
     SAS::report_event(cdf_failed);
@@ -142,7 +142,7 @@ void PeerMessageSender::send_cb(int result_code,
     else
     {
       // No, we've run out, fail
-      LOG_ERROR("Failed to connect to all CCFs, message not sent");
+      TRC_ERROR("Failed to connect to all CCFs, message not sent");
       _sm->on_ccf_response(false, 0, "", result_code, _msg);
       delete this; return;
     }
