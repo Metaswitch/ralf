@@ -15,6 +15,7 @@ TARGET_SOURCES := accesslogger.cpp \
                   localstore.cpp \
                   memcachedstore.cpp \
                   memcachedstoreview.cpp \
+                  memcached_config.cpp \
                   signalhandler.cpp \
                   sessionstore.cpp \
                   session_manager.cpp \
@@ -45,7 +46,8 @@ TARGET_SOURCES := accesslogger.cpp \
                   alarm.cpp \
                   communicationmonitor.cpp \
                   exception_handler.cpp \
-                  health_checker.cpp
+                  health_checker.cpp \
+                  counter.cpp
 
 TARGET_SOURCES_BUILD := main.cpp
 

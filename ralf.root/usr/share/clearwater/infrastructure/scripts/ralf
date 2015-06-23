@@ -36,6 +36,8 @@
 
 ralf_listen_port=3869
 ralf_secure_listen_port=5659
+acl_required=false
+check_destination_host=true
 . /etc/clearwater/config
 
 # Allow a specific FQDN for Ralf to be set (in case this is an
@@ -44,26 +46,24 @@ ralf_secure_listen_port=5659
 
 identity=$ralf_diameteridentity
 
-acl_required=false
-
 if [[ -z "$identity" ]];
 then
     if [[ -z "$public_hostname" ]];
     then
-        echo "ERROR: must have a public_hostname set in /etc/clearwater/config" >&2
-        exit 1
+        echo "No public_hostname set in /etc/clearwater/local_config" >&2
+        exit
     fi
     identity=$public_hostname
 fi
 
 if [[ -z "$ralf_hostname" ]];
 then
-    echo "ERROR: must have a ralf_hostname set in /etc/clearwater/config" >&2
-    exit 1
+    echo "No ralf_hostname set in /etc/clearwater/shared_config" >&2
+    exit
 fi
 
 # Strip any characters not valid in an FQDN out of ralf_hostname (for
 # example, it might be an IPv6 address)
 realm=$(echo $ralf_hostname | sed -e 's/:[^:]*$//g' | sed -e 's/^\[//g' | sed -e 's/\]$//g')
 
-/usr/share/clearwater/bin/generic_create_diameterconf ralf $identity $realm $ralf_listen_port $ralf_secure_listen_port $acl_required
+/usr/share/clearwater/bin/generic_create_diameterconf ralf $identity $realm $ralf_listen_port $ralf_secure_listen_port $acl_required $check_destination_host

@@ -71,7 +71,10 @@ enum OptionTypes
   MAX_TOKENS,
   INIT_TOKEN_RATE,
   MIN_TOKEN_RATE,
-  EXCEPTION_MAX_TTL
+  EXCEPTION_MAX_TTL,
+  BILLING_PEER,
+  HTTP_BLACKLIST_DURATION,
+  DIAMETER_BLACKLIST_DURATION
 };
 
 enum struct MemcachedWriteFormat
@@ -88,6 +91,7 @@ struct options
   unsigned short http_port;
   int http_threads;
   std::string billing_realm;
+  std::string billing_peer;
   int max_peers;
   bool access_log_enabled;
   std::string access_log_directory;
@@ -103,30 +107,35 @@ struct options
   float init_token_rate;
   float min_token_rate;
   int exception_max_ttl;
+  int http_blacklist_duration;
+  int diameter_blacklist_duration;
 };
 
 const static struct option long_opt[] =
 {
-  {"localhost",              required_argument, NULL, 'l'},
-  {"diameter-conf",          required_argument, NULL, 'c'},
-  {"dns-server",             required_argument, NULL, DNS_SERVER},
-  {"http",                   required_argument, NULL, 'H'},
-  {"http-threads",           required_argument, NULL, 't'},
-  {"billing-realm",          required_argument, NULL, 'b'},
-  {"max-peers",              required_argument, NULL, 'p'},
-  {"access-log",             required_argument, NULL, 'a'},
-  {"log-file",               required_argument, NULL, 'F'},
-  {"log-level",              required_argument, NULL, 'L'},
-  {"sas",                    required_argument, NULL, 's'},
-  {"alarms-enabled",         no_argument,       NULL, ALARMS_ENABLED},
-  {"help",                   no_argument,       NULL, 'h'},
-  {"memcached-write-format", required_argument, 0,    MEMCACHED_WRITE_FORMAT},
-  {"target-latency-us",      required_argument, NULL, TARGET_LATENCY_US},
-  {"max-tokens",             required_argument, NULL, MAX_TOKENS},
-  {"init-token-rate",        required_argument, NULL, INIT_TOKEN_RATE},
-  {"min-token-rate",         required_argument, NULL, MIN_TOKEN_RATE},
-  {"exception-max-ttl",      required_argument, NULL, EXCEPTION_MAX_TTL},
-  {NULL,                     0,                 NULL, 0},
+  {"localhost",                   required_argument, NULL, 'l'},
+  {"diameter-conf",               required_argument, NULL, 'c'},
+  {"dns-server",                  required_argument, NULL, DNS_SERVER},
+  {"http",                        required_argument, NULL, 'H'},
+  {"http-threads",                required_argument, NULL, 't'},
+  {"billing-realm",               required_argument, NULL, 'b'},
+  {"billing-peer",                required_argument, NULL, BILLING_PEER},
+  {"max-peers",                   required_argument, NULL, 'p'},
+  {"access-log",                  required_argument, NULL, 'a'},
+  {"log-file",                    required_argument, NULL, 'F'},
+  {"log-level",                   required_argument, NULL, 'L'},
+  {"sas",                         required_argument, NULL, 's'},
+  {"alarms-enabled",              no_argument,       NULL, ALARMS_ENABLED},
+  {"help",                        no_argument,       NULL, 'h'},
+  {"memcached-write-format",      required_argument, 0,    MEMCACHED_WRITE_FORMAT},
+  {"target-latency-us",           required_argument, NULL, TARGET_LATENCY_US},
+  {"max-tokens",                  required_argument, NULL, MAX_TOKENS},
+  {"init-token-rate",             required_argument, NULL, INIT_TOKEN_RATE},
+  {"min-token-rate",              required_argument, NULL, MIN_TOKEN_RATE},
+  {"exception-max-ttl",           required_argument, NULL, EXCEPTION_MAX_TTL},
+  {"http-blacklist-duration",     required_argument, NULL, HTTP_BLACKLIST_DURATION},
+  {"diameter-blacklist-duration", required_argument, NULL, DIAMETER_BLACKLIST_DURATION},
+  {NULL,                          0,                 NULL, 0},
 };
 
 static std::string options_description = "l:c:H:t:b:p:a:F:L:s:h";
@@ -142,6 +151,8 @@ void usage(void)
        "                            Set HTTP bind address and port (default: 0.0.0.0:8888)\n"
        " -t, --http-threads N       Number of HTTP threads (default: 1)\n"
        " -b, --billing-realm <name> Set Destination-Realm on Rf messages\n"
+       "     --billing-peer <name>  If Ralf can't find a CDF by resolving the --billing-realm,\n"
+       "                            it will try and connect to this Diameter peer.\n"
        " -p, --max-peers N          Number of peers to connect to (default: 2)\n"
        " -a, --access-log <directory>\n"
        "                            Generate access logs in specified directory\n"
@@ -156,7 +167,7 @@ void usage(void)
        "     --memcached-write-format\n"
        "                            The data format to use when writing sessions\n"
        "                            to memcached. Values are 'binary' and 'json'\n"
-       "                            (defaults to 'binary')\n"
+       "                            (defaults to 'json')\n"
        "     --target-latency-us <usecs>\n"
        "                            Target latency above which throttling applies (default: 100000)\n"
        "     --max-tokens N         Maximum number of tokens allowed in the token bucket (used by\n"
@@ -168,6 +179,10 @@ void usage(void)
        "     --exception-max-ttl <secs>\n"
        "                            The maximum time before the process exits if it hits an exception.\n"
        "                            The actual time is randomised.\n"
+       "     --http-blacklist-duration <secs>\n"
+       "                            The amount of time to blacklist an HTTP peer when it is unresponsive.\n"
+       "     --diameter-blacklist-duration <secs>\n"
+       "                            The amount of time to blacklist a Diameter peer when it is unresponsive.\n"
        " -h, --help                 Show this help screen\n"
       );
 }
@@ -211,17 +226,17 @@ int init_options(int argc, char**argv, struct options& options)
     switch (opt)
     {
     case 'l':
-      LOG_INFO("Local host: %s", optarg);
+      TRC_INFO("Local host: %s", optarg);
       options.local_host = std::string(optarg);
       break;
 
     case 'c':
-      LOG_INFO("Diameter configuration file: %s", optarg);
+      TRC_INFO("Diameter configuration file: %s", optarg);
       options.diameter_conf = std::string(optarg);
       break;
 
     case 'H':
-      LOG_INFO("HTTP address: %s", optarg);
+      TRC_INFO("HTTP address: %s", optarg);
       options.http_address = std::string(optarg);
       // TODO: Parse optional HTTP port.
       break;
@@ -236,45 +251,50 @@ int init_options(int argc, char**argv, struct options& options)
       {
         options.sas_server = sas_options[0];
         options.sas_system_name = sas_options[1];
-        LOG_INFO("SAS set to %s\n", options.sas_server.c_str());
-        LOG_INFO("System name is set to %s\n", options.sas_system_name.c_str());
+        TRC_INFO("SAS set to %s\n", options.sas_server.c_str());
+        TRC_INFO("System name is set to %s\n", options.sas_system_name.c_str());
       }
       else
       {
         CL_RALF_INVALID_SAS_OPTION.log();
-        LOG_WARNING("Invalid --sas option, SAS disabled\n");
+        TRC_WARNING("Invalid --sas option, SAS disabled\n");
       }
     }
     break;
 
     case 't':
-      LOG_INFO("HTTP threads: %s", optarg);
+      TRC_INFO("HTTP threads: %s", optarg);
       options.http_threads = atoi(optarg);
       break;
 
     case 'b':
-      LOG_INFO("Billing realm: %s", optarg);
+      TRC_INFO("Billing realm: %s", optarg);
       options.billing_realm = std::string(optarg);
       break;
 
+    case BILLING_PEER:
+      TRC_INFO("Fallback Diameter peer to connect to: %s", optarg);
+      options.billing_peer = std::string(optarg);
+      break;
+
     case 'p':
-      LOG_INFO("Maximum peers: %s", optarg);
+      TRC_INFO("Maximum peers: %s", optarg);
       options.max_peers = atoi(optarg);
       break;
 
     case 'a':
-      LOG_INFO("Access log: %s", optarg);
+      TRC_INFO("Access log: %s", optarg);
       options.access_log_enabled = true;
       options.access_log_directory = std::string(optarg);
       break;
 
     case ALARMS_ENABLED:
-      LOG_INFO("SNMP alarms are enabled");
+      TRC_INFO("SNMP alarms are enabled");
       options.alarms_enabled = true;
       break;
 
     case DNS_SERVER:
-      LOG_INFO("DNS server set to %s", optarg);
+      TRC_INFO("DNS server set to %s", optarg);
       options.dns_server = std::string(optarg);
       break;
 
@@ -290,17 +310,17 @@ int init_options(int argc, char**argv, struct options& options)
     case MEMCACHED_WRITE_FORMAT:
       if (strcmp(optarg, "binary") == 0)
       {
-        LOG_INFO("Memcached write format set to 'binary'");
+        TRC_INFO("Memcached write format set to 'binary'");
         options.memcached_write_format = MemcachedWriteFormat::BINARY;
       }
       else if (strcmp(optarg, "json") == 0)
       {
-        LOG_INFO("Memcached write format set to 'json'");
+        TRC_INFO("Memcached write format set to 'json'");
         options.memcached_write_format = MemcachedWriteFormat::JSON;
       }
       else
       {
-        LOG_WARNING("Invalid value for memcached-write-format, using '%s'."
+        TRC_WARNING("Invalid value for memcached-write-format, using '%s'."
                     "Got '%s', valid values are 'json' and 'binary'",
                     ((options.memcached_write_format == MemcachedWriteFormat::JSON) ?
                      "json" : "binary"),
@@ -312,7 +332,7 @@ int init_options(int argc, char**argv, struct options& options)
       options.target_latency_us = atoi(optarg);
       if (options.target_latency_us <= 0)
       {
-        LOG_ERROR("Invalid --target-latency-us option %s", optarg);
+        TRC_ERROR("Invalid --target-latency-us option %s", optarg);
         return -1;
       }
       break;
@@ -321,7 +341,7 @@ int init_options(int argc, char**argv, struct options& options)
       options.max_tokens = atoi(optarg);
       if (options.max_tokens <= 0)
       {
-        LOG_ERROR("Invalid --max-tokens option %s", optarg);
+        TRC_ERROR("Invalid --max-tokens option %s", optarg);
         return -1;
       }
       break;
@@ -330,7 +350,7 @@ int init_options(int argc, char**argv, struct options& options)
       options.init_token_rate = atoi(optarg);
       if (options.init_token_rate <= 0)
       {
-        LOG_ERROR("Invalid --init-token-rate option %s", optarg);
+        TRC_ERROR("Invalid --init-token-rate option %s", optarg);
         return -1;
       }
       break;
@@ -339,20 +359,32 @@ int init_options(int argc, char**argv, struct options& options)
       options.min_token_rate = atoi(optarg);
       if (options.min_token_rate <= 0)
       {
-        LOG_ERROR("Invalid --min-token-rate option %s", optarg);
+        TRC_ERROR("Invalid --min-token-rate option %s", optarg);
         return -1;
       }
       break;
 
     case EXCEPTION_MAX_TTL:
       options.exception_max_ttl = atoi(optarg);
-      LOG_INFO("Max TTL after an exception set to %d",
+      TRC_INFO("Max TTL after an exception set to %d",
                options.exception_max_ttl);
+      break;
+
+    case HTTP_BLACKLIST_DURATION:
+      options.http_blacklist_duration = atoi(optarg);
+      TRC_INFO("HTTP blacklist duration set to %d",
+               options.http_blacklist_duration);
+      break;
+
+    case DIAMETER_BLACKLIST_DURATION:
+      options.diameter_blacklist_duration = atoi(optarg);
+      TRC_INFO("Diameter blacklist duration set to %d",
+               options.diameter_blacklist_duration);
       break;
 
     default:
       CL_RALF_INVALID_OPTION_C.log();
-      LOG_ERROR("Unknown option: %d.  Run with --help for options.\n", opt);
+      TRC_ERROR("Unknown option: %d.  Run with --help for options.\n", opt);
       return -1;
     }
   }
@@ -377,11 +409,11 @@ void signal_handler(int sig)
   signal(SIGSEGV, signal_handler);
 
   // Log the signal, along with a backtrace.
-  LOG_BACKTRACE("Signal %d caught", sig);
+  TRC_BACKTRACE("Signal %d caught", sig);
 
   // Ensure the log files are complete - the core file created by abort() below
   // will trigger the log files to be copied to the diags bundle
-  LOG_COMMIT();
+  TRC_COMMIT();
 
   // Check if there's a stored jmp_buf on the thread and handle if there is
   exception_handler->handle_exception();
@@ -415,6 +447,7 @@ int main(int argc, char**argv)
   options.http_port = 10888;
   options.http_threads = 1;
   options.billing_realm = "dest-realm.unknown";
+  options.billing_peer = "";
   options.max_peers = 2;
   options.access_log_enabled = false;
   options.log_to_file = false;
@@ -422,15 +455,20 @@ int main(int argc, char**argv)
   options.sas_server = "0.0.0.0";
   options.sas_system_name = "";
   options.alarms_enabled = false;
-  options.memcached_write_format = MemcachedWriteFormat::BINARY;
+  options.memcached_write_format = MemcachedWriteFormat::JSON;
   options.target_latency_us = 100000;
   options.max_tokens = 20;
   options.init_token_rate = 100.0;
   options.min_token_rate = 10.0;
   options.exception_max_ttl = 600;
+  options.http_blacklist_duration = HttpResolver::DEFAULT_BLACKLIST_DURATION;
+  options.diameter_blacklist_duration = DiameterResolver::DEFAULT_BLACKLIST_DURATION;
 
   boost::filesystem::path p = argv[0];
-  openlog(p.filename().c_str(), PDLOG_PID, PDLOG_LOCAL6);
+  // Copy the filename to a string so that we can be sure of its lifespan -
+  // the value passed to openlog must be valid for the duration of the program.
+  std::string filename = p.filename().c_str();
+  openlog(filename.c_str(), PDLOG_PID, PDLOG_LOCAL6);
   CL_RALF_STARTED.log();
 
   if (init_logging_options(argc, argv, options) != 0)
@@ -452,7 +490,7 @@ int main(int argc, char**argv)
     Log::setLogger(new Logger(options.log_directory, prog_name));
   }
 
-  LOG_STATUS("Log level set to %d", options.log_level);
+  TRC_STATUS("Log level set to %d", options.log_level);
 
   std::stringstream options_ss;
   for (int ii = 0; ii < argc; ii++)
@@ -462,7 +500,7 @@ int main(int argc, char**argv)
   }
   std::string options_str = "Command-line options were: " + options_ss.str();
 
-  LOG_INFO(options_str.c_str());
+  TRC_INFO(options_str.c_str());
 
   if (init_options(argc, argv, options) != 0)
   {
@@ -470,14 +508,14 @@ int main(int argc, char**argv)
     return 1;
   }
 
-  MemcachedStore* mstore = new MemcachedStore(false,
+  MemcachedStore* mstore = new MemcachedStore(true,
                                               "./cluster_settings",
                                               memcached_comm_monitor,
                                               vbucket_alarm);
 
   if (!(mstore->has_servers()))
   {
-    LOG_ERROR("./cluster_settings file does not contain a valid set of servers");
+    TRC_ERROR("./cluster_settings file does not contain a valid set of servers");
     return 1;
   };
 
@@ -535,14 +573,25 @@ int main(int argc, char**argv)
 
   Diameter::Stack* diameter_stack = Diameter::Stack::get_instance();
   Rf::Dictionary* dict = NULL;
-  diameter_stack->initialize();
-  diameter_stack->configure(options.diameter_conf,
-                            exception_handler,
-                            cdf_comm_monitor);
-  dict = new Rf::Dictionary();
-  diameter_stack->advertize_application(Diameter::Dictionary::Application::ACCT,
-                                        dict->RF);
-  diameter_stack->start();
+
+  try
+  {
+    diameter_stack->initialize();
+    diameter_stack->configure(options.diameter_conf,
+                              exception_handler,
+                              cdf_comm_monitor);
+    dict = new Rf::Dictionary();
+    diameter_stack->advertize_application(Diameter::Dictionary::Application::ACCT,
+                                          dict->RF);
+    diameter_stack->start();
+  }
+  catch (Diameter::Stack::Exception& e)
+  {
+    CL_RALF_DIAMETER_INIT_FAIL.log(e._func, e._rc);
+    closelog();
+    TRC_ERROR("Failed to initialize Diameter stack - function %s, rc %d", e._func, e._rc);
+    exit(2);
+  }
 
   SessionStore::SerializerDeserializer* serializer;
   std::vector<SessionStore::SerializerDeserializer*> deserializers;
@@ -581,8 +630,10 @@ int main(int argc, char**argv)
   }
 
   // Create a connection to Chronos.  This requires an HttpResolver.
-  LOG_STATUS("Creating connection to Chronos at %s using %s as the callback URI", local_chronos.c_str(), chronos_callback_addr.c_str());
-  HttpResolver* http_resolver = new HttpResolver(dns_resolver, http_af);
+  TRC_STATUS("Creating connection to Chronos at %s using %s as the callback URI", local_chronos.c_str(), chronos_callback_addr.c_str());
+  HttpResolver* http_resolver = new HttpResolver(dns_resolver,
+                                                 http_af,
+                                                 options.http_blacklist_duration);
   ChronosConnection* timer_conn = new ChronosConnection(local_chronos, chronos_callback_addr, http_resolver, chronos_comm_monitor);
 
   cfg->mgr = new SessionManager(store, dict, factory, timer_conn, diameter_stack, hc);
@@ -614,13 +665,16 @@ int main(int argc, char**argv)
   struct in6_addr dummy_addr;
   if (inet_pton(AF_INET6, options.local_host.c_str(), &dummy_addr) == 1)
   {
-    LOG_DEBUG("Local host is an IPv6 address");
+    TRC_DEBUG("Local host is an IPv6 address");
     diameter_af = AF_INET6;
   }
 
-  DiameterResolver* diameter_resolver = new DiameterResolver(dns_resolver, diameter_af);
+  DiameterResolver* diameter_resolver = new DiameterResolver(dns_resolver,
+                                                             diameter_af,
+                                                             options.diameter_blacklist_duration);
   RealmManager* realm_manager = new RealmManager(diameter_stack,
                                                  options.billing_realm,
+                                                 options.billing_peer,
                                                  options.max_peers,
                                                  diameter_resolver);
   realm_manager->start();

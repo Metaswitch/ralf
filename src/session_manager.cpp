@@ -68,17 +68,13 @@ void SessionManager::handle(Message* msg)
     if (sess == NULL)
     {
       // No record of the session - ignore the request
-      LOG_INFO("Session for %s not found in database, ignoring message", msg->call_id.c_str());
+      TRC_INFO("Session for %s not found in database, ignoring message", msg->call_id.c_str());
       delete msg; msg = NULL;
       return;
     }
 
     if (msg->record_type.isInterim())
     {
-      SAS::Event continued_rf(msg->trail, SASEvent::CONTINUED_RF_SESSION, 0);
-      continued_rf.add_var_param(sess->session_id);
-      SAS::report_event(continued_rf);
-
       sess->acct_record_number += 1;
       // Update the store with the incremented accounting record number
       bool success = _store->set_session_data(msg->call_id,
@@ -94,16 +90,12 @@ void SessionManager::handle(Message* msg)
     }
     else if  (msg->record_type.isStop())
     {
-      SAS::Event end_rf(msg->trail, SASEvent::END_RF_SESSION, 0);
-      end_rf.add_var_param(sess->session_id);
-      SAS::report_event(end_rf);
-
       // Delete the session from the store and cancel the timer
       _store->delete_session_data(msg->call_id,
                                   msg->role,
                                   msg->function,
                                   msg->trail);
-      LOG_INFO("Received STOP for session %s, deleting session and timer using timer ID %s", msg->call_id.c_str(), sess->timer_id.c_str());
+      TRC_INFO("Received STOP for session %s, deleting session and timer using timer ID %s", msg->call_id.c_str(), sess->timer_id.c_str());
 
       if (sess->timer_id != "NO_TIMER")
       {
@@ -173,18 +165,57 @@ std::string SessionManager::create_opaque_data(Message* msg)
   doc.Accept(w);
   std::string body = s.GetString();
 
-  LOG_DEBUG("Built INTERIM request body: %s", body.c_str());
+  TRC_DEBUG("Built INTERIM request body: %s", body.c_str());
 
   return body;
 }
 
-void SessionManager::on_ccf_response (bool accepted, uint32_t interim_interval, std::string session_id, int rc, Message* msg)
+// This function generates a SAS event based on the response from the CCF. This
+// describes the *logical* impact of the event (other events cover the protocol
+// flows).
+//
+// EVENT ACRs are explicitly *not* logged by this function. They have no impact
+// beyond the current transaction and can be debugged sufficiently using the
+// protocol flow.
+void SessionManager::sas_log_ccf_response(bool accepted,
+                                          const std::string& session_id,
+                                          Message* msg)
 {
-  // Log this here, as it's the first time we have access to the
-  // session ID for a new session
-  SAS::Event new_rf(msg->trail, SASEvent::NEW_RF_SESSION, 0);
-  new_rf.add_var_param(session_id);
-  SAS::report_event(new_rf);
+  int event_id;
+
+  // Work out what event to log.
+  if (msg->record_type.isStart())
+  {
+    event_id = accepted ? SASEvent::NEW_RF_SESSION_OK : SASEvent::NEW_RF_SESSION_ERR;
+  }
+  else if (msg->record_type.isInterim())
+  {
+    event_id = accepted ? SASEvent::CONTINUED_RF_SESSION_OK : SASEvent::CONTINUED_RF_SESSION_ERR;
+  }
+  else if (msg->record_type.isStop())
+  {
+    event_id = accepted ? SASEvent::END_RF_SESSION_OK : SASEvent::END_RF_SESSION_ERR;
+  }
+  else
+  {
+    // No special log required for event-based billing.
+    return;
+  }
+
+  SAS::Event event(msg->trail, event_id, 0);
+  event.add_static_param(msg->role);
+  event.add_static_param(msg->function);
+  event.add_var_param(session_id);
+  SAS::report_event(event);
+}
+
+void SessionManager::on_ccf_response(bool accepted,
+                                     uint32_t interim_interval,
+                                     std::string session_id,
+                                     int rc,
+                                     Message* msg)
+{
+  sas_log_ccf_response(accepted, session_id, msg);
 
   if (interim_interval == 0)
   {
@@ -239,7 +270,7 @@ void SessionManager::on_ccf_response (bool accepted, uint32_t interim_interval, 
          if (status != HTTP_OK)
          {
            // LCOV_EXCL_START
-           LOG_ERROR("Chronos POST failed");
+           TRC_ERROR("Chronos POST failed");
            // LCOV_EXCL_STOP
          }
       };
@@ -248,7 +279,7 @@ void SessionManager::on_ccf_response (bool accepted, uint32_t interim_interval, 
       new_timer.add_static_param(interim_interval);
       SAS::report_event(new_timer);
 
-      LOG_INFO("Writing session to store");
+      TRC_INFO("Writing session to store");
       SessionStore::Session* sess = new SessionStore::Session();
       sess->session_id = session_id;
       sess->interim_interval = interim_interval;
@@ -274,14 +305,14 @@ void SessionManager::on_ccf_response (bool accepted, uint32_t interim_interval, 
   }
   else
   {
-    LOG_WARNING("Session for %s received error from CDF", msg->call_id.c_str());
+    TRC_WARNING("Session for %s received error from CDF", msg->call_id.c_str());
     if (msg->record_type.isInterim())
     {
       if (rc == 5002)
       {
         // 5002 means the CDF has no record of this session. It's pointless to send any
         // more messages - delete the session from the store.
-        LOG_INFO("Session for %s received 5002 error from CDF, deleting", msg->call_id.c_str());
+        TRC_INFO("Session for %s received 5002 error from CDF, deleting", msg->call_id.c_str());
         _store->delete_session_data(msg->call_id,
                                     msg->role,
                                     msg->function,
@@ -294,7 +325,7 @@ void SessionManager::on_ccf_response (bool accepted, uint32_t interim_interval, 
 
         if (msg->session_refresh_time > interim_interval)
         {
-          LOG_INFO("Received INTERIM for session %s, updating timer using timer ID %s", msg->call_id.c_str(), msg->timer_id.c_str());
+          TRC_INFO("Received INTERIM for session %s, updating timer using timer ID %s", msg->call_id.c_str(), msg->timer_id.c_str());
 
           std::string timer_id = msg->timer_id;
           send_chronos_update(timer_id,

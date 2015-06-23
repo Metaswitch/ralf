@@ -1,6 +1,6 @@
 #/bin/sh
 
-# @file homestead.postinst
+# @file ralf.postinst
 #
 # Project Clearwater - IMS in the Cloud
 # Copyright (C) 2013  Metaswitch Networks Ltd
@@ -91,6 +91,13 @@ case "$1" in
         do
             $SCRIPT
         done
+
+        # Stop the cluster manager, so that it is restarted by Monit 
+        # and picks up the new plugins. We check whether the process is 
+        # installed to avoid warning logs when etcd isn't being used
+        if [ -x "/etc/init.d/clearwater-cluster-manager" ]; then
+          service clearwater-cluster-manager stop || /bin/true
+        fi  
 
         # Restart ralf.  Always do this by terminating ralf so monit will
         # restart it more-or-less immediately.  (monit restart seems to have

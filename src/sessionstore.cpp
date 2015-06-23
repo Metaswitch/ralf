@@ -57,8 +57,8 @@ SessionStore::SessionStore(Store *store,
 
 SessionStore::SessionStore(Store* store) : _store(store)
 {
-  _serializer = new BinarySerializerDeserializer();
-  _deserializers.push_back(new BinarySerializerDeserializer());
+  _serializer = new JsonSerializerDeserializer();
+  _deserializers.push_back(new JsonSerializerDeserializer());
 }
 
 SessionStore::~SessionStore()
@@ -79,7 +79,7 @@ SessionStore::Session* SessionStore::get_session_data(const std::string& call_id
                                                       SAS::TrailId trail)
 {
   std::string key = create_key(call_id, role, function);
-  LOG_DEBUG("Retrieving session data for %s", key.c_str());
+  TRC_DEBUG("Retrieving session data for %s", key.c_str());
   Session* session = NULL;
 
   std::string data;
@@ -89,7 +89,7 @@ SessionStore::Session* SessionStore::get_session_data(const std::string& call_id
   if (status == Store::Status::OK && !data.empty())
   {
     // Retrieved the data, so deserialize it.
-    LOG_DEBUG("Retrieved record, CAS = %ld", cas);
+    TRC_DEBUG("Retrieved record, CAS = %ld", cas);
     session = deserialize_session(data);
 
     if (session != NULL)
@@ -99,7 +99,7 @@ SessionStore::Session* SessionStore::get_session_data(const std::string& call_id
     else
     {
       // Could not deserialize the record. Treat it as not found.
-      LOG_INFO("Failed to deserialize record");
+      TRC_INFO("Failed to deserialize record");
       SAS::Event event(trail, SASEvent::SESSION_DESERIALIZATION_FAILED, 0);
       event.add_var_param(call_id);
       event.add_var_param(data);
@@ -117,7 +117,7 @@ bool SessionStore::set_session_data(const std::string& call_id,
                                     SAS::TrailId trail)
 {
   std::string key = create_key(call_id, role, function);
-  LOG_DEBUG("Saving session data for %s, CAS = %ld", key.c_str(), session->_cas);
+  TRC_DEBUG("Saving session data for %s, CAS = %ld", key.c_str(), session->_cas);
 
   std::string data = serialize_session(session);
 
@@ -127,7 +127,7 @@ bool SessionStore::set_session_data(const std::string& call_id,
                                           session->_cas,
                                           session->session_refresh_time,
                                           trail);
-  LOG_DEBUG("Store returned %d", status);
+  TRC_DEBUG("Store returned %d", status);
 
   return (status = Store::Status::OK);
 }
@@ -138,10 +138,10 @@ bool SessionStore::delete_session_data(const std::string& call_id,
                                        SAS::TrailId trail)
 {
   std::string key = create_key(call_id, role, function);
-  LOG_DEBUG("Deleting session data for %s", key.c_str());
+  TRC_DEBUG("Deleting session data for %s", key.c_str());
 
   Store::Status status = _store->delete_data("session", key, trail);
-  LOG_DEBUG("Store returned %d", status);
+  TRC_DEBUG("Store returned %d", status);
 
   return (status = Store::Status::OK);
 }
@@ -163,18 +163,18 @@ SessionStore::Session* SessionStore::deserialize_session(const std::string& data
   {
     SerializerDeserializer* deserializer = *it;
 
-    LOG_DEBUG("Try to deserialize record with '%s' deserializer",
+    TRC_DEBUG("Try to deserialize record with '%s' deserializer",
               deserializer->name().c_str());
     session = deserializer->deserialize_session(data);
 
     if (session != NULL)
     {
-      LOG_DEBUG("Deserialization succeeded");
+      TRC_DEBUG("Deserialization succeeded");
       break;
     }
     else
     {
-      LOG_DEBUG("Deserialization failed");
+      TRC_DEBUG("Deserialization failed");
     }
   }
 
@@ -233,7 +233,7 @@ SessionStore::Session* SessionStore::BinarySerializerDeserializer::
 #define ASSERT_NOT_EOF(STREAM)                                                 \
 if ((STREAM).eof())                                                            \
 {                                                                              \
-  LOG_INFO("Failed to deserialize binary document (hit EOF at %s:%d)",         \
+  TRC_INFO("Failed to deserialize binary document (hit EOF at %s:%d)",         \
            __FILE__, __LINE__);                                                \
   delete session; session = NULL;                                              \
   return NULL;                                                                 \
@@ -324,14 +324,14 @@ std::string SessionStore::JsonSerializerDeserializer::
 SessionStore::Session* SessionStore::JsonSerializerDeserializer::
   deserialize_session(const std::string& data)
 {
-  LOG_DEBUG("Deserialize JSON document: %s", data.c_str());
+  TRC_DEBUG("Deserialize JSON document: %s", data.c_str());
 
   rapidjson::Document doc;
   doc.Parse<0>(data.c_str());
 
   if (doc.HasParseError())
   {
-    LOG_DEBUG("Failed to parse document");
+    TRC_DEBUG("Failed to parse document");
     return NULL;
   }
 
@@ -359,7 +359,7 @@ SessionStore::Session* SessionStore::JsonSerializerDeserializer::
   }
   catch(JsonFormatError err)
   {
-    LOG_INFO("Failed to deserialize JSON document (hit error at %s:%d)",
+    TRC_INFO("Failed to deserialize JSON document (hit error at %s:%d)",
              err._file, err._line);
     delete session; session = NULL;
   }
