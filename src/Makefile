@@ -120,6 +120,7 @@ LDFLAGS += -lzmq \
            -lfdproto \
            -ljsoncpp \
            -lsas \
+           -lz \
            -lcurl \
            -lpthread \
            -lcares \
