@@ -127,7 +127,9 @@ LDFLAGS += -lzmq \
            -lboost_date_time \
            -lc \
            -lboost_system \
-           -lboost_filesystem
+           -lboost_filesystem \
+           $(shell net-snmp-config --netsnmp-agent-libs)
+
 
 # Test build uses just-built libraries, which may not be installed
 LDFLAGS_TEST += -Wl,-rpath=$(ROOT)/usr/lib
