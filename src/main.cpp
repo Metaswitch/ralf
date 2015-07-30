@@ -61,6 +61,7 @@
 #include "realmmanager.h"
 #include "communicationmonitor.h"
 #include "exception_handler.h"
+#include "ralf_alarmdefinition.h"
 
 enum OptionTypes
 {
