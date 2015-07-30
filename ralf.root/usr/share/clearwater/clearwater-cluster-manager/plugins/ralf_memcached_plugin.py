@@ -36,7 +36,7 @@ from metaswitch.clearwater.cluster_manager.plugin_base import \
 from metaswitch.clearwater.cluster_manager.plugin_utils import \
     run_command, write_memcached_cluster_settings
 from metaswitch.clearwater.cluster_manager.alarms import issue_alarm
-from metaswitch.clearwater.cluster_manager import pdlogs, constants
+from metaswitch.clearwater.cluster_manager import pdlogs, alarm_constants
 import logging
 import os
 
@@ -45,7 +45,7 @@ _log = logging.getLogger("ralf_memcached_plugin")
 
 class RalfMemcachedPlugin(SynchroniserPluginBase):
     def __init__(self, params):
-        issue_alarm(constants.RAISE_MEMCACHED_NOT_YET_CLUSTERED)
+        issue_alarm(alarm_constants.MEMCACHED_NOT_YET_CLUSTERED_MAJOR)
         pdlogs.NOT_YET_CLUSTERED_ALARM.log(cluster_desc=self.cluster_description())
         self._key = "/clearwater/{}/ralf/clustering/memcached".format(params.local_site)
 
@@ -72,7 +72,7 @@ class RalfMemcachedPlugin(SynchroniserPluginBase):
 
     def on_stable_cluster(self, cluster_view):
         self.on_cluster_changing(cluster_view)
-        issue_alarm(constants.CLEAR_MEMCACHED_NOT_YET_CLUSTERED)
+        issue_alarm(alarm_constants.MEMCACHED_NOT_YET_CLUSTERED_CLEARED)
 
     def on_leaving_cluster(self, cluster_view):
         pass
