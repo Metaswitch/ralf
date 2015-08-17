@@ -1,3 +1,7 @@
+#!/bin/bash
+
+# @file ralf_restart
+#
 # Project Clearwater - IMS in the Cloud
 # Copyright (C) 2015  Metaswitch Networks Ltd
 #
@@ -30,53 +34,4 @@
 # under which the OpenSSL Project distributes the OpenSSL toolkit software,
 # as those licenses appear in the file LICENSE-OPENSSL.
 
-
-from metaswitch.clearwater.cluster_manager.plugin_base import \
-    SynchroniserPluginBase
-from metaswitch.clearwater.cluster_manager.plugin_utils import \
-    run_command, write_memcached_cluster_settings
-from metaswitch.clearwater.cluster_manager.alarms import issue_alarm
-from metaswitch.clearwater.cluster_manager import pdlogs, alarm_constants
-import logging
-import os
-
-_log = logging.getLogger("ralf_memcached_plugin")
-
-
-class RalfMemcachedPlugin(SynchroniserPluginBase):
-    def __init__(self, params):
-        issue_alarm(alarm_constants.MEMCACHED_NOT_YET_CLUSTERED_MAJOR)
-        pdlogs.NOT_YET_CLUSTERED_ALARM.log(cluster_desc=self.cluster_description())
-        self._key = "/{}/{}/ralf/clustering/memcached".format(params.etcd_key, params.local_site)
-
-    def key(self):
-        return self._key
-
-    def files(self):
-        return ["/etc/clearwater/cluster_settings"]
-
-    def cluster_description(self):
-        return "local Ralf memcached cluster"
-
-    def on_cluster_changing(self, cluster_view):
-        write_memcached_cluster_settings("/etc/clearwater/cluster_settings",
-                                         cluster_view)
-        run_command("/usr/share/clearwater/bin/reload_memcached_users")
-
-    def on_joining_cluster(self, cluster_view):
-        self.on_cluster_changing(cluster_view)
-
-    def on_new_cluster_config_ready(self, cluster_view):
-        run_command("service astaire reload")
-        run_command("service astaire wait-sync")
-
-    def on_stable_cluster(self, cluster_view):
-        self.on_cluster_changing(cluster_view)
-        issue_alarm(alarm_constants.MEMCACHED_NOT_YET_CLUSTERED_CLEARED)
-
-    def on_leaving_cluster(self, cluster_view):
-        pass
-
-
-def load_as_plugin(params):
-    return RalfMemcachedPlugin(params)
+service ralf stop
