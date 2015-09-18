@@ -563,3 +563,34 @@ TEST_F(SessionManagerTest, HealthCheckFailureTest)
   delete store;
   delete memstore;
 }
+
+TEST_F(SessionManagerTest, CorrectTagForwarded)
+{
+  LocalStore* memstore = new LocalStore();
+  SessionStore* store = new SessionStore(memstore);
+  MockChronosConnection* fake_chronos = new MockChronosConnection("http://localhost:1234");
+  MockHealthChecker* hc = new MockHealthChecker();
+  DummyErrorPeerMessageSenderFactory* fail_factory = new DummyErrorPeerMessageSenderFactory(BILLING_REALM);
+  SessionManager* mgr = new SessionManager(store, _dict, fail_factory, fake_chronos, _diameter_stack, hc);
+  SessionStore::Session* sess = NULL;
+
+
+  Message* start_msg = new Message("CALL_ID_FOUR", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(2), 300, FAKE_TRAIL_ID);
+
+  // When the CDF accepts a message, we should treat that as
+  // healthy behaviour
+  const std::vector<std::string> tags = {"CALL"};
+  EXPECT_CALL(*fake_chronos, send_post(_, _, _, _, _, _, tags)).Times(1);
+  mgr->handle(start_msg);
+
+  delete sess;
+  sess = NULL;
+
+  delete mgr;
+  delete hc;
+  delete fail_factory;
+  delete fake_chronos;
+  delete store;
+  delete memstore;
+}
+
