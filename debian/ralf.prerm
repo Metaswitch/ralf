@@ -79,6 +79,7 @@ case "$1" in
         # Use || /bin/true to ignore a failure, because set -e is in effect.
         rm -f /etc/monit/conf.d/$NAME.monit
         reload clearwater-monit &> /dev/null || true
+        rm -f /usr/share/clearwater/clearwater-cluster-manager/plugins/$NAME*
         service $NAME stop || true
         if [ $1 != "upgrade" ]; then
             remove_user
