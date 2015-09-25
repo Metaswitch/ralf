@@ -570,10 +570,9 @@ TEST_F(SessionManagerTest, CorrectTagForwarded)
   SessionStore* store = new SessionStore(memstore);
   MockChronosConnection* fake_chronos = new MockChronosConnection("http://localhost:1234");
   MockHealthChecker* hc = new MockHealthChecker();
-  DummyErrorPeerMessageSenderFactory* fail_factory = new DummyErrorPeerMessageSenderFactory(BILLING_REALM);
-  SessionManager* mgr = new SessionManager(store, _dict, fail_factory, fake_chronos, _diameter_stack, hc);
+  DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory(BILLING_REALM);
+  SessionManager* mgr = new SessionManager(store, _dict, factory, fake_chronos, _diameter_stack, hc);
   SessionStore::Session* sess = NULL;
-
 
   Message* start_msg = new Message("CALL_ID_FOUR", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(2), 300, FAKE_TRAIL_ID);
 
@@ -588,7 +587,7 @@ TEST_F(SessionManagerTest, CorrectTagForwarded)
 
   delete mgr;
   delete hc;
-  delete fail_factory;
+  delete factory;
   delete fake_chronos;
   delete store;
   delete memstore;
