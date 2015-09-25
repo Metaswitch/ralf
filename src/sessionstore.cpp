@@ -125,7 +125,7 @@ bool SessionStore::set_session_data(const std::string& call_id,
                                           key,
                                           data,
                                           session->_cas,
-                                          session->session_refresh_time,
+                                          2 * session->session_refresh_time,
                                           trail);
   TRC_DEBUG("Store returned %d", status);
 

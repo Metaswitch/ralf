@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# @file ralf
+# @file ralf_reload
 #
 # Project Clearwater - IMS in the Cloud
-# Copyright (C) 2014 Metaswitch Networks Ltd
+# Copyright (C) 2015  Metaswitch Networks Ltd
 #
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the
@@ -34,27 +34,4 @@
 # under which the OpenSSL Project distributes the OpenSSL toolkit software,
 # as those licenses appear in the file LICENSE-OPENSSL.
 
-ralf_listen_port=3869
-ralf_secure_listen_port=5659
-acl_required=false
-check_destination_host=true
-. /etc/clearwater/config
-
-# Allow a specific FQDN for Ralf to be set (in case this is an
-# all-in-one node running both ralf and homestead Diameter stacks).
-# Otherwise, fall back to the public hostname.
-
-identity=$ralf_diameteridentity
-
-if [ -n "$ralf_hostname" ] && [ -n "$public_hostname" ];
-then
-  if [[ -z "$identity" ]];
-  then
-    identity=$public_hostname
-  fi
-
-  # Strip any characters not valid in an FQDN out of ralf_hostname (for
-  # example, it might be an IPv6 address)
-  realm=$(echo $ralf_hostname | sed -e 's/:[^:]*$//g' | sed -e 's/^\[//g' | sed -e 's/\]$//g')
-  /usr/share/clearwater/bin/generic_create_diameterconf ralf $identity $realm $ralf_listen_port $ralf_secure_listen_port $acl_required $check_destination_host
-fi
+service ralf reload

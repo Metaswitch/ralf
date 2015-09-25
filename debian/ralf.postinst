@@ -87,10 +87,7 @@ case "$1" in
         [ ! -x /usr/share/clearwater/bin/clearwater-logging-update ] || /usr/share/clearwater/bin/clearwater-logging-update
         add_section /etc/security/limits.conf ralf /etc/security/limits.conf.ralf
 
-        for SCRIPT in $(ls -1 /usr/share/clearwater/infrastructure/scripts/$NAME* 2>/dev/null)
-        do
-            $SCRIPT
-        done
+        service clearwater-infrastructure restart
 
         # Stop the cluster manager, so that it is restarted by Monit 
         # and picks up the new plugins. We check whether the process is 
