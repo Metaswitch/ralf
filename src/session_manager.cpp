@@ -257,6 +257,7 @@ void SessionManager::on_ccf_response(bool accepted,
 
       // Set the timer id initially to NO_TIMER - this isn't included in the path of the POST
       std::string timer_id = NO_TIMER;
+      std::vector<std::string> tags = {"CALL"};
 
       if (msg->session_refresh_time > interim_interval)
       {
@@ -265,7 +266,8 @@ void SessionManager::on_ccf_response(bool accepted,
                                                   msg->session_refresh_time, // repeat-for
                                                   "/call-id/"+Utils::url_escape(msg->call_id)+"?timer-interim=true",
                                                   create_opaque_data(msg),
-                                                  msg->trail);
+                                                  msg->trail,
+                                                  tags);
 
          if (status != HTTP_OK)
          {
@@ -379,6 +381,8 @@ void SessionManager::send_chronos_update(std::string& timer_id,
                                          const std::string& opaque_data,
                                          SAS::TrailId trail)
 {
+  std::vector<std::string> tags = {"CALL"};
+
   if (timer_id == NO_TIMER)
   {
     // LCOV_EXCL_START
@@ -388,7 +392,8 @@ void SessionManager::send_chronos_update(std::string& timer_id,
                            session_refresh_time,
                            callback_uri,
                            opaque_data,
-                           trail);
+                           trail,
+                           tags);
     // LCOV_EXCL_STOP
   }
   else
@@ -398,6 +403,7 @@ void SessionManager::send_chronos_update(std::string& timer_id,
                           session_refresh_time,
                           callback_uri,
                           opaque_data,
-                          trail);
+                          trail,
+                          tags);
   }
 }
