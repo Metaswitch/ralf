@@ -25,4 +25,4 @@ The `timer-interim` API is used by Chronos to trigger an INTERIM ACR. The CDF sp
 
 ## Diameter
 
-Ralf builds and sends ACR messages using the standard Diameter protocol. The content of these ACRs are largely defined by the HTTP body received, but they are compliant with [RFC6733](https://tools.ietf.org/html/rfc6733) and [3GPP TS32.299](http://www.3gpp.org/DynaReport/32299.htm).
+Ralf builds and sends ACR messages to a CCF using the standard Diameter protocol. The content of these ACRs are largely defined by the HTTP body received, but they are compliant with [RFC6733](https://tools.ietf.org/html/rfc6733) and [3GPP TS32.299](http://www.3gpp.org/DynaReport/32299.htm).
