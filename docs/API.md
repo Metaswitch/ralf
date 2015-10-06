@@ -1,5 +1,7 @@
 # Ralf - API Guide
 
+## HTTP
+
 Ralf provides a RESTful API which can be used by any component wishing to send Rf billing messages.
 
     /call-id/<call ID>
@@ -19,4 +21,8 @@ The `event` object contains the data for the ACR. Each field is mapped exactly t
 
 For more detailed information on the fields in an ACR, see [RFC6733](https://tools.ietf.org/html/rfc6733) and [3GPP TS32.299](http://www.3gpp.org/DynaReport/32299.htm).
 
-The `timer-interim` API is used by Chronos to trigger an INTERIM ACR. The CDF specifies a session refresh time, and so Ralf must send INTERIM ACRs regularly to keep the session alive.
+The `timer-interim` API is used by Chronos to trigger an INTERIM ACR. The CDF specifies a session refresh time, and so Ralf must send INTERIM ACRs regularly to keep the session alive. This API is distinct from the API that is used for a real INTERIM ACR so that Ralf can eventually send a STOP ACR to close the Rf session if it hasn't received a real INTERIM for a long period of time.
+
+## Diameter
+
+Ralf builds and sends ACR messages using the standard Diameter protocol. The content of these ACRs are largely defined by the HTTP body received, but they are compliant with [RFC6733](https://tools.ietf.org/html/rfc6733) and [3GPP TS32.299](http://www.3gpp.org/DynaReport/32299.htm).
