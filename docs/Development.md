@@ -39,9 +39,6 @@ This accesses the repository over SSH on Github, and will not work unless you ha
 	
 ## Building Binaries
 
-Note that the first build can take a long time. It takes 10-15 minutes on 
-an EC2 m1.small instance.
-
 To build ralf and all its dependencies, change to the top-level `ralf`
 directory and issue `make`.
 
@@ -83,12 +80,12 @@ framework, so the output from the test run looks something like this.
     [==========] Running 92 tests from 20 test cases.
     [----------] Global test environment set-up.
 	...
-	[----------] 2 tests from DiameterStackTest
-	[ RUN      ] DiameterStackTest.SimpleMainline
-	[       OK ] DiameterStackTest.SimpleMainline (394 ms)
-	[ RUN      ] DiameterStackTest.AdvertizeApplication
-	[       OK ] DiameterStackTest.AdvertizeApplication (1193 ms)
-	[----------] 2 tests from DiameterStackTest (1587 ms total)
+	[----------] 2 tests from BasicSessionStoreTest/0, where TypeParam = SessionStore::BinarySerializerDeserializer
+	[ RUN      ] BasicSessionStoreTest/0.SimpleTest
+	[       OK ] BasicSessionStoreTest/0.SimpleTest (0 ms)
+	[ RUN      ] BasicSessionStoreTest/0.DeletionTest
+	[       OK ] BasicSessionStoreTest/0.DeletionTest (0 ms)
+	[----------] 2 tests from BasicSessionStoreTest/0 (0 ms total)
 	...
     [----------] Global test environment tear-down
     [==========] 92 tests from 20 test cases ran. (27347 ms total)
