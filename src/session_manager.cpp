@@ -73,10 +73,12 @@ void SessionManager::handle(Message* msg)
       return;
     }
 
+    // Increment the accounting record number before building new ACR.
+    sess->acct_record_number += 1;
+
     if (msg->record_type.isInterim())
     {
-      sess->acct_record_number += 1;
-      // Update the store with the incremented accounting record number
+      // Update the store with the incremented accounting record number.
       bool success = _store->set_session_data(msg->call_id,
                                               msg->role,
                                               msg->function,
