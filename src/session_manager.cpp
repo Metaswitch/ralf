@@ -93,10 +93,17 @@ void SessionManager::handle(Message* msg)
     else if  (msg->record_type.isStop())
     {
       // Delete the session from the store and cancel the timer
-      _store->delete_session_data(msg->call_id,
-                                  msg->role,
-                                  msg->function,
-                                  msg->trail);
+      bool success =_store->delete_session_data(msg->call_id,
+                                                msg->role,
+                                                msg->function,
+                                                msg->trail);
+
+      if (!success)
+      {
+        // Someone has written conflicting data since we read this, so start processing this message again
+        return this->handle(msg);  // LCOV_EXCL_LINE - no conflicts in UT
+      }
+
       TRC_INFO("Received STOP for session %s, deleting session and timer using timer ID %s", msg->call_id.c_str(), sess->timer_id.c_str());
 
       if (sess->timer_id != "NO_TIMER")
