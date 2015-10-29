@@ -129,7 +129,7 @@ bool SessionStore::set_session_data(const std::string& call_id,
                                           trail);
   TRC_DEBUG("Store returned %d", status);
 
-  return (status = Store::Status::OK);
+  return (status == Store::Status::OK);
 }
 
 bool SessionStore::delete_session_data(const std::string& call_id,
@@ -143,7 +143,7 @@ bool SessionStore::delete_session_data(const std::string& call_id,
   Store::Status status = _store->delete_data("session", key, trail);
   TRC_DEBUG("Store returned %d", status);
 
-  return (status = Store::Status::OK);
+  return (status == Store::Status::OK);
 }
 
 // Serialize a session to a string that can later be loaded by deserialize_session().
