@@ -65,8 +65,7 @@
 
 enum OptionTypes
 {
-  ALARMS_ENABLED=256+1,
-  DNS_SERVER,
+  DNS_SERVER=256+1,
   MEMCACHED_WRITE_FORMAT,
   TARGET_LATENCY_US,
   MAX_TOKENS,
@@ -101,7 +100,6 @@ struct options
   int log_level;
   std::string sas_server;
   std::string sas_system_name;
-  bool alarms_enabled;
   MemcachedWriteFormat memcached_write_format;
   int target_latency_us;
   int max_tokens;
@@ -126,7 +124,6 @@ const static struct option long_opt[] =
   {"log-file",                    required_argument, NULL, 'F'},
   {"log-level",                   required_argument, NULL, 'L'},
   {"sas",                         required_argument, NULL, 's'},
-  {"alarms-enabled",              no_argument,       NULL, ALARMS_ENABLED},
   {"help",                        no_argument,       NULL, 'h'},
   {"memcached-write-format",      required_argument, 0,    MEMCACHED_WRITE_FORMAT},
   {"target-latency-us",           required_argument, NULL, TARGET_LATENCY_US},
@@ -164,7 +161,6 @@ void usage(void)
        "                            Use specified host as Service Assurance Server and specified\n"
        "                            system name to identify this system to SAS. If this option isn't\n"
        "                            specified, SAS is disabled\n"
-       "     --alarms-enabled       Whether SNMP alarms are enabled (default: false)\n"
        "     --memcached-write-format\n"
        "                            The data format to use when writing sessions\n"
        "                            to memcached. Values are 'binary' and 'json'\n"
@@ -287,11 +283,6 @@ int init_options(int argc, char**argv, struct options& options)
       TRC_INFO("Access log: %s", optarg);
       options.access_log_enabled = true;
       options.access_log_directory = std::string(optarg);
-      break;
-
-    case ALARMS_ENABLED:
-      TRC_INFO("SNMP alarms are enabled");
-      options.alarms_enabled = true;
       break;
 
     case DNS_SERVER:
@@ -450,7 +441,6 @@ int main(int argc, char**argv)
   options.log_level = 0;
   options.sas_server = "0.0.0.0";
   options.sas_system_name = "";
-  options.alarms_enabled = false;
   options.memcached_write_format = MemcachedWriteFormat::JSON;
   options.target_latency_us = 100000;
   options.max_tokens = 20;
@@ -504,31 +494,26 @@ int main(int argc, char**argv)
     return 1;
   }
 
-  CommunicationMonitor* cdf_comm_monitor = NULL;
-  CommunicationMonitor* chronos_comm_monitor = NULL;
-  CommunicationMonitor* memcached_comm_monitor = NULL;
-  Alarm* vbucket_alarm = NULL;
 
-  if (options.alarms_enabled)
-  {
-    // Create Ralf's alarm objects. Note that the alarm identifier strings must match those
-    // in the alarm definition JSON file exactly.
-    cdf_comm_monitor = new CommunicationMonitor(new Alarm("ralf", AlarmDef::RALF_CDF_COMM_ERROR,
-                                                                  AlarmDef::CRITICAL));
+  // Create Ralf's alarm objects. Note that the alarm identifier strings must match those
+  // in the alarm definition JSON file exactly.
+  CommunicationMonitor* cdf_comm_monitor = new CommunicationMonitor(new Alarm("ralf",
+                                                                              AlarmDef::RALF_CDF_COMM_ERROR,
+                                                                              AlarmDef::CRITICAL));
 
-    chronos_comm_monitor = new CommunicationMonitor(new Alarm("ralf", AlarmDef::RALF_CHRONOS_COMM_ERROR,
-                                                                      AlarmDef::CRITICAL));
+  CommunicationMonitor* chronos_comm_monitor = new CommunicationMonitor(new Alarm("ralf",
+                                                                                  AlarmDef::RALF_CHRONOS_COMM_ERROR,
+                                                                                  AlarmDef::CRITICAL));
 
-    memcached_comm_monitor = new CommunicationMonitor(new Alarm("ralf", AlarmDef::RALF_MEMCACHED_COMM_ERROR,
-                                                                        AlarmDef::CRITICAL));
+  CommunicationMonitor* memcached_comm_monitor = new CommunicationMonitor(new Alarm("ralf",
+                                                                                    AlarmDef::RALF_MEMCACHED_COMM_ERROR,
+                                                                                    AlarmDef::CRITICAL));
 
-    vbucket_alarm = new Alarm("ralf", AlarmDef::RALF_VBUCKET_ERROR,
-                                      AlarmDef::MAJOR);
+  Alarm* vbucket_alarm = new Alarm("ralf", AlarmDef::RALF_VBUCKET_ERROR, AlarmDef::MAJOR);
 
-    // Start the alarm request agent
-    AlarmReqAgent::get_instance().start();
-    AlarmState::clear_all("ralf");
-  }
+  // Start the alarm request agent
+  AlarmReqAgent::get_instance().start();
+  AlarmState::clear_all("ralf");
 
   MemcachedStore* mstore = new MemcachedStore(true,
                                               "./cluster_settings",
@@ -706,17 +691,14 @@ int main(int argc, char**argv)
   delete exception_handler; exception_handler = NULL;
   delete hc; hc = NULL;
 
-  if (options.alarms_enabled)
-  {
-    // Stop the alarm request agent
-    AlarmReqAgent::get_instance().stop();
+  // Stop the alarm request agent
+  AlarmReqAgent::get_instance().stop();
 
-    // Delete Ralf's alarm objects
-    delete cdf_comm_monitor;
-    delete chronos_comm_monitor;
-    delete memcached_comm_monitor;
-    delete vbucket_alarm;
-  }
+  // Delete Ralf's alarm objects
+  delete cdf_comm_monitor;
+  delete chronos_comm_monitor;
+  delete memcached_comm_monitor;
+  delete vbucket_alarm;
 
   closelog();
   signal(SIGTERM, SIG_DFL);
