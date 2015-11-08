@@ -62,6 +62,7 @@
 #include "communicationmonitor.h"
 #include "exception_handler.h"
 #include "ralf_alarmdefinition.h"
+#include "namespace_hop.h"
 
 enum OptionTypes
 {
@@ -536,7 +537,8 @@ int main(int argc, char**argv)
             "ralf",
             SASEvent::CURRENT_RESOURCE_BUNDLE,
             options.sas_server,
-            sas_write);
+            sas_write,
+            create_connection_in_management_namespace);
 
   LoadMonitor* load_monitor = new LoadMonitor(options.target_latency_us,
                                               options.max_tokens,
@@ -544,11 +546,7 @@ int main(int argc, char**argv)
                                               options.min_token_rate);
 
   HealthChecker* hc = new HealthChecker();
-  pthread_t health_check_thread;
-  pthread_create(&health_check_thread,
-                 NULL,
-                 &HealthChecker::static_main_thread_function,
-                 (void*)hc);
+  hc->start_thread();
 
   // Create an exception handler. The exception handler doesn't need
   // to quiesce the process before killing it.
@@ -686,8 +684,7 @@ int main(int argc, char**argv)
   delete dns_resolver; dns_resolver = NULL;
   delete load_monitor; load_monitor = NULL;
 
-  hc->terminate();
-  pthread_join(health_check_thread, NULL);
+  hc->stop_thread();
   delete exception_handler; exception_handler = NULL;
   delete hc; hc = NULL;
 

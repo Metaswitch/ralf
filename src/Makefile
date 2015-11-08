@@ -48,7 +48,8 @@ TARGET_SOURCES := accesslogger.cpp \
                   communicationmonitor.cpp \
                   exception_handler.cpp \
                   health_checker.cpp \
-                  counter.cpp
+                  counter.cpp \
+                  namespace_hop.cpp
 
 TARGET_SOURCES_BUILD := main.cpp
 
