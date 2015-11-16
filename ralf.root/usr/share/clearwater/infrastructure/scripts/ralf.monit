@@ -41,7 +41,7 @@ cat > /etc/monit/conf.d/ralf.monit <<EOF
 # Check the Ralf process.
 
 # Monitor the service's PID file and memory use.
-check process ralf_process with pidfile /var/run/ralf.pid
+check process ralf_process with pidfile /var/run/ralf/ralf.pid
   group ralf 
 
   # The start, stop and restart commands are linked to alarms
