@@ -75,7 +75,8 @@ enum OptionTypes
   EXCEPTION_MAX_TTL,
   BILLING_PEER,
   HTTP_BLACKLIST_DURATION,
-  DIAMETER_BLACKLIST_DURATION
+  DIAMETER_BLACKLIST_DURATION,
+  PIDFILE
 };
 
 enum struct MemcachedWriteFormat
@@ -109,6 +110,7 @@ struct options
   int exception_max_ttl;
   int http_blacklist_duration;
   int diameter_blacklist_duration;
+  std::string pidfile;
 };
 
 const static struct option long_opt[] =
@@ -134,6 +136,7 @@ const static struct option long_opt[] =
   {"exception-max-ttl",           required_argument, NULL, EXCEPTION_MAX_TTL},
   {"http-blacklist-duration",     required_argument, NULL, HTTP_BLACKLIST_DURATION},
   {"diameter-blacklist-duration", required_argument, NULL, DIAMETER_BLACKLIST_DURATION},
+  {"pidfile",                     required_argument, NULL, PIDFILE},
   {NULL,                          0,                 NULL, 0},
 };
 
@@ -181,6 +184,7 @@ void usage(void)
        "                            The amount of time to blacklist an HTTP peer when it is unresponsive.\n"
        "     --diameter-blacklist-duration <secs>\n"
        "                            The amount of time to blacklist a Diameter peer when it is unresponsive.\n"
+       "     --pidfile=<filename>   Write pidfile\n"
        " -h, --help                 Show this help screen\n"
       );
 }
@@ -375,6 +379,10 @@ int init_options(int argc, char**argv, struct options& options)
                options.diameter_blacklist_duration);
       break;
 
+    case PIDFILE:
+      options.pidfile = std::string(optarg);
+      break;
+
     default:
       CL_RALF_INVALID_OPTION_C.log();
       TRC_ERROR("Unknown option: %d.  Run with --help for options.\n", opt);
@@ -495,6 +503,16 @@ int main(int argc, char**argv)
     return 1;
   }
 
+  if (options.pidfile != "")
+  {
+    int rc = Utils::lock_and_write_pidfile(options.pidfile);
+    if (rc == -1)
+    {
+      // Failure to acquire pidfile lock
+      TRC_ERROR("Could not write pidfile - exiting");
+      return 2;
+    }
+  }
 
   // Create Ralf's alarm objects. Note that the alarm identifier strings must match those
   // in the alarm definition JSON file exactly.
