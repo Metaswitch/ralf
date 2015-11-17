@@ -137,6 +137,7 @@ TEST_F(SessionManagerTest, SimpleTest)
   SessionStore* store = new SessionStore(memstore);
   DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory(BILLING_REALM);
   MockChronosConnection* fake_chronos = new MockChronosConnection("http://localhost:1234");
+  fake_chronos->accept_all_requests();
   HealthChecker* hc = new HealthChecker();
   SessionManager* mgr = new SessionManager(store, _dict, factory, fake_chronos, _diameter_stack, hc);
   SessionStore::Session* sess = NULL;
@@ -184,6 +185,7 @@ TEST_F(SessionManagerTest, TimerIDTest)
   SessionStore* store = new SessionStore(memstore);
   DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory(BILLING_REALM);
   MockChronosConnection* fake_chronos = new MockChronosConnection("http://localhost:1234");
+  fake_chronos->accept_all_requests();
   HealthChecker* hc = new HealthChecker();
   SessionManager* mgr = new SessionManager(store, _dict, factory, fake_chronos, _diameter_stack, hc);
   SessionStore::Session* sess = NULL;
@@ -241,6 +243,7 @@ TEST_F(SessionManagerTest, TimeUpdateTest)
   SessionStore* store = new SessionStore(memstore);
   DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory(BILLING_REALM);
   MockChronosConnection* fake_chronos = new MockChronosConnection("http://localhost:1234");
+  fake_chronos->accept_all_requests();
   HealthChecker* hc = new HealthChecker();
   SessionManager* mgr = new SessionManager(store, _dict, factory, fake_chronos, _diameter_stack, hc);
   SessionStore::Session* sess = NULL;
@@ -287,6 +290,7 @@ TEST_F(SessionManagerTest, NewCallTest)
   DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory(BILLING_REALM);
   HealthChecker* hc = new HealthChecker();
   MockChronosConnection* fake_chronos = new MockChronosConnection("http://localhost:1234");
+  fake_chronos->accept_all_requests();
   SessionManager* mgr = new SessionManager(store, _dict, factory, fake_chronos, _diameter_stack, hc);
   SessionStore::Session* sess = NULL;
 
@@ -325,6 +329,7 @@ TEST_F(SessionManagerTest, UnknownCallTest)
   SessionStore* store = new SessionStore(memstore);
   DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory(BILLING_REALM);
   MockChronosConnection* fake_chronos = new MockChronosConnection("http://localhost:1234");
+  fake_chronos->accept_all_requests();
   HealthChecker* hc = new HealthChecker();
   SessionManager* mgr = new SessionManager(store, _dict, factory, fake_chronos, _diameter_stack, hc);
   SessionStore::Session* sess = NULL;
@@ -351,6 +356,7 @@ TEST_F(SessionManagerTest, CDFFailureTest)
   DummyErrorPeerMessageSenderFactory* factory = new DummyErrorPeerMessageSenderFactory(BILLING_REALM);
   HealthChecker* hc = new HealthChecker();
   MockChronosConnection* fake_chronos = new MockChronosConnection("http://localhost:1234");
+  fake_chronos->accept_all_requests();
   SessionManager* mgr = new SessionManager(store, _dict, factory, fake_chronos, _diameter_stack, hc);
   SessionStore::Session* sess = NULL;
 
@@ -380,6 +386,7 @@ TEST_F(SessionManagerTest, CDFInterimFailureTest)
   SessionStore* store = new SessionStore(memstore);
   DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory(BILLING_REALM);
   MockChronosConnection* fake_chronos = new MockChronosConnection("http://localhost:1234");
+  fake_chronos->accept_all_requests();
   HealthChecker* hc = new HealthChecker();
   SessionManager* mgr = new SessionManager(store, _dict, factory, fake_chronos, _diameter_stack, hc);
   DummyErrorPeerMessageSenderFactory* fail_factory = new DummyErrorPeerMessageSenderFactory(BILLING_REALM);
@@ -420,6 +427,7 @@ TEST_F(SessionManagerTest, CDFInterimFailureWithTimerIdChangeTest)
   SessionStore* store = new SessionStore(memstore);
   DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory(BILLING_REALM);
   MockChronosConnection* fake_chronos = new MockChronosConnection("http://localhost:1234");
+  fake_chronos->accept_all_requests();
   HealthChecker* hc = new HealthChecker();
   SessionManager* mgr = new SessionManager(store, _dict, factory, fake_chronos, _diameter_stack, hc);
   DummyErrorPeerMessageSenderFactory* fail_factory = new DummyErrorPeerMessageSenderFactory(BILLING_REALM);
@@ -471,6 +479,7 @@ TEST_F(SessionManagerTest, CDFInterimUnknownTest)
   SessionStore* store = new SessionStore(memstore);
   DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory(BILLING_REALM);
   MockChronosConnection* fake_chronos = new MockChronosConnection("http://localhost:1234");
+  fake_chronos->accept_all_requests();
   HealthChecker* hc = new HealthChecker();
   SessionManager* mgr = new SessionManager(store, _dict, factory, fake_chronos, _diameter_stack, hc);
   DummyUnknownErrorPeerMessageSenderFactory* fail_factory = new DummyUnknownErrorPeerMessageSenderFactory(BILLING_REALM);
@@ -507,6 +516,7 @@ TEST_F(SessionManagerTest, HealthCheckTest)
   LocalStore* memstore = new LocalStore();
   SessionStore* store = new SessionStore(memstore);
   MockChronosConnection* fake_chronos = new MockChronosConnection("http://localhost:1234");
+  fake_chronos->accept_all_requests();
   MockHealthChecker* hc = new MockHealthChecker();
   DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory(BILLING_REALM);
   SessionManager* mgr = new SessionManager(store, _dict, factory, fake_chronos, _diameter_stack, hc);
@@ -541,6 +551,7 @@ TEST_F(SessionManagerTest, HealthCheckFailureTest)
   LocalStore* memstore = new LocalStore();
   SessionStore* store = new SessionStore(memstore);
   MockChronosConnection* fake_chronos = new MockChronosConnection("http://localhost:1234");
+  fake_chronos->accept_all_requests();
   MockHealthChecker* hc = new MockHealthChecker();
   DummyErrorPeerMessageSenderFactory* fail_factory = new DummyErrorPeerMessageSenderFactory(BILLING_REALM);
   SessionManager* fail_mgr = new SessionManager(store, _dict, fail_factory, fake_chronos, _diameter_stack, hc);
@@ -569,6 +580,7 @@ TEST_F(SessionManagerTest, CorrectTagForwarded)
   LocalStore* memstore = new LocalStore();
   SessionStore* store = new SessionStore(memstore);
   MockChronosConnection* fake_chronos = new MockChronosConnection("http://localhost:1234");
+  fake_chronos->accept_all_requests();
   MockHealthChecker* hc = new MockHealthChecker();
   DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory(BILLING_REALM);
   SessionManager* mgr = new SessionManager(store, _dict, factory, fake_chronos, _diameter_stack, hc);
@@ -580,6 +592,7 @@ TEST_F(SessionManagerTest, CorrectTagForwarded)
   // healthy behaviour
   const std::vector<std::string> tags = {"CALL"};
   EXPECT_CALL(*fake_chronos, send_post(_, _, _, _, _, _, tags)).Times(1);
+  EXPECT_CALL(*hc, health_check_passed()).Times(1);
   mgr->handle(start_msg);
 
   delete sess;

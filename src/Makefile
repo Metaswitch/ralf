@@ -58,7 +58,8 @@ TARGET_SOURCES_TEST := test_sessionstore.cpp \
                        test_rf.cpp \
                        test_handlers.cpp \
                        test_main.cpp \
-                       fakelogger.cpp
+                       fakelogger.cpp \
+                       mock_chronos_connection.cpp
 
 TARGET_EXTRA_OBJS_TEST := gmock-all.o \
                           gtest-all.o
@@ -90,8 +91,8 @@ CPPFLAGS += -I${ROOT}/include \
             -I${ROOT}/modules/jsoncpp/include \
             -I${ROOT}/modules/rapidjson/include
 
-# Add modules/cpp-common/src as a VPATH to pull in required common modules
-VPATH := ${ROOT}/modules/cpp-common/src
+# Add cpp-common paths as a VPATH to pull in required common modules
+VPATH := ${ROOT}/modules/cpp-common/src:${ROOT}/modules/cpp-common/test_utils
 
 # Production build:
 #
