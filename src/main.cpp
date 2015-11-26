@@ -651,8 +651,8 @@ int main(int argc, char**argv)
                           exception_handler,
                           access_logger,
                           load_monitor);
-    http_stack->register_handler("^/ping$", & ping_handler);
-    http_stack->register_handler("^/call-id/[^/]*$", &billing_handler);
+    http_stack->register_handler((char*)"^/ping$", &ping_handler);
+    http_stack->register_handler((char*)"^/call-id/[^/]*$", &billing_handler);
     http_stack->start();
   }
   catch (HttpStack::Exception& e)
