@@ -43,25 +43,43 @@ COMMON_SOURCES := accesslogger.cpp \
 
 ralf_SOURCES := ${COMMON_SOURCES} main.cpp
 ralf_test_SOURCES := ${COMMON_SOURCES} \
-	                   test_sessionstore.cpp \
+                     test_sessionstore.cpp \
                      test_session_manager.cpp \
                      test_rf.cpp \
                      test_handlers.cpp \
                      test_main.cpp \
                      fakelogger.cpp \
-										 mock_chronos_connection.cpp
+                     mock_chronos_connection.cpp
 
 COMMON_CPPFLAGS := -I../include \
                    -I../usr/include \
-									 -I../modules/cpp-common/include \
-									 -I../modules/sas-client/include \
-									 -I../modules/jsoncpp/include \
-									 -I../modules/rapidjson/include
+                   -I../modules/cpp-common/include \
+                   -I../modules/sas-client/include \
+                   -I../modules/jsoncpp/include \
+                   -I../modules/rapidjson/include
 
 ralf_CPPFLAGS := ${COMMON_CPPFLAGS}
 ralf_test_CPPFLAGS := ${COMMON_CPPFLAGS}
 
-COMMON_LDFLAGS := -L../usr/lib -lzmq -lpthread -lrt -lcares -lsas -lz -lmemcached -lboost_regex -lboost_date_time -lboost_system -lboost_filesystem -lcurl -levhtp -levent -lfdproto -lfdcore -levent_pthreads
+COMMON_LDFLAGS := -L../usr/lib \
+                  -lzmq \
+                  -lpthread \
+                  -lrt \
+                  -lcares \
+                  -lsas \
+                  -lz \
+                  -lmemcached \
+                  -lboost_regex \
+                  -lboost_date_time \
+                  -lboost_system \
+                  -lboost_filesystem \
+                  -lcurl \
+                  -levhtp \
+                  -levent \
+                  -lfdproto \
+                  -lfdcore \
+                  -levent_pthreads
+
 ralf_LDFLAGS := ${COMMON_LDFLAGS}
 ralf_test_LDFLAGS := ${COMMON_LDFLAGS}
 
