@@ -86,3 +86,14 @@ ralf_test_LDFLAGS := ${COMMON_LDFLAGS}
 VPATH += ../modules/cpp-common/src ./ut ../modules/cpp-common/test_utils
 
 include ../build-infra/cpp.mk
+
+# Alarm definition generation rules
+ROOT := $(abspath $(shell pwd)/../)
+MODULE_DIR := ${ROOT}/modules
+include ../modules/cpp-common/makefiles/alarm-utils.mk
+
+../usr/include/ralf_alarmdefinition.h : ../build/bin/alarm_header ../ralf.root/usr/share/clearwater/infrastructure/alarms/ralf_alarms.json
+	$< -j "../ralf.root/usr/share/clearwater/infrastructure/alarms/ralf_alarms.json" -n "ralf"
+	mv ralf_alarmdefinition.h $@
+${ralf_OBJECT_DIR}/main.o : ../usr/include/ralf_alarmdefinition.h
+
