@@ -9,6 +9,9 @@ ralf:
 ralf_test:
 	${MAKE} -C ${RALF_DIR} test
 
+ralf_full_test:
+	${MAKE} -C ${RALF_DIR} full_test
+
 ralf_clean:
 	${MAKE} -C ${RALF_DIR} clean
 

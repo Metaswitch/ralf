@@ -25,7 +25,9 @@ build: ${SUBMODULES} ralf
 
 test: ${SUBMODULES} ralf_test
 
-testall: $(patsubst %, %_test, ${SUBMODULES}) test
+full_test: ${SUBMODULES} ralf_full_test
+
+testall: $(patsubst %, %_test, ${SUBMODULES}) full_test
 
 clean: $(patsubst %, %_clean, ${SUBMODULES}) ralf_clean
 	rm -rf ${ROOT}/usr
