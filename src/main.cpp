@@ -257,13 +257,8 @@ int init_options(int argc, char**argv, struct options& options)
     case 'M':
       {
         std::string stores_str = std::string(optarg);
-        std::stringstream ss(stores_str);
-        std::istream_iterator<std::string> begin(ss);
-        std::istream_iterator<std::string> end;
-        std::vector<std::string> stores_vector(begin, end);
-        std::copy(stores_vector.begin(),
-                  stores_vector.end(),
-                  std::ostream_iterator<std::string>(std::cout, ","));
+        std::vector<std::string> stores_vector;
+        boost::split(stores_vector, stores_str, boost::is_any_of(","));
 
         // The first store is in the local site. Any remaining stores are in
         // remote GR sites.
@@ -273,12 +268,10 @@ int init_options(int argc, char**argv, struct options& options)
           stores_vector.erase(stores_vector.begin());
           options.remote_session_stores = stores_vector;
 
-          TRC_INFO("Using memcached session stores %s", optarg);
-        }
-        else
-        {
-          // I'm not sure we can hit this branch.
-          TRC_ERROR("Unable to parse session-stores parameter");
+          TRC_INFO("Using memcached session stores");
+          TRC_INFO("  Primary store: %s", options.session_store.c_str());
+          std::string remote_stores_str = boost::algorithm::join(options.remote_session_stores, ", ");
+          TRC_INFO("  Backup store(s): %s", remote_stores_str.c_str());
         }
       }
       break;
