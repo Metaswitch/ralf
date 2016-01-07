@@ -114,9 +114,11 @@ bool SessionStore::set_session_data(const std::string& call_id,
                                     const role_of_node_t role,
                                     const node_functionality_t function,
                                     Session* session,
+                                    bool new_session,
                                     SAS::TrailId trail)
 {
   std::string key = create_key(call_id, role, function);
+  uint64_t cas = new_session ? 0 : session->_cas;
   TRC_DEBUG("Saving session data for %s, CAS = %ld", key.c_str(), session->_cas);
 
   std::string data = serialize_session(session);
@@ -124,7 +126,7 @@ bool SessionStore::set_session_data(const std::string& call_id,
   Store::Status status = _store->set_data("session",
                                           key,
                                           data,
-                                          session->_cas,
+                                          cas,
                                           2 * session->session_refresh_time,
                                           trail);
   TRC_DEBUG("Store returned %d", status);

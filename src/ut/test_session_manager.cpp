@@ -1,4 +1,5 @@
 /**
+ *
  * @file test_sessionstore.cpp UT for Ralf session store.
  *
  * Project Clearwater - IMS in the Cloud
@@ -205,7 +206,7 @@ TEST_F(SessionManagerTest, TimerIDTest)
   // Change the stored timer - this means that the chronos PUT will return a
   // clashing timer, triggering the session manager to update the stored timer ID
   sess->timer_id = "NEW_TIMER";
-  store->set_session_data("CALL_ID_ONE", ORIGINATING, SCSCF, sess, FAKE_TRAIL_ID);
+  store->set_session_data("CALL_ID_ONE", ORIGINATING, SCSCF, sess, false, FAKE_TRAIL_ID);
 
   delete sess;
   sess = NULL;
@@ -446,7 +447,7 @@ TEST_F(SessionManagerTest, CDFInterimFailureWithTimerIdChangeTest)
   // Change the stored timer - this means that the chronos PUT will return a
   // clashing timer, triggering the session manager to update the stored timer ID
   sess->timer_id = "NEW_TIMER";
-  store->set_session_data("CALL_ID_FOUR", ORIGINATING, SCSCF, sess, FAKE_TRAIL_ID);
+  store->set_session_data("CALL_ID_FOUR", ORIGINATING, SCSCF, sess, false, FAKE_TRAIL_ID);
 
   delete sess;
   sess = NULL;
@@ -606,3 +607,241 @@ TEST_F(SessionManagerTest, CorrectTagForwarded)
   delete memstore;
 }
 
+TEST_F(SessionManagerTest, GRSimpleTest)
+{
+  LocalStore* local_memstore = new LocalStore();
+  LocalStore* remote_memstore1 = new LocalStore();
+  LocalStore* remote_memstore2 = new LocalStore();
+  SessionStore* local_store = new SessionStore(local_memstore);
+  SessionStore* remote_store1 = new SessionStore(remote_memstore1);
+  SessionStore* remote_store2 = new SessionStore(remote_memstore2);
+  DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory(BILLING_REALM);
+  MockChronosConnection* fake_chronos = new MockChronosConnection("http://localhost:1234");
+  fake_chronos->accept_all_requests();
+  HealthChecker* hc = new HealthChecker();
+  SessionManager* mgr = new SessionManager(local_store,
+                                           {remote_store1, remote_store2},
+                                           _dict,
+                                           factory,
+                                           fake_chronos,
+                                           _diameter_stack,
+                                           hc);
+  SessionStore::Session* sess = NULL;
+
+  Message* start_msg = new Message("CALL_ID_ONE", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(2), 300, FAKE_TRAIL_ID);
+  start_msg->ccfs.push_back("10.0.0.1");
+  Message* interim_msg = new Message("CALL_ID_ONE", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(3), 0, FAKE_TRAIL_ID);
+  Message* stop_msg = new Message("CALL_ID_ONE", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(4), 0, FAKE_TRAIL_ID);
+
+  // START should put a session in all the stores.
+  mgr->handle(start_msg);
+
+  sess = local_store->get_session_data("CALL_ID_ONE", ORIGINATING, SCSCF, FAKE_TRAIL_ID);
+  ASSERT_NE((SessionStore::Session*)NULL, sess);
+  EXPECT_EQ(1u, sess->acct_record_number);
+  delete sess; sess = NULL;
+
+  sess = remote_store1->get_session_data("CALL_ID_ONE", ORIGINATING, SCSCF, FAKE_TRAIL_ID);
+  ASSERT_NE((SessionStore::Session*)NULL, sess);
+  EXPECT_EQ(1u, sess->acct_record_number);
+  delete sess; sess = NULL;
+
+  sess = remote_store2->get_session_data("CALL_ID_ONE", ORIGINATING, SCSCF, FAKE_TRAIL_ID);
+  ASSERT_NE((SessionStore::Session*)NULL, sess);
+  EXPECT_EQ(1u, sess->acct_record_number);
+  delete sess; sess = NULL;
+
+  // INTERIM should keep that session in all the stores.
+  mgr->handle(interim_msg);
+
+  sess = local_store->get_session_data("CALL_ID_ONE", ORIGINATING, SCSCF, FAKE_TRAIL_ID);
+  ASSERT_NE((SessionStore::Session*)NULL, sess);
+  EXPECT_EQ(2u, sess->acct_record_number);
+  delete sess; sess = NULL;
+
+  sess = remote_store1->get_session_data("CALL_ID_ONE", ORIGINATING, SCSCF, FAKE_TRAIL_ID);
+  ASSERT_NE((SessionStore::Session*)NULL, sess);
+  EXPECT_EQ(2u, sess->acct_record_number);
+  delete sess; sess = NULL;
+
+  sess = remote_store2->get_session_data("CALL_ID_ONE", ORIGINATING, SCSCF, FAKE_TRAIL_ID);
+  ASSERT_NE((SessionStore::Session*)NULL, sess);
+  EXPECT_EQ(2u, sess->acct_record_number);
+  delete sess; sess = NULL;
+
+  // STOP should remove the session from all the stores.
+  mgr->handle(stop_msg);
+
+  sess = local_store->get_session_data("CALL_ID_ONE", ORIGINATING, SCSCF, FAKE_TRAIL_ID);
+  ASSERT_EQ(NULL, sess);
+
+  sess = remote_store1->get_session_data("CALL_ID_ONE", ORIGINATING, SCSCF, FAKE_TRAIL_ID);
+  ASSERT_EQ(NULL, sess);
+
+  sess = remote_store2->get_session_data("CALL_ID_ONE", ORIGINATING, SCSCF, FAKE_TRAIL_ID);
+  ASSERT_EQ(NULL, sess);
+
+  delete mgr;
+  delete factory;
+  delete hc;
+  delete fake_chronos;
+  delete local_store;
+  delete remote_store1;
+  delete remote_store2;
+  delete local_memstore;
+  delete remote_memstore1;
+  delete remote_memstore2;
+}
+
+TEST_F(SessionManagerTest, GRInterimUnknownTest)
+{
+  LocalStore* local_memstore = new LocalStore();
+  LocalStore* remote_memstore1 = new LocalStore();
+  LocalStore* remote_memstore2 = new LocalStore();
+  SessionStore* local_store = new SessionStore(local_memstore);
+  SessionStore* remote_store1 = new SessionStore(remote_memstore1);
+  SessionStore* remote_store2 = new SessionStore(remote_memstore2);
+  DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory(BILLING_REALM);
+  MockChronosConnection* fake_chronos = new MockChronosConnection("http://localhost:1234");
+  fake_chronos->accept_all_requests();
+  HealthChecker* hc = new HealthChecker();
+  SessionManager* mgr = new SessionManager(local_store,
+                                           {remote_store1, remote_store2},
+                                           _dict,
+                                           factory,
+                                           fake_chronos,
+                                           _diameter_stack,
+                                           hc);
+  DummyUnknownErrorPeerMessageSenderFactory* fail_factory = new DummyUnknownErrorPeerMessageSenderFactory(BILLING_REALM);
+  SessionManager* fail_mgr = new SessionManager(local_store,
+                                                {remote_store1, remote_store2},
+                                                _dict,
+                                                fail_factory,
+                                                fake_chronos,
+                                                _diameter_stack,
+                                                hc);
+  SessionStore::Session* sess = NULL;
+
+  Message* start_msg = new Message("CALL_ID_FOUR", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(2), 300, FAKE_TRAIL_ID);
+  Message* interim_msg = new Message("CALL_ID_FOUR", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(3), 300, FAKE_TRAIL_ID);
+
+  mgr->handle(start_msg);
+
+  // When an INTERIM message fails with a 5002 "Session unknown" error, we
+  // should delete the session from all the stores.
+  fail_mgr->handle(interim_msg);
+  sess = local_store->get_session_data("CALL_ID_FOUR", ORIGINATING, SCSCF, FAKE_TRAIL_ID);
+  ASSERT_EQ(NULL, sess);
+  sess = remote_store1->get_session_data("CALL_ID_FOUR", ORIGINATING, SCSCF, FAKE_TRAIL_ID);
+  ASSERT_EQ(NULL, sess);
+  sess = remote_store2->get_session_data("CALL_ID_FOUR", ORIGINATING, SCSCF, FAKE_TRAIL_ID);
+  ASSERT_EQ(NULL, sess);
+
+  delete mgr;
+  delete fail_mgr;
+  delete factory;
+  delete fail_factory;
+  delete hc;
+  delete fake_chronos;
+  delete local_store;
+  delete remote_store1;
+  delete remote_store2;
+  delete local_memstore;
+  delete remote_memstore1;
+  delete remote_memstore2;
+}
+
+TEST_F(SessionManagerTest, GRUnknownCallTest)
+{
+  LocalStore* local_memstore = new LocalStore();
+  LocalStore* remote_memstore1 = new LocalStore();
+  LocalStore* remote_memstore2 = new LocalStore();
+  SessionStore* local_store = new SessionStore(local_memstore);
+  SessionStore* remote_store1 = new SessionStore(remote_memstore1);
+  SessionStore* remote_store2 = new SessionStore(remote_memstore2);
+  DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory(BILLING_REALM);
+  MockChronosConnection* fake_chronos = new MockChronosConnection("http://localhost:1234");
+  fake_chronos->accept_all_requests();
+  HealthChecker* hc = new HealthChecker();
+  SessionManager* mgr = new SessionManager(local_store,
+                                           {remote_store1, remote_store2},
+                                           _dict, factory,
+                                           fake_chronos,
+                                           _diameter_stack,
+                                           hc);
+  SessionStore::Session* sess = NULL;
+
+  Message* interim_msg = new Message("CALL_ID_THREE", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(3), 300, FAKE_TRAIL_ID);
+
+  // If we receive an INTERIM for a call not in the store, we should ignore it
+  mgr->handle(interim_msg);
+  sess = local_store->get_session_data("CALL_ID_THREE", ORIGINATING, SCSCF, FAKE_TRAIL_ID);
+  ASSERT_EQ(NULL, sess);
+  sess = remote_store1->get_session_data("CALL_ID_THREE", ORIGINATING, SCSCF, FAKE_TRAIL_ID);
+  ASSERT_EQ(NULL, sess);
+  sess = remote_store2->get_session_data("CALL_ID_THREE", ORIGINATING, SCSCF, FAKE_TRAIL_ID);
+  ASSERT_EQ(NULL, sess);
+
+  delete mgr;
+  delete factory;
+  delete hc;
+  delete fake_chronos;
+  delete local_store;
+  delete remote_store1;
+  delete remote_store2;
+  delete local_memstore;
+  delete remote_memstore1;
+  delete remote_memstore2;
+}
+
+TEST_F(SessionManagerTest, GREmptyRemoteTest)
+{
+  LocalStore* local_memstore = new LocalStore();
+  LocalStore* remote_memstore1 = new LocalStore();
+  LocalStore* remote_memstore2 = new LocalStore();
+  SessionStore* local_store = new SessionStore(local_memstore);
+  SessionStore* remote_store1 = new SessionStore(remote_memstore1);
+  SessionStore* remote_store2 = new SessionStore(remote_memstore2);
+  DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory(BILLING_REALM);
+  MockChronosConnection* fake_chronos = new MockChronosConnection("http://localhost:1234");
+  fake_chronos->accept_all_requests();
+  HealthChecker* hc = new HealthChecker();
+  SessionManager* mgr = new SessionManager(local_store,
+                                           {remote_store1, remote_store2},
+                                           _dict,
+                                           factory,
+                                           fake_chronos,
+                                           _diameter_stack,
+                                           hc);
+  SessionStore::Session* sess = NULL;
+
+  Message* start_msg = new Message("CALL_ID_ONE", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(2), 300, FAKE_TRAIL_ID);
+  start_msg->ccfs.push_back("10.0.0.1");
+  Message* interim_msg = new Message("CALL_ID_ONE", ORIGINATING, SCSCF, NULL, Rf::AccountingRecordType(3), 0, FAKE_TRAIL_ID);
+
+  // START should put a session in all the stores.
+  mgr->handle(start_msg);
+
+  // Delete the session from a remote store.
+  remote_store1->delete_session_data("CALL_ID_ONE", ORIGINATING, SCSCF, FAKE_TRAIL_ID);
+
+  // INTERIM should keep that session in all the stores. In particular, it
+  // should be back in the remote store we deleted it from.
+  mgr->handle(interim_msg);
+
+  sess = remote_store1->get_session_data("CALL_ID_ONE", ORIGINATING, SCSCF, FAKE_TRAIL_ID);
+  ASSERT_NE((SessionStore::Session*)NULL, sess);
+  EXPECT_EQ(2u, sess->acct_record_number);
+  delete sess; sess = NULL;
+
+  delete mgr;
+  delete factory;
+  delete hc;
+  delete fake_chronos;
+  delete local_store;
+  delete remote_store1;
+  delete remote_store2;
+  delete local_memstore;
+  delete remote_memstore1;
+  delete remote_memstore2;
+}
