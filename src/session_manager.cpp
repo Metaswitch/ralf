@@ -60,10 +60,10 @@ void SessionManager::handle(Message* msg)
   if (msg->record_type.isInterim() || msg->record_type.isStop())
   {
     // This relates to an existing session
-    sess = _store->get_session_data(msg->call_id,
-                                    msg->role,
-                                    msg->function,
-                                    msg->trail);
+    sess = _local_store->get_session_data(msg->call_id,
+                                          msg->role,
+                                          msg->function,
+                                          msg->trail);
 
     if (sess == NULL)
     {
@@ -79,11 +79,11 @@ void SessionManager::handle(Message* msg)
     if (msg->record_type.isInterim())
     {
       // Update the store with the incremented accounting record number.
-      bool success = _store->set_session_data(msg->call_id,
-                                              msg->role,
-                                              msg->function,
-                                              sess,
-                                              msg->trail);
+      bool success = _local_store->set_session_data(msg->call_id,
+                                                    msg->role,
+                                                    msg->function,
+                                                    sess,
+                                                    msg->trail);
       if (!success)
       {
         // Someone has written conflicting data since we read this, so start processing this message again
@@ -93,10 +93,10 @@ void SessionManager::handle(Message* msg)
     else if  (msg->record_type.isStop())
     {
       // Delete the session from the store and cancel the timer
-      bool success =_store->delete_session_data(msg->call_id,
-                                                msg->role,
-                                                msg->function,
-                                                msg->trail);
+      bool success =_local_store->delete_session_data(msg->call_id,
+                                                      msg->role,
+                                                      msg->function,
+                                                      msg->trail);
 
       if (!success)
       {
@@ -303,11 +303,11 @@ void SessionManager::on_ccf_response(bool accepted,
       sess->session_refresh_time = msg->session_refresh_time;
 
       // Do this unconditionally - if it fails, this processing has already been done elsewhere
-      _store->set_session_data(msg->call_id,
-                               msg->role,
-                               msg->function,
-                               sess,
-                               msg->trail);
+      _local_store->set_session_data(msg->call_id,
+                                     msg->role,
+                                     msg->function,
+                                     sess,
+                                     msg->trail);
       delete sess; sess = NULL;
     }
 
@@ -324,10 +324,10 @@ void SessionManager::on_ccf_response(bool accepted,
         // 5002 means the CDF has no record of this session. It's pointless to send any
         // more messages - delete the session from the store.
         TRC_INFO("Session for %s received 5002 error from CDF, deleting", msg->call_id.c_str());
-        _store->delete_session_data(msg->call_id,
-                                    msg->role,
-                                    msg->function,
-                                    msg->trail);
+        _local_store->delete_session_data(msg->call_id,
+                                          msg->role,
+                                          msg->function,
+                                          msg->trail);
       }
       else if (!msg->timer_interim)
       {
@@ -364,20 +364,20 @@ void SessionManager::on_ccf_response(bool accepted,
 // contention then this update will fail
 void SessionManager::update_timer_id(Message* msg, std::string timer_id)
 {
-  SessionStore::Session* sess = _store->get_session_data(msg->call_id,
-                                                         msg->role,
-                                                         msg->function,
-                                                         msg->trail);
+  SessionStore::Session* sess = _local_store->get_session_data(msg->call_id,
+                                                               msg->role,
+                                                               msg->function,
+                                                               msg->trail);
   if (sess != NULL)
   {
     sess->timer_id = timer_id;
     msg->timer_id = timer_id;
 
-    _store->set_session_data(msg->call_id,
-                             msg->role,
-                             msg->function,
-                             sess,
-                             msg->trail);
+    _local_store->set_session_data(msg->call_id,
+                                   msg->role,
+                                   msg->function,
+                                   sess,
+                                   msg->trail);
   }
 
   delete sess; sess = NULL;

@@ -587,17 +587,6 @@ int main(int argc, char**argv)
   AlarmReqAgent::get_instance().start();
   AlarmState::clear_all("ralf");
 
-  MemcachedStore* mstore = new MemcachedStore(true,
-                                              "./cluster_settings",
-                                              memcached_comm_monitor,
-                                              vbucket_alarm);
-
-  if (!(mstore->has_servers()))
-  {
-    TRC_ERROR("./cluster_settings file does not contain a valid set of servers");
-    return 1;
-  };
-
   AccessLogger* access_logger = NULL;
   if (options.access_log_enabled)
   {
@@ -647,6 +636,20 @@ int main(int argc, char**argv)
     exit(2);
   }
 
+  // Create a DNS resolver.  We'll use this for HTTP, for Diameter and for Astaire.
+  DnsCachedResolver* dns_resolver = new DnsCachedResolver(options.dns_server);
+
+  int addr_family = AF_INET;
+  if (is_ipv6(options.local_host))
+  {
+    addr_family = AF_INET6;
+  }
+
+  AstaireResolver* astaire_resolver =
+                        new AstaireResolver(dns_resolver,
+                                            addr_family,
+                                            options.astaire_blacklist_duration);
+
   SessionStore::SerializerDeserializer* serializer;
   std::vector<SessionStore::SerializerDeserializer*> deserializers;
 
@@ -662,12 +665,35 @@ int main(int argc, char**argv)
   deserializers.push_back(new SessionStore::JsonSerializerDeserializer());
   deserializers.push_back(new SessionStore::BinarySerializerDeserializer());
 
-  SessionStore* store = new SessionStore(mstore, serializer, deserializers);
+  TopologyNeutralMemcachedStore* local_memstore =
+                      new TopologyNeutralMemcachedStore(options.session_store,
+                                                        astaire_resolver,
+                                                        memcached_comm_monitor);
+
+  SessionStore* local_session_store = new SessionStore(local_memstore,
+                                                       serializer,
+                                                       deserializers);
+
+  std::vector<Store*> remote_memstores;
+  std::vector<SessionStore*> remote_session_stores;
+
+  for (std::vector<std::string>::iterator it = options.remote_session_stores.begin();
+       it != options.remote_session_stores.end();
+       ++it)
+  {
+    TopologyNeutralMemcachedStore* remote_memstore =
+                     new TopologyNeutralMemcachedStore(*it,
+                                                       astaire_resolver,
+                                                       memcached_comm_monitor);
+    remote_memstores.push_back(remote_memstore);
+    SessionStore* remote_session_store = new SessionStore(remote_memstore,
+                                                          serializer,
+                                                          deserializers);
+    remote_session_stores.push_back(remote_session_store);
+  }
+
   BillingHandlerConfig* cfg = new BillingHandlerConfig();
   PeerMessageSenderFactory* factory = new PeerMessageSenderFactory(options.billing_realm);
-
-  // Create a DNS resolver.  We'll use this both for HTTP and for Diameter.
-  DnsCachedResolver* dns_resolver = new DnsCachedResolver(options.dns_server);
 
   std::string port_str = std::to_string(options.http_port);
 
@@ -690,7 +716,7 @@ int main(int argc, char**argv)
                                                  options.http_blacklist_duration);
   ChronosConnection* timer_conn = new ChronosConnection(local_chronos, chronos_callback_addr, http_resolver, chronos_comm_monitor);
 
-  cfg->mgr = new SessionManager(store, dict, factory, timer_conn, diameter_stack, hc);
+  cfg->mgr = new SessionManager(local_session_store, remote_session_stores, dict, factory, timer_conn, diameter_stack, hc);
 
   HttpStack* http_stack = HttpStack::get_instance();
   HttpStackUtils::PingHandler ping_handler;
@@ -754,6 +780,24 @@ int main(int argc, char**argv)
   delete http_resolver; http_resolver = NULL;
   delete dns_resolver; dns_resolver = NULL;
   delete load_monitor; load_monitor = NULL;
+
+  delete local_session_store; local_session_store = NULL;
+  delete local_memstore; local_memstore = NULL;
+  for (std::vector<SessionStore*>::iterator it = remote_session_stores.begin();
+       it != remote_session_stores.end();
+       ++it)
+  {
+    delete *it;
+  }
+  remote_session_stores.clear();
+  for (std::vector<Store*>::iterator it = remote_memstores.begin();
+       it != remote_memstores.end();
+       ++it)
+  {
+    delete *it;
+  }
+  remote_memstores.clear();
+  delete astaire_resolver; astaire_resolver = NULL;
 
   hc->stop_thread();
   delete exception_handler; exception_handler = NULL;

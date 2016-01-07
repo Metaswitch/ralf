@@ -39,7 +39,8 @@ COMMON_SOURCES := accesslogger.cpp \
                   exception_handler.cpp \
                   health_checker.cpp \
                   counter.cpp \
-                  namespace_hop.cpp
+                  namespace_hop.cpp \
+                  astaire_resolver.cpp
 
 ralf_SOURCES := ${COMMON_SOURCES} main.cpp
 ralf_test_SOURCES := ${COMMON_SOURCES} \
