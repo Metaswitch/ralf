@@ -40,6 +40,9 @@
 #include <strings.h>
 #include <boost/filesystem.hpp>
 
+#include <iostream>
+#include <iterator>
+
 #include "ralf_pd_definitions.h"
 
 #include "ipv6utils.h"
@@ -59,6 +62,7 @@
 #include "load_monitor.h"
 #include "diameterresolver.h"
 #include "realmmanager.h"
+#include "astaire_resolver.h"
 #include "communicationmonitor.h"
 #include "exception_handler.h"
 #include "ralf_alarmdefinition.h"
@@ -76,6 +80,7 @@ enum OptionTypes
   BILLING_PEER,
   HTTP_BLACKLIST_DURATION,
   DIAMETER_BLACKLIST_DURATION,
+  ASTAIRE_BLACKLIST_DURATION,
   PIDFILE
 };
 
@@ -89,6 +94,8 @@ struct options
   std::string local_host;
   std::string diameter_conf;
   std::string dns_server;
+  std::string session_store;
+  std::vector<std::string> remote_session_stores;
   std::string http_address;
   unsigned short http_port;
   int http_threads;
@@ -110,6 +117,7 @@ struct options
   int exception_max_ttl;
   int http_blacklist_duration;
   int diameter_blacklist_duration;
+  int astaire_blacklist_duration;
   std::string pidfile;
 };
 
@@ -118,6 +126,7 @@ const static struct option long_opt[] =
   {"localhost",                   required_argument, NULL, 'l'},
   {"diameter-conf",               required_argument, NULL, 'c'},
   {"dns-server",                  required_argument, NULL, DNS_SERVER},
+  {"session-stores",              required_argument, NULL, 'M'},
   {"http",                        required_argument, NULL, 'H'},
   {"http-threads",                required_argument, NULL, 't'},
   {"billing-realm",               required_argument, NULL, 'b'},
@@ -136,6 +145,7 @@ const static struct option long_opt[] =
   {"exception-max-ttl",           required_argument, NULL, EXCEPTION_MAX_TTL},
   {"http-blacklist-duration",     required_argument, NULL, HTTP_BLACKLIST_DURATION},
   {"diameter-blacklist-duration", required_argument, NULL, DIAMETER_BLACKLIST_DURATION},
+  {"astaire-blacklist-duration",  required_argument, NULL, ASTAIRE_BLACKLIST_DURATION},
   {"pidfile",                     required_argument, NULL, PIDFILE},
   {NULL,                          0,                 NULL, 0},
 };
@@ -149,6 +159,11 @@ void usage(void)
        " -l, --localhost <hostname> Specify the local hostname or IP address\n"
        " -c, --diameter-conf <file> File name for Diameter configuration\n"
        "     --dns-server <IP>      DNS server to use to resolve addresses\n"
+       " -M, --session-stores <domain>[,<domain>,<domain>...]\n"
+       "                            Specifies location of the local memcached site for storing\n"
+       "                            sessions, optionally followed by the location of any remote\n"
+       "                            sites for geo-redundant storage\n"
+       "                            (otherwise uses local store)\n"
        " -H, --http <address>[:<port>]\n"
        "                            Set HTTP bind address and port (default: 0.0.0.0:8888)\n"
        " -t, --http-threads N       Number of HTTP threads (default: 1)\n"
@@ -184,6 +199,8 @@ void usage(void)
        "                            The amount of time to blacklist an HTTP peer when it is unresponsive.\n"
        "     --diameter-blacklist-duration <secs>\n"
        "                            The amount of time to blacklist a Diameter peer when it is unresponsive.\n"
+       "     --astaire-blacklist-duration <secs>\n"
+       "                            The amount of time to blacklist an Astaire node when it is unresponsive.\n"
        "     --pidfile=<filename>   Write pidfile\n"
        " -h, --help                 Show this help screen\n"
       );
@@ -235,6 +252,35 @@ int init_options(int argc, char**argv, struct options& options)
     case 'c':
       TRC_INFO("Diameter configuration file: %s", optarg);
       options.diameter_conf = std::string(optarg);
+      break;
+
+    case 'M':
+      {
+        std::string stores_str = std::string(optarg);
+        std::stringstream ss(stores_str);
+        std::istream_iterator<std::string> begin(ss);
+        std::istream_iterator<std::string> end;
+        std::vector<std::string> stores_vector(begin, end);
+        std::copy(stores_vector.begin(),
+                  stores_vector.end(),
+                  std::ostream_iterator<std::string>(std::cout, ","));
+
+        // The first store is in the local site. Any remaining stores are in
+        // remote GR sites.
+        if (!stores_vector.empty())
+        {
+          options.session_store = stores_vector.front();
+          stores_vector.erase(stores_vector.begin());
+          options.remote_session_stores = stores_vector;
+
+          TRC_INFO("Using memcached session stores %s", optarg);
+        }
+        else
+        {
+          // I'm not sure we can hit this branch.
+          TRC_ERROR("Unable to parse session-stores parameter");
+        }
+      }
       break;
 
     case 'H':
@@ -379,6 +425,12 @@ int init_options(int argc, char**argv, struct options& options)
                options.diameter_blacklist_duration);
       break;
 
+    case ASTAIRE_BLACKLIST_DURATION:
+      options.astaire_blacklist_duration = atoi(optarg);
+      TRC_INFO("Astaire blacklist duration set to %d",
+               options.astaire_blacklist_duration);
+      break;
+
     case PIDFILE:
       options.pidfile = std::string(optarg);
       break;
@@ -458,6 +510,7 @@ int main(int argc, char**argv)
   options.exception_max_ttl = 600;
   options.http_blacklist_duration = HttpResolver::DEFAULT_BLACKLIST_DURATION;
   options.diameter_blacklist_duration = DiameterResolver::DEFAULT_BLACKLIST_DURATION;
+  options.astaire_blacklist_duration = AstaireResolver::DEFAULT_BLACKLIST_DURATION;
 
   boost::filesystem::path p = argv[0];
   // Copy the filename to a string so that we can be sure of its lifespan -

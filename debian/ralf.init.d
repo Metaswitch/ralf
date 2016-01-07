@@ -97,17 +97,8 @@ get_settings()
         sas_server=0.0.0.0
         signaling_dns_server=127.0.0.1
         num_http_threads=$(($(grep processor /proc/cpuinfo | wc -l) * 50))
-        . /etc/clearwater/config
-      
-        # Set up a default cluster_settings file if it does not exist.
-        [ -f /etc/clearwater/cluster_settings ] || echo "servers=$local_ip:11211" > /etc/clearwater/cluster_settings
-      
-        # If the remote cluster settings file exists then start sprout with geo-redundancy enabled
-        [ -f /etc/clearwater/remote_cluster_settings ] && remote_memstore_arg="--remote-memstore=/etc/clearwater/remote_cluster_settings"
-      
-        # Set up defaults for user settings then pull in any overrides.
         log_level=2
-        [ -r /etc/clearwater/user_settings ] && . /etc/clearwater/user_settings
+        . /etc/clearwater/config
       
         # Work out which features are enabled.
         if [ -d /etc/clearwater/features.d ]
@@ -147,6 +138,7 @@ get_daemon_args()
         DAEMON_ARGS="--localhost=$local_ip
                      --http=$local_ip
                      --http-threads=$num_http_threads
+                     --session-stores=$ralf_session_store
                      --access-log=$log_directory
                      --dns-server=$signaling_dns_server
                      --log-file=$log_directory
@@ -163,6 +155,7 @@ get_daemon_args()
 
         [ "$http_blacklist_duration" = "" ]     || DAEMON_ARGS="$DAEMON_ARGS --http-blacklist-duration=$http_blacklist_duration"
         [ "$diameter_blacklist_duration" = "" ] || DAEMON_ARGS="$DAEMON_ARGS --diameter-blacklist-duration=$diameter_blacklist_duration"
+        [ "$astaire_blacklist_duration" = "" ]  || DAEMON_ARGS="$DAEMON_ARGS --astaire-blacklist-duration=$astaire_blacklist_duration"
 }
 
 #
