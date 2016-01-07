@@ -174,6 +174,7 @@ public:
   bool delete_session_data(const std::string& call_id,
                            const role_of_node_t role,
                            const node_functionality_t function,
+                           Session* data,
                            SAS::TrailId trail);
 
 private:

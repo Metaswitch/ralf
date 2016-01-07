@@ -135,12 +135,20 @@ bool SessionStore::set_session_data(const std::string& call_id,
 bool SessionStore::delete_session_data(const std::string& call_id,
                                        const role_of_node_t role,
                                        const node_functionality_t function,
+                                       Session* session,
                                        SAS::TrailId trail)
 {
   std::string key = create_key(call_id, role, function);
-  TRC_DEBUG("Deleting session data for %s", key.c_str());
+  TRC_DEBUG("Deleting session data for %s, CAS = %ld", key.c_str(), session->_cas);
 
-  Store::Status status = _store->delete_data("session", key, trail);
+  std::string data = serialize_session(session);
+
+  Store::Status status = _store->set_data("session",
+                                          key,
+                                          data,
+                                          session->_cas,
+                                          0,
+                                          trail);
   TRC_DEBUG("Store returned %d", status);
 
   return (status == Store::Status::OK);

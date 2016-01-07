@@ -96,6 +96,7 @@ void SessionManager::handle(Message* msg)
       bool success =_store->delete_session_data(msg->call_id,
                                                 msg->role,
                                                 msg->function,
+                                                sess,
                                                 msg->trail);
 
       if (!success)
