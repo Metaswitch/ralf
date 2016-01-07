@@ -102,13 +102,13 @@ void SessionManager::handle(Message* msg)
     if (msg->record_type.isInterim())
     {
       // Update the store with the incremented accounting record number.
-      bool success = _local_store->set_session_data(msg->call_id,
-                                                    msg->role,
-                                                    msg->function,
-                                                    sess,
-                                                    new_session,
-                                                    msg->trail);
-      if (!success)
+      Store::Status rc = _local_store->set_session_data(msg->call_id,
+                                                        msg->role,
+                                                        msg->function,
+                                                        sess,
+                                                        new_session,
+                                                        msg->trail);
+      if (rc == Store::Status::DATA_CONTENTION)
       {
         // Someone has written conflicting data since we read this, so start processing this message again
         return this->handle(msg);  // LCOV_EXCL_LINE - no conflicts in UT
@@ -135,15 +135,18 @@ void SessionManager::handle(Message* msg)
           remote_sess->acct_record_number += 1;
         }
 
-        success = (*remote_store)->set_session_data(msg->call_id,
-                                                    msg->role,
-                                                    msg->function,
-                                                    remote_sess,
-                                                    new_session,
-                                                    msg->trail);
+        rc = (*remote_store)->set_session_data(msg->call_id,
+                                               msg->role,
+                                               msg->function,
+                                               remote_sess,
+                                               new_session,
+                                               msg->trail);
         delete remote_sess; remote_sess = NULL;
 
-        if (success)
+        // Move onto the next store unless we've got data contention, in which
+        // case we want to try this store. If a remote site is uncontactable we
+        // ignore it.
+        if (rc != Store::Status::DATA_CONTENTION)
         {
           ++remote_store;
         }
@@ -152,12 +155,12 @@ void SessionManager::handle(Message* msg)
     else if  (msg->record_type.isStop())
     {
       // Delete the session from the store and cancel the timer
-      bool success =_local_store->delete_session_data(msg->call_id,
-                                                      msg->role,
-                                                      msg->function,
-                                                      msg->trail);
+      Store::Status rc =_local_store->delete_session_data(msg->call_id,
+                                                          msg->role,
+                                                          msg->function,
+                                                          msg->trail);
 
-      if (!success)
+      if (rc == Store::Status::DATA_CONTENTION)
       {
         // Someone has written conflicting data since we read this, so start processing this message again
         return this->handle(msg);  // LCOV_EXCL_LINE - no conflicts in UT
@@ -167,11 +170,15 @@ void SessionManager::handle(Message* msg)
 
       while (remote_store != _remote_stores.end())
       {
-        success = (*remote_store)->delete_session_data(msg->call_id,
-                                                       msg->role,
-                                                       msg->function,
-                                                       msg->trail);
-        if (success)
+        rc = (*remote_store)->delete_session_data(msg->call_id,
+                                                  msg->role,
+                                                  msg->function,
+                                                  msg->trail);
+
+        // Move onto the next store unless we've got data contention, in which
+        // case we want to try this store. If a remote site is uncontactable we
+        // ignore it.
+        if (rc != Store::Status::DATA_CONTENTION)
         {
           ++remote_store;
         }
@@ -461,8 +468,10 @@ void SessionManager::on_ccf_response(bool accepted,
 // contention then this update will fail
 void SessionManager::update_timer_id(Message* msg, std::string timer_id)
 {
-  std::vector<SessionStore*> stores = _remote_stores;
-  stores.push_back(_local_store);
+  std::vector<SessionStore*> stores = {_local_store};
+  stores.insert(stores.end(),
+                _remote_stores.begin(),
+                _remote_stores.end());
 
   for (std::vector<SessionStore*>::iterator store = stores.begin();
        store != stores.end();
