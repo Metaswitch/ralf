@@ -81,7 +81,9 @@ enum OptionTypes
   HTTP_BLACKLIST_DURATION,
   DIAMETER_BLACKLIST_DURATION,
   ASTAIRE_BLACKLIST_DURATION,
-  PIDFILE
+  PIDFILE,
+  LOCAL_SITE_NAME,
+  SESSION_STORES
 };
 
 enum struct MemcachedWriteFormat
@@ -92,10 +94,10 @@ enum struct MemcachedWriteFormat
 struct options
 {
   std::string local_host;
+  std::string local_site_name;
   std::string diameter_conf;
   std::string dns_server;
-  std::string session_store;
-  std::vector<std::string> remote_session_stores;
+  std::vector<std::string> session_stores;
   std::string http_address;
   unsigned short http_port;
   int http_threads;
@@ -124,9 +126,10 @@ struct options
 const static struct option long_opt[] =
 {
   {"localhost",                   required_argument, NULL, 'l'},
+  {"local-site-name",             required_argument, NULL, LOCAL_SITE_NAME},
   {"diameter-conf",               required_argument, NULL, 'c'},
   {"dns-server",                  required_argument, NULL, DNS_SERVER},
-  {"session-stores",              required_argument, NULL, 'M'},
+  {"session-stores",              required_argument, NULL, SESSION_STORES},
   {"http",                        required_argument, NULL, 'H'},
   {"http-threads",                required_argument, NULL, 't'},
   {"billing-realm",               required_argument, NULL, 'b'},
@@ -157,12 +160,14 @@ void usage(void)
   puts("Options:\n"
        "\n"
        " -l, --localhost <hostname> Specify the local hostname or IP address\n"
+       "     --local-site-name <name>\n"
+       "                            The name of the local site (used in a geo-redundant deployment)\n"
        " -c, --diameter-conf <file> File name for Diameter configuration\n"
        "     --dns-server <IP>      DNS server to use to resolve addresses\n"
-       " -M, --session-stores <domain>[,<domain>,<domain>...]\n"
-       "                            Specifies location of the local memcached site for storing\n"
-       "                            sessions, optionally followed by the location of any remote\n"
-       "                            sites for geo-redundant storage\n"
+       " -M, --session-stores <site_name>=<domain>[,<site_name>=<domain>,<site_name>=<domain>...]\n"
+       "                            Specifies location of the memcached store in each GR site for storing\n"
+       "                            sessions. One of the sites must be the local site. Remote sites for\n"
+       "                            geo-redundant storage are optional.\n"
        "                            (otherwise uses local store)\n"
        " -H, --http <address>[:<port>]\n"
        "                            Set HTTP bind address and port (default: 0.0.0.0:8888)\n"
@@ -254,25 +259,22 @@ int init_options(int argc, char**argv, struct options& options)
       options.diameter_conf = std::string(optarg);
       break;
 
-    case 'M':
+    case LOCAL_SITE_NAME:
+      options.local_site_name = std::string(optarg);
+      TRC_INFO("Local site name = %s", optarg);
+      break;
+
+    case SESSION_STORES:
       {
-        std::string stores_str = std::string(optarg);
-        std::vector<std::string> stores_vector;
-        boost::split(stores_vector, stores_str, boost::is_any_of(","));
-
-        // The first store is in the local site. Any remaining stores are in
-        // remote GR sites.
-        if (!stores_vector.empty())
-        {
-          options.session_store = stores_vector.front();
-          stores_vector.erase(stores_vector.begin());
-          options.remote_session_stores = stores_vector;
-
-          TRC_INFO("Using memcached session stores");
-          TRC_INFO("  Primary store: %s", options.session_store.c_str());
-          std::string remote_stores_str = boost::algorithm::join(options.remote_session_stores, ", ");
-          TRC_INFO("  Backup store(s): %s", remote_stores_str.c_str());
-        }
+        // This option has the format
+        // <site_name>=<domain>,[<site_name>=<domain>,<site_name=<domain>,...].
+        // For now, just split into a vector of <site_name>=<domain> strings. We
+        // need to know the local site name to parse this properly, so we'll do
+        // that later.
+        std::string stores_arg = std::string(optarg);
+        boost::split(options.session_stores,
+                     stores_arg,
+                     boost::is_any_of(","));
       }
       break;
 
@@ -504,6 +506,7 @@ int main(int argc, char**argv)
   options.http_blacklist_duration = HttpResolver::DEFAULT_BLACKLIST_DURATION;
   options.diameter_blacklist_duration = DiameterResolver::DEFAULT_BLACKLIST_DURATION;
   options.astaire_blacklist_duration = AstaireResolver::DEFAULT_BLACKLIST_DURATION;
+  options.session_stores = {"127.0.0.1"};
 
   boost::filesystem::path p = argv[0];
   // Copy the filename to a string so that we can be sure of its lifespan -
@@ -557,6 +560,36 @@ int main(int argc, char**argv)
       // Failure to acquire pidfile lock
       TRC_ERROR("Could not write pidfile - exiting");
       return 2;
+    }
+  }
+
+  // Parse the session-stores argument.
+  std::string session_store_location;
+  std::vector<std::string> remote_session_stores_locations;
+  if (!options.session_stores.empty())
+  {
+    if (!Utils::parse_stores_arg(options.session_stores,
+                                 options.local_site_name,
+                                 session_store_location,
+                                 remote_session_stores_locations))
+    {
+      TRC_ERROR("Invalid format of session-stores program argument");
+      return 1;
+    }
+
+    if (session_store_location == "")
+    {
+      // If we've failed to find a local site session store then Ralf has
+      // been misconfigured.
+      TRC_ERROR("No local site session store specified");
+      return 1;
+    }
+    else
+    {
+      TRC_INFO("Using memcached session stores");
+      TRC_INFO("  Primary store: %s", session_store_location.c_str());
+      std::string remote_session_stores_str = boost::algorithm::join(remote_session_stores_locations, ", ");
+      TRC_INFO("  Backup store(s): %s", remote_session_stores_str.c_str());
     }
   }
 
@@ -659,7 +692,7 @@ int main(int argc, char**argv)
   deserializers.push_back(new SessionStore::BinarySerializerDeserializer());
 
   TopologyNeutralMemcachedStore* local_memstore =
-                      new TopologyNeutralMemcachedStore(options.session_store,
+                      new TopologyNeutralMemcachedStore(session_store_location,
                                                         astaire_resolver,
                                                         memcached_comm_monitor);
 
@@ -670,8 +703,8 @@ int main(int argc, char**argv)
   std::vector<Store*> remote_memstores;
   std::vector<SessionStore*> remote_session_stores;
 
-  for (std::vector<std::string>::iterator it = options.remote_session_stores.begin();
-       it != options.remote_session_stores.end();
+  for (std::vector<std::string>::iterator it = remote_session_stores_locations.begin();
+       it != remote_session_stores_locations.end();
        ++it)
   {
     TopologyNeutralMemcachedStore* remote_memstore =
