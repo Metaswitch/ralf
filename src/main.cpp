@@ -164,7 +164,7 @@ void usage(void)
        "                            The name of the local site (used in a geo-redundant deployment)\n"
        " -c, --diameter-conf <file> File name for Diameter configuration\n"
        "     --dns-server <IP>      DNS server to use to resolve addresses\n"
-       " -M, --session-stores <site_name>=<domain>[,<site_name>=<domain>,<site_name>=<domain>...]\n"
+       " -M, --session-stores <site_name>=<domain>[:<port>][,<site_name>=<domain>[:<port>],...]\n"
        "                            Specifies location of the memcached store in each GR site for storing\n"
        "                            sessions. One of the sites must be the local site. Remote sites for\n"
        "                            geo-redundant storage are optional.\n"
