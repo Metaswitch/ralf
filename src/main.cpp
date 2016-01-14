@@ -165,7 +165,6 @@ void usage(void)
        "                            Specifies location of the memcached store in each GR site for storing\n"
        "                            sessions. One of the sites must be the local site. Remote sites for\n"
        "                            geo-redundant storage are optional.\n"
-       "                            (otherwise uses local store)\n"
        " -H, --http <address>[:<port>]\n"
        "                            Set HTTP bind address and port (default: 0.0.0.0:8888)\n"
        " -t, --http-threads N       Number of HTTP threads (default: 1)\n"
