@@ -40,9 +40,6 @@
 #include <strings.h>
 #include <boost/filesystem.hpp>
 
-#include <iostream>
-#include <iterator>
-
 #include "ralf_pd_definitions.h"
 
 #include "ipv6utils.h"
