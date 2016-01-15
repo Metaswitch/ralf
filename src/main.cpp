@@ -605,7 +605,7 @@ int main(int argc, char**argv)
 
   CommunicationMonitor* astaire_comm_monitor = new CommunicationMonitor(new Alarm("ralf",
                                                                                   AlarmDef::RALF_ASTAIRE_COMM_ERROR,
-                                                                                    AlarmDef::CRITICAL),
+                                                                                  AlarmDef::CRITICAL),
                                                                           "Ralf",
                                                                           "Astaire");
 
