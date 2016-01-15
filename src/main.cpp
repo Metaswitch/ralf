@@ -603,13 +603,11 @@ int main(int argc, char**argv)
                                                                         "Ralf",
                                                                         "Chronos");
 
-  CommunicationMonitor* memcached_comm_monitor = new CommunicationMonitor(new Alarm("ralf",
-                                                                                    AlarmDef::RALF_MEMCACHED_COMM_ERROR,
+  CommunicationMonitor* astaire_comm_monitor = new CommunicationMonitor(new Alarm("ralf",
+                                                                                  AlarmDef::RALF_ASTAIRE_COMM_ERROR,
                                                                                     AlarmDef::CRITICAL),
                                                                           "Ralf",
-                                                                          "Memcached");
-
-  Alarm* vbucket_alarm = new Alarm("ralf", AlarmDef::RALF_VBUCKET_ERROR, AlarmDef::MAJOR);
+                                                                          "Astaire");
 
   // Start the alarm request agent
   AlarmReqAgent::get_instance().start();
@@ -696,7 +694,7 @@ int main(int argc, char**argv)
   TopologyNeutralMemcachedStore* local_memstore =
                       new TopologyNeutralMemcachedStore(session_store_location,
                                                         astaire_resolver,
-                                                        memcached_comm_monitor);
+                                                        astaire_comm_monitor);
 
   SessionStore* local_session_store = new SessionStore(local_memstore,
                                                        serializer,
@@ -712,7 +710,7 @@ int main(int argc, char**argv)
     TopologyNeutralMemcachedStore* remote_memstore =
                      new TopologyNeutralMemcachedStore(*it,
                                                        astaire_resolver,
-                                                       memcached_comm_monitor);
+                                                       astaire_comm_monitor);
     remote_memstores.push_back(remote_memstore);
     SessionStore* remote_session_store = new SessionStore(remote_memstore,
                                                           serializer,
@@ -837,8 +835,7 @@ int main(int argc, char**argv)
   // Delete Ralf's alarm objects
   delete cdf_comm_monitor;
   delete chronos_comm_monitor;
-  delete memcached_comm_monitor;
-  delete vbucket_alarm;
+  delete astaire_comm_monitor;
 
   closelog();
   signal(SIGTERM, SIG_DFL);
