@@ -20,17 +20,17 @@
         {
             "index": 2001,
             "cause": "UNDERLYING_RESOURCE_UNAVAILABLE",
-            "name": "RALF_MEMCACHED_COMM_ERROR",
+            "name": "RALF_ASTAIRE_COMM_ERROR",
             "levels": [
                 {
                     "severity": "CLEARED",
-                    "details": "Ralf communication to at least one Memcached has been restored.",
-                    "description": "Ralf: Memcached communication error cleared"
+                    "details": "Ralf has re-established connection with Astaire.",
+                    "description": "Ralf: Astaire communication error cleared"
                 },
                 {
                     "severity": "CRITICAL",
-                    "details": "Ralf is unable to contact any Memcacheds. It will periodically attempt to reconnect. If this alarm does not clear, ensure that at least one Memcached is operational and that network connectivity exists between it and Ralf.",
-                    "description": "Ralf: Memcached communication error"
+                    "details": "Ralf has failed to make a connection with the Astaire processes in the cluster. If this alarm does not clear, network connection may have been lost, or the Astaire processes may have failed and be in an unrecoverable condition.",
+                    "description": "Ralf: Astaire communication error"
                 }
             ]
         },
@@ -65,23 +65,6 @@
                     "severity": "CRITICAL",
                     "details": "Ralf is unable to contact any CDFs. It will periodically attempt to reconnect. If this alarm does not clear, ensure that at least one HSS is operational and that network connectivity exists between it and Ralf.",
                     "description": "Ralf: CDF communication error"
-                }
-            ]
-        },
-        {
-            "index": 2004,
-            "cause": "UNDERLYING_RESOURCE_UNAVAILABLE",
-            "name": "RALF_VBUCKET_ERROR",
-            "levels": [
-                {
-                    "severity": "CLEARED",
-                    "details": "Ralf communication to Memcached for a piece of data has been restored.",
-                    "description": "Ralf: Memcached vBucket communication error cleared"
-                },
-                {
-                    "severity": "MAJOR",
-                    "details": "Ralf is unable to contact any Memcacheds for a piece of data. Some subscriber data will be unavailable. If this alarm does not clear, ensure that all Memcacheds are operational and that network connectivity exists between them and Ralf.",
-                    "description": "Ralf: Memcached vBucket communication error"
                 }
             ]
         }
