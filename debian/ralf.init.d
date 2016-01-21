@@ -134,7 +134,7 @@ get_daemon_args()
         [ -z "$exception_max_ttl" ] || exception_max_ttl_arg="--exception-max-ttl=$exception_max_ttl"
         [ -z "$cdf_identity" ] || billing_peer_arg="--billing-peer=$cdf_identity"
         [ -z $signaling_namespace ] || namespace_prefix="ip netns exec $signaling_namespace"
-        [ -z "$local_site_name"] || local_site_name_arg="--local-site-name=$local_site_name"
+        [ -z "$local_site_name" ] || local_site_name_arg="--local-site-name=$local_site_name"
 
         DAEMON_ARGS="--localhost=$local_ip
                      $local_site_name_arg
