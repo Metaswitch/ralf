@@ -609,6 +609,12 @@ int main(int argc, char**argv)
                                                                           "Ralf",
                                                                           "Astaire");
 
+  CommunicationMonitor* remote_astaire_comm_monitor = new CommunicationMonitor(new Alarm("ralf",
+                                                                                         AlarmDef::RALF_REMOTE_ASTAIRE_COMM_ERROR,
+                                                                                         AlarmDef::CRITICAL),
+                                                                               "Ralf",
+                                                                               "remote Astaire");
+
   // Start the alarm request agent
   AlarmReqAgent::get_instance().start();
   AlarmState::clear_all("ralf");
@@ -710,7 +716,7 @@ int main(int argc, char**argv)
     TopologyNeutralMemcachedStore* remote_memstore =
                      new TopologyNeutralMemcachedStore(*it,
                                                        astaire_resolver,
-                                                       astaire_comm_monitor);
+                                                       remote_astaire_comm_monitor);
     remote_memstores.push_back(remote_memstore);
     SessionStore* remote_session_store = new SessionStore(remote_memstore,
                                                           serializer,
@@ -836,6 +842,7 @@ int main(int argc, char**argv)
   delete cdf_comm_monitor;
   delete chronos_comm_monitor;
   delete astaire_comm_monitor;
+  delete remote_astaire_comm_monitor;
 
   closelog();
   signal(SIGTERM, SIG_DFL);
