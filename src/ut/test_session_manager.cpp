@@ -590,7 +590,7 @@ TEST_F(SessionManagerTest, CorrectTagForwarded)
 
   // When the CDF accepts a message, we should treat that as
   // healthy behaviour
-  const std::vector<std::string> tags = {"CALL"};
+  std::map<std::string, uint32_t> tags; tags["CALL"] = 1;
   EXPECT_CALL(*fake_chronos, send_post(_, _, _, _, _, _, tags)).Times(1);
   EXPECT_CALL(*hc, health_check_passed()).Times(1);
   mgr->handle(start_msg);
