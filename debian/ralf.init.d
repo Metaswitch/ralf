@@ -212,7 +212,7 @@ do_stop()
 do_run()
 {
         # Allow us to write to the pidfile directory
-        install -m 755 -o $NAME -g root -d /var/run/$NAME && chown -r $NAME /var/run/$NAME
+        install -m 755 -o $NAME -g root -d /var/run/$NAME && chown -R $NAME /var/run/$NAME
 
         setup_environment
         get_daemon_args
