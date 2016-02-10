@@ -346,7 +346,7 @@ void SessionManager::on_ccf_response(bool accepted,
 
       // Set the timer id initially to NO_TIMER - this isn't included in the path of the POST
       std::string timer_id = NO_TIMER;
-      std::vector<std::string> tags = {"CALL"};
+      std::map<std::string, uint32_t> tags; tags["CALL"] = 1;
 
       if (msg->session_refresh_time > interim_interval)
       {
@@ -505,7 +505,7 @@ void SessionManager::send_chronos_update(std::string& timer_id,
                                          const std::string& opaque_data,
                                          SAS::TrailId trail)
 {
-  std::vector<std::string> tags = {"CALL"};
+  std::map<std::string, uint32_t> tags {{"CALL", 1}};
 
   if (timer_id == NO_TIMER)
   {

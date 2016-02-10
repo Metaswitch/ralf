@@ -22,9 +22,6 @@
 [submodule "modules/sas-client"]
 	path = modules/sas-client
 	url = git@github.com:Metaswitch/sas-client.git
-[submodule "modules/jsoncpp"]
-	path = modules/jsoncpp
-	url = git@github.com:Metaswitch/jsoncpp-upstream.git
 [submodule "modules/gcovr"]
 	path = modules/gcovr
 	url = git@github.com:gcovr/gcovr.git
