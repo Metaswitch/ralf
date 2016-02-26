@@ -69,7 +69,6 @@ COMMON_LDFLAGS := -L../usr/lib \
                   -lz \
                   -lmemcached \
                   -lboost_regex \
-                  -lboost_date_time \
                   -lboost_system \
                   -lboost_filesystem \
                   -lcurl \
