@@ -55,7 +55,6 @@ COMMON_CPPFLAGS := -I../include \
                    -I../usr/include \
                    -I../modules/cpp-common/include \
                    -I../modules/sas-client/include \
-                   -I../modules/jsoncpp/include \
                    -I../modules/rapidjson/include
 
 ralf_CPPFLAGS := ${COMMON_CPPFLAGS}
@@ -70,7 +69,6 @@ COMMON_LDFLAGS := -L../usr/lib \
                   -lz \
                   -lmemcached \
                   -lboost_regex \
-                  -lboost_date_time \
                   -lboost_system \
                   -lboost_filesystem \
                   -lcurl \
