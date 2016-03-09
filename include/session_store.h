@@ -164,18 +164,24 @@ public:
                             const node_functionality_t function,
                             SAS::TrailId trail);
 
-  // Save the session object back into the store (this may fail due to CAS atomicity
-  // checking)
+  // Save the session object back into the store (this may fail due to CAS
+  // atomicity checking).
   bool set_session_data(const std::string& call_id,
                         const role_of_node_t role,
                         const node_functionality_t function,
                         Session* data,
                         SAS::TrailId trail);
+
+  // Delete the session object from the store safely (this may fail due to CAS
+  // atomicity checking).
   bool delete_session_data(const std::string& call_id,
                            const role_of_node_t role,
                            const node_functionality_t function,
                            Session* data,
                            SAS::TrailId trail);
+
+  // Delete the session object from the store aggressively (this will never fail
+  // due to CAS atomicity checking).
   bool delete_session_data(const std::string& call_id,
                            const role_of_node_t role,
                            const node_functionality_t function,
