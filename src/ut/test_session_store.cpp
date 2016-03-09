@@ -1,5 +1,5 @@
 /**
- * @file test_sessionstore.cpp UT for Ralf session store.
+ * @file test_session_store.cpp UT for Ralf session store.
  *
  * Project Clearwater - IMS in the Cloud
  * Copyright (C) 2013  Metaswitch Networks Ltd
@@ -38,7 +38,7 @@
 #include "gtest/gtest.h"
 
 #include "localstore.h"
-#include "sessionstore.h"
+#include "session_store.h"
 
 #include "mock_store.h"
 
