@@ -37,7 +37,7 @@
 #define SESSION_MANAGER_HPP_
 
 #include "message.hpp"
-#include "sessionstore.h"
+#include "session_store.h"
 #include "chronosconnection.h"
 #include "rf.h"
 #include "health_checker.h"

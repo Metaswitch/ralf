@@ -1,5 +1,5 @@
 /**
- * @file sessionmanager.cpp Ralf session manager.
+ * @file session_manager.cpp Ralf session manager.
  *
  * Project Clearwater - IMS in the Cloud
  * Copyright (C) 2013  Metaswitch Networks Ltd
@@ -39,7 +39,7 @@
 
 #include "utils.h"
 #include "message.hpp"
-#include "sessionstore.h"
+#include "session_store.h"
 #include "session_manager.hpp"
 #include "log.h"
 #include "peer_message_sender.hpp"
@@ -96,6 +96,7 @@ void SessionManager::handle(Message* msg)
       bool success =_store->delete_session_data(msg->call_id,
                                                 msg->role,
                                                 msg->function,
+                                                sess,
                                                 msg->trail);
 
       if (!success)
