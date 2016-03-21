@@ -420,7 +420,6 @@ void signal_handler(int sig)
   exception_handler->handle_exception();
 
   CL_RALF_CRASHED.log(strsignal(sig));
-  closelog();
 
   // Dump a core.
   abort();
@@ -466,7 +465,6 @@ int main(int argc, char**argv)
 
   if (init_logging_options(argc, argv, options) != 0)
   {
-    closelog();
     return 1;
   }
 
@@ -497,7 +495,6 @@ int main(int argc, char**argv)
 
   if (init_options(argc, argv, options) != 0)
   {
-    closelog();
     return 1;
   }
 
@@ -593,7 +590,6 @@ int main(int argc, char**argv)
   catch (Diameter::Stack::Exception& e)
   {
     CL_RALF_DIAMETER_INIT_FAIL.log(e._func, e._rc);
-    closelog();
     TRC_ERROR("Failed to initialize Diameter stack - function %s, rc %d", e._func, e._rc);
     exit(2);
   }
@@ -719,7 +715,6 @@ int main(int argc, char**argv)
   delete memcached_comm_monitor;
   delete vbucket_alarm;
 
-  closelog();
   signal(SIGTERM, SIG_DFL);
   sem_destroy(&term_sem);
 }
