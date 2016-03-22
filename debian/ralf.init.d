@@ -97,6 +97,7 @@ get_settings()
         sas_server=0.0.0.0
         signaling_dns_server=127.0.0.1
         num_http_threads=$(($(grep processor /proc/cpuinfo | wc -l) * 50))
+        log_level=2
         . /etc/clearwater/config
       
         # Set up a default cluster_settings file if it does not exist.
@@ -104,10 +105,6 @@ get_settings()
       
         # If the remote cluster settings file exists then start sprout with geo-redundancy enabled
         [ -f /etc/clearwater/remote_cluster_settings ] && remote_memstore_arg="--remote-memstore=/etc/clearwater/remote_cluster_settings"
-      
-        # Set up defaults for user settings then pull in any overrides.
-        log_level=2
-        [ -r /etc/clearwater/user_settings ] && . /etc/clearwater/user_settings
       
         # Work out which features are enabled.
         if [ -d /etc/clearwater/features.d ]
