@@ -27,6 +27,7 @@ COMMON_SOURCES := accesslogger.cpp \
                   utils.cpp \
                   zmq_lvc.cpp \
                   log.cpp \
+                  pdlog.cpp \
                   baseresolver.cpp \
                   diameterresolver.cpp \
                   dnscachedresolver.cpp \
