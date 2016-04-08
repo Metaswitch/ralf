@@ -111,7 +111,7 @@
                     "description": "Ralf: Remote Astaire communication error.",
                     "cause": "Ralf is unable to contact any remote Astaires.",
                     "effect": "In progress and new calls can no longer record call detail events and have it reliably transmitted to the CDF. Ralf drops incoming call detail events and logs the error. No caching or queuing of call detail events is provided by Ralf.",
-                    "effect": "The deployment is no longer geographically redundant because the call detail events from the I-CSCF and S-CSCF are not synchronized to the remote site. If subscribers switch to the other geographic site then call detail events for in progress and new calls will no longer be reliably transmitted to the CDF.
+                    "effect": "The deployment is no longer geographically redundant because the call detail events from the I-CSCF and S-CSCF are not synchronized to the remote site. If subscribers switch to the other geographic site then call detail events for in progress and new calls will no longer be reliably transmitted to the CDF.",
                     "action": "Monitor for this alarm to clear. If this alarm does not clear, ensure that at least one remote Astaire process is operational and that network connectivity exists between it and Ralf. If the remote Astaire processes do not return to service then contact your support representative."
                 }
             ]
