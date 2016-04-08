@@ -76,7 +76,8 @@ enum OptionTypes
   BILLING_PEER,
   HTTP_BLACKLIST_DURATION,
   DIAMETER_BLACKLIST_DURATION,
-  PIDFILE
+  PIDFILE,
+  DAEMON,
 };
 
 enum struct MemcachedWriteFormat
@@ -111,6 +112,7 @@ struct options
   int http_blacklist_duration;
   int diameter_blacklist_duration;
   std::string pidfile;
+  bool daemon;
 };
 
 const static struct option long_opt[] =
@@ -137,6 +139,7 @@ const static struct option long_opt[] =
   {"http-blacklist-duration",     required_argument, NULL, HTTP_BLACKLIST_DURATION},
   {"diameter-blacklist-duration", required_argument, NULL, DIAMETER_BLACKLIST_DURATION},
   {"pidfile",                     required_argument, NULL, PIDFILE},
+  {"daemon",                      no_argument,       NULL, DAEMON},
   {NULL,                          0,                 NULL, 0},
 };
 
@@ -185,6 +188,7 @@ void usage(void)
        "     --diameter-blacklist-duration <secs>\n"
        "                            The amount of time to blacklist a Diameter peer when it is unresponsive.\n"
        "     --pidfile=<filename>   Write pidfile\n"
+       "     --daemon               Run as a daemon\n"
        " -h, --help                 Show this help screen\n"
       );
 }
@@ -383,6 +387,10 @@ int init_options(int argc, char**argv, struct options& options)
       options.pidfile = std::string(optarg);
       break;
 
+    case DAEMON:
+      options.daemon = true;
+      break;
+
     default:
       CL_RALF_INVALID_OPTION_C.log();
       TRC_ERROR("Unknown option: %d.  Run with --help for options.\n", opt);
@@ -457,6 +465,8 @@ int main(int argc, char**argv)
   options.exception_max_ttl = 600;
   options.http_blacklist_duration = HttpResolver::DEFAULT_BLACKLIST_DURATION;
   options.diameter_blacklist_duration = DiameterResolver::DEFAULT_BLACKLIST_DURATION;
+  options.pidfile = "";
+  options.daemon = false;
 
   // Initialise ENT logging before making "Started" log
   PDLogStatic::init(argv[0]);
@@ -496,6 +506,18 @@ int main(int argc, char**argv)
   if (init_options(argc, argv, options) != 0)
   {
     return 1;
+  }
+
+  if (options.daemon)
+  {
+    // Options parsed and validated, time to demonize before writing out our
+    // pidfile or spwaning threads.
+    int errnum = Utils::daemonize();
+    if (errnum != 0)
+    {
+      TRC_ERROR("Failed to convert to daemon, %d (%s)", errnum, strerror(errnum));
+      exit(0);
+    }
   }
 
   if (options.pidfile != "")
