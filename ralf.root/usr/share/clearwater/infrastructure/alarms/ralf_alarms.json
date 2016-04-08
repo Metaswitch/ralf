@@ -26,23 +26,23 @@
         {
             "index": 2001,
             "cause": "UNDERLYING_RESOURCE_UNAVAILABLE",
-            "name": "RALF_MEMCACHED_COMM_ERROR",
+            "name": "RALF_ASTAIRE_COMM_ERROR",
             "levels": [
                 {
                     "severity": "CLEARED",
-                    "details": "Ralf communication to at least one Memcached has been restored.",
-                    "description": "Ralf: Memcached communication error cleared.",
-                    "cause": "Ralf communication to at least one Memcached has been restored. The previously issued alarm has been cleared.",
+                    "details": "Ralf has re-established connection with Astaire.",
+                    "description": "Ralf: Astaire communication error cleared.",
+                    "cause": "Ralf communication to at least one Astaire process has been restored. The previously issued alarm has been cleared.",
                     "effect": "Normal call detail event recording by the I-CSCF and S-CSCF has been restored.",
                     "action": "No action."
                 },
                 {
                     "severity": "CRITICAL",
-                    "details": "Ralf is unable to contact any Memcacheds. It will periodically attempt to reconnect. If this alarm does not clear, ensure that at least one Memcached is operational and that network connectivity exists between it and Ralf.",
-                    "description": "Ralf: Memcached communication error.",
-                    "cause": "Ralf is unable to contact any Memcacheds.",
+                    "details": "Ralf has failed to make a connection with the Astaire processes in the cluster. If this alarm does not clear, network connection may have been lost, or the Astaire processes may have failed and be in an unrecoverable condition.",
+                    "description": "Ralf: Astaire communication error.",
+                    "cause": "Ralf is unable to contact any Astaire processes.",
                     "effect": "In progress and new calls can no longer record call detail events and have it reliably transmitted to the CDF. Ralf drops incoming call detail events and logs the error. No caching or queuing of call detail events is provided by Ralf.",
-                    "action": "Monitor for this alarm to clear. If this alarm does not clear, ensure that at least one Memcached is operational and that network connectivity exists between it and Ralf. If Memcached does not return to service then contact your support representative."
+                    "action": "Monitor for this alarm to clear. If this alarm does not clear, ensure that at least one Astaire process is operational and that network connectivity exists between it and Ralf. If Astaire does not return to service then contact your support representative."
                 }
             ]
         },
@@ -95,23 +95,24 @@
         {
             "index": 2004,
             "cause": "UNDERLYING_RESOURCE_UNAVAILABLE",
-            "name": "RALF_VBUCKET_ERROR",
+            "name": "RALF_REMOTE_ASTAIRE_COMM_ERROR",
             "levels": [
                 {
                     "severity": "CLEARED",
-                    "details": "Ralf communication to Memcached for a piece of data has been restored.",
-                    "description": "Ralf: Memcached vBucket communication error cleared.",
-                    "cause": "Ralf communication to Memcached for a vBucket has been restored. The previously issued alarm has been cleared.",
-                    "effect": "Normal call detail event recording by the I-CSCF and S-CSCF has been restored.",
+                    "details": "Ralf has re-established connection with remote Astaires.",
+                    "description": "Ralf: Remote Astaire communication error cleared.",
+                    "cause": "Ralf communication to at least one remote Astaire process has been restored. The previously issued alarm has been cleared.",
+                    "effect": "Normal site synchronization of call detail event recording by the I-CSCF and S-CSCF has been restored.",
                     "action": "No action."
                 },
                 {
-                    "severity": "MAJOR",
-                    "details": "Ralf is unable to contact any Memcacheds for a piece of data. Some subscriber data will be unavailable. If this alarm does not clear, ensure that all Memcacheds are operational and that network connectivity exists between them and Ralf.",
-                    "description": "Ralf: Memcached vBucket communication error.",
-                    "cause": "Ralf is unable to contact any Memcacheds for a vBucket.",
-                    "effect": "A subset of the active calls can no longer record call detail events and have it reliably transmitted to the CDF.",
-                    "action": "Monitor for this alarm to clear. If this alarm does not clear, ensure that at least one Memcached vBucket is operational and that network connectivity exists between it and Ralf. If Memcached does not return to service then contact your support representative."
+                    "severity": "CRITICAL",
+                    "details": "Ralf has failed to make a connection with the Astaire processes in a remote cluster. If this alarm does not clear, network connection may have been lost, or the Astaire processes may have failed and be in an unrecoverable condition.",
+                    "description": "Ralf: Remote Astaire communication error.",
+                    "cause": "Ralf is unable to contact any remote Astaires.",
+                    "effect": "In progress and new calls can no longer record call detail events and have it reliably transmitted to the CDF. Ralf drops incoming call detail events and logs the error. No caching or queuing of call detail events is provided by Ralf.",
+                    "effect": "The deployment is no longer geographically redundant because the call detail events from the I-CSCF and S-CSCF are not synchronized to the remote site. If subscribers switch to the other geographic site then call detail events for in progress and new calls will no longer be reliably transmitted to the CDF.",
+                    "action": "Monitor for this alarm to clear. If this alarm does not clear, ensure that at least one remote Astaire process is operational and that network connectivity exists between it and Ralf. If the remote Astaire processes do not return to service then contact your support representative."
                 }
             ]
         }

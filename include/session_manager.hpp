@@ -47,12 +47,14 @@ class PeerMessageSenderFactory;
 class SessionManager
 {
 public:
-  SessionManager(SessionStore* store,
+  SessionManager(SessionStore* local_store,
+                 std::vector<SessionStore*> remote_stores,
                  Rf::Dictionary* dict,
                  PeerMessageSenderFactory* factory,
                  ChronosConnection* timer_conn,
                  Diameter::Stack* diameter_stack,
-                 HealthChecker* hc): _store(store),
+                 HealthChecker* hc): _local_store(local_store),
+                                     _remote_stores(remote_stores),
                                      _timer_conn(timer_conn),
                                      _dict(dict),
                                      _factory(factory),
@@ -75,7 +77,8 @@ private:
                             const std::string& session_id,
                             Message* msg);
 
-  SessionStore* _store;
+  SessionStore* _local_store;
+  std::vector<SessionStore*> _remote_stores;
   ChronosConnection* _timer_conn;
   Rf::Dictionary* _dict;
   PeerMessageSenderFactory* _factory;

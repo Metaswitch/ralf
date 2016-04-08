@@ -104,8 +104,8 @@ TYPED_TEST(BasicSessionStoreTest, SimpleTest)
   session->session_refresh_time = 5 * 60;
 
   // Save the session in the store
-  bool rc = this->_store->set_session_data("call_id", ORIGINATING, SCSCF, session, FAKE_TRAIL);
-  EXPECT_EQ(true, rc);
+  Store::Status rc = this->_store->set_session_data("call_id", ORIGINATING, SCSCF, session, false, FAKE_TRAIL);
+  EXPECT_EQ(Store::Status::OK, rc);
   delete session; session = NULL;
 
   // Retrieve the session again.
@@ -132,8 +132,8 @@ TYPED_TEST(BasicSessionStoreTest, DeletionTest)
   session->session_refresh_time = 5 * 60;
 
   // Save the session in the store
-  bool rc = this->_store->set_session_data("call_id", ORIGINATING, SCSCF, session, FAKE_TRAIL);
-  EXPECT_EQ(true, rc);
+  Store::Status rc = this->_store->set_session_data("call_id", ORIGINATING, SCSCF, session, false, FAKE_TRAIL);
+  EXPECT_EQ(Store::Status::OK, rc);
   delete session; session = NULL;
 
   this->_store->delete_session_data("call_id", ORIGINATING, SCSCF, FAKE_TRAIL);
@@ -207,8 +207,8 @@ TYPED_TEST(MultiFormatSessionStoreTest, SimpleTest)
   session->session_refresh_time = 5 * 60;
 
   // Save the session in the store
-  bool rc = this->_single_store->set_session_data("call_id", ORIGINATING, SCSCF, session, FAKE_TRAIL);
-  EXPECT_EQ(true, rc);
+  Store::Status rc = this->_single_store->set_session_data("call_id", ORIGINATING, SCSCF, session, false, FAKE_TRAIL);
+  EXPECT_EQ(Store::Status::OK, rc);
   delete session; session = NULL;
 
   // Retrieve the session again.
@@ -235,8 +235,8 @@ TYPED_TEST(MultiFormatSessionStoreTest, DeletionTest)
   session->session_refresh_time = 5 * 60;
 
   // Save the session in the store
-  bool rc = this->_single_store->set_session_data("call_id", ORIGINATING, SCSCF, session, FAKE_TRAIL);
-  EXPECT_EQ(true, rc);
+  Store::Status rc = this->_single_store->set_session_data("call_id", ORIGINATING, SCSCF, session, false, FAKE_TRAIL);
+  EXPECT_EQ(Store::Status::OK, rc);
   delete session; session = NULL;
 
   this->_multi_store->delete_session_data("call_id", ORIGINATING, SCSCF, FAKE_TRAIL);

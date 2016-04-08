@@ -59,6 +59,7 @@
 #include "load_monitor.h"
 #include "diameterresolver.h"
 #include "realmmanager.h"
+#include "astaire_resolver.h"
 #include "communicationmonitor.h"
 #include "exception_handler.h"
 #include "ralf_alarmdefinition.h"
@@ -76,7 +77,10 @@ enum OptionTypes
   BILLING_PEER,
   HTTP_BLACKLIST_DURATION,
   DIAMETER_BLACKLIST_DURATION,
-  PIDFILE
+  ASTAIRE_BLACKLIST_DURATION,
+  PIDFILE,
+  LOCAL_SITE_NAME,
+  SESSION_STORES
 };
 
 enum struct MemcachedWriteFormat
@@ -87,8 +91,10 @@ enum struct MemcachedWriteFormat
 struct options
 {
   std::string local_host;
+  std::string local_site_name;
   std::string diameter_conf;
   std::string dns_server;
+  std::vector<std::string> session_stores;
   std::string http_address;
   unsigned short http_port;
   int http_threads;
@@ -110,14 +116,17 @@ struct options
   int exception_max_ttl;
   int http_blacklist_duration;
   int diameter_blacklist_duration;
+  int astaire_blacklist_duration;
   std::string pidfile;
 };
 
 const static struct option long_opt[] =
 {
   {"localhost",                   required_argument, NULL, 'l'},
+  {"local-site-name",             required_argument, NULL, LOCAL_SITE_NAME},
   {"diameter-conf",               required_argument, NULL, 'c'},
   {"dns-server",                  required_argument, NULL, DNS_SERVER},
+  {"session-stores",              required_argument, NULL, SESSION_STORES},
   {"http",                        required_argument, NULL, 'H'},
   {"http-threads",                required_argument, NULL, 't'},
   {"billing-realm",               required_argument, NULL, 'b'},
@@ -136,6 +145,7 @@ const static struct option long_opt[] =
   {"exception-max-ttl",           required_argument, NULL, EXCEPTION_MAX_TTL},
   {"http-blacklist-duration",     required_argument, NULL, HTTP_BLACKLIST_DURATION},
   {"diameter-blacklist-duration", required_argument, NULL, DIAMETER_BLACKLIST_DURATION},
+  {"astaire-blacklist-duration",  required_argument, NULL, ASTAIRE_BLACKLIST_DURATION},
   {"pidfile",                     required_argument, NULL, PIDFILE},
   {NULL,                          0,                 NULL, 0},
 };
@@ -147,8 +157,14 @@ void usage(void)
   puts("Options:\n"
        "\n"
        " -l, --localhost <hostname> Specify the local hostname or IP address\n"
+       "     --local-site-name <name>\n"
+       "                            The name of the local site (used in a geo-redundant deployment)\n"
        " -c, --diameter-conf <file> File name for Diameter configuration\n"
        "     --dns-server <IP>      DNS server to use to resolve addresses\n"
+       "     --session-stores <site_name>=<domain>[:<port>][,<site_name>=<domain>[:<port>],...]\n"
+       "                            Specifies location of the memcached store in each GR site for storing\n"
+       "                            sessions. One of the sites must be the local site. Remote sites for\n"
+       "                            geo-redundant storage are optional.\n"
        " -H, --http <address>[:<port>]\n"
        "                            Set HTTP bind address and port (default: 0.0.0.0:8888)\n"
        " -t, --http-threads N       Number of HTTP threads (default: 1)\n"
@@ -184,6 +200,8 @@ void usage(void)
        "                            The amount of time to blacklist an HTTP peer when it is unresponsive.\n"
        "     --diameter-blacklist-duration <secs>\n"
        "                            The amount of time to blacklist a Diameter peer when it is unresponsive.\n"
+       "     --astaire-blacklist-duration <secs>\n"
+       "                            The amount of time to blacklist an Astaire node when it is unresponsive.\n"
        "     --pidfile=<filename>   Write pidfile\n"
        " -h, --help                 Show this help screen\n"
       );
@@ -235,6 +253,25 @@ int init_options(int argc, char**argv, struct options& options)
     case 'c':
       TRC_INFO("Diameter configuration file: %s", optarg);
       options.diameter_conf = std::string(optarg);
+      break;
+
+    case LOCAL_SITE_NAME:
+      options.local_site_name = std::string(optarg);
+      TRC_INFO("Local site name = %s", optarg);
+      break;
+
+    case SESSION_STORES:
+      {
+        // This option has the format
+        // <site_name>=<domain>,[<site_name>=<domain>,<site_name=<domain>,...].
+        // For now, just split into a vector of <site_name>=<domain> strings. We
+        // need to know the local site name to parse this properly, so we'll do
+        // that later.
+        std::string stores_arg = std::string(optarg);
+        boost::split(options.session_stores,
+                     stores_arg,
+                     boost::is_any_of(","));
+      }
       break;
 
     case 'H':
@@ -379,6 +416,12 @@ int init_options(int argc, char**argv, struct options& options)
                options.diameter_blacklist_duration);
       break;
 
+    case ASTAIRE_BLACKLIST_DURATION:
+      options.astaire_blacklist_duration = atoi(optarg);
+      TRC_INFO("Astaire blacklist duration set to %d",
+               options.astaire_blacklist_duration);
+      break;
+
     case PIDFILE:
       options.pidfile = std::string(optarg);
       break;
@@ -457,6 +500,8 @@ int main(int argc, char**argv)
   options.exception_max_ttl = 600;
   options.http_blacklist_duration = HttpResolver::DEFAULT_BLACKLIST_DURATION;
   options.diameter_blacklist_duration = DiameterResolver::DEFAULT_BLACKLIST_DURATION;
+  options.astaire_blacklist_duration = AstaireResolver::DEFAULT_BLACKLIST_DURATION;
+  options.session_stores = {"127.0.0.1"};
 
   // Initialise ENT logging before making "Started" log
   PDLogStatic::init(argv[0]);
@@ -509,6 +554,36 @@ int main(int argc, char**argv)
     }
   }
 
+  // Parse the session-stores argument.
+  std::string session_store_location;
+  std::vector<std::string> remote_session_stores_locations;
+  if (!options.session_stores.empty())
+  {
+    if (!Utils::parse_stores_arg(options.session_stores,
+                                 options.local_site_name,
+                                 session_store_location,
+                                 remote_session_stores_locations))
+    {
+      TRC_ERROR("Invalid format of session-stores program argument");
+      return 1;
+    }
+
+    if (session_store_location == "")
+    {
+      // If we've failed to find a local site session store then Ralf has
+      // been misconfigured.
+      TRC_ERROR("No local site session store specified");
+      return 1;
+    }
+    else
+    {
+      TRC_INFO("Using memcached session stores");
+      TRC_INFO("  Primary store: %s", session_store_location.c_str());
+      std::string remote_session_stores_str = boost::algorithm::join(remote_session_stores_locations, ", ");
+      TRC_INFO("  Backup store(s): %s", remote_session_stores_str.c_str());
+    }
+  }
+
   // Create Ralf's alarm objects. Note that the alarm identifier strings must match those
   // in the alarm definition JSON file exactly.
   CommunicationMonitor* cdf_comm_monitor = new CommunicationMonitor(new Alarm("ralf",
@@ -523,27 +598,20 @@ int main(int argc, char**argv)
                                                                         "Ralf",
                                                                         "Chronos");
 
-  CommunicationMonitor* memcached_comm_monitor = new CommunicationMonitor(new Alarm("ralf",
-                                                                                    AlarmDef::RALF_MEMCACHED_COMM_ERROR,
-                                                                                    AlarmDef::CRITICAL),
+  CommunicationMonitor* astaire_comm_monitor = new CommunicationMonitor(new Alarm("ralf",
+                                                                                  AlarmDef::RALF_ASTAIRE_COMM_ERROR,
+                                                                                  AlarmDef::CRITICAL),
                                                                           "Ralf",
-                                                                          "Memcached");
+                                                                          "Astaire");
 
-  Alarm* vbucket_alarm = new Alarm("ralf", AlarmDef::RALF_VBUCKET_ERROR, AlarmDef::MAJOR);
+  CommunicationMonitor* remote_astaire_comm_monitor = new CommunicationMonitor(new Alarm("ralf",
+                                                                                         AlarmDef::RALF_REMOTE_ASTAIRE_COMM_ERROR,
+                                                                                         AlarmDef::CRITICAL),
+                                                                               "Ralf",
+                                                                               "remote Astaire");
 
   // Start the alarm request agent
   AlarmReqAgent::get_instance().start();
-
-  MemcachedStore* mstore = new MemcachedStore(true,
-                                              "./cluster_settings",
-                                              memcached_comm_monitor,
-                                              vbucket_alarm);
-
-  if (!(mstore->has_servers()))
-  {
-    TRC_ERROR("./cluster_settings file does not contain a valid set of servers");
-    return 1;
-  };
 
   AccessLogger* access_logger = NULL;
   if (options.access_log_enabled)
@@ -593,6 +661,20 @@ int main(int argc, char**argv)
     exit(2);
   }
 
+  // Create a DNS resolver.  We'll use this for HTTP, for Diameter and for Astaire.
+  DnsCachedResolver* dns_resolver = new DnsCachedResolver(options.dns_server);
+
+  int addr_family = AF_INET;
+  if (is_ipv6(options.local_host))
+  {
+    addr_family = AF_INET6;
+  }
+
+  AstaireResolver* astaire_resolver =
+                        new AstaireResolver(dns_resolver,
+                                            addr_family,
+                                            options.astaire_blacklist_duration);
+
   SessionStore::SerializerDeserializer* serializer;
   std::vector<SessionStore::SerializerDeserializer*> deserializers;
 
@@ -608,12 +690,35 @@ int main(int argc, char**argv)
   deserializers.push_back(new SessionStore::JsonSerializerDeserializer());
   deserializers.push_back(new SessionStore::BinarySerializerDeserializer());
 
-  SessionStore* store = new SessionStore(mstore, serializer, deserializers);
+  TopologyNeutralMemcachedStore* local_memstore =
+                      new TopologyNeutralMemcachedStore(session_store_location,
+                                                        astaire_resolver,
+                                                        astaire_comm_monitor);
+
+  SessionStore* local_session_store = new SessionStore(local_memstore,
+                                                       serializer,
+                                                       deserializers);
+
+  std::vector<Store*> remote_memstores;
+  std::vector<SessionStore*> remote_session_stores;
+
+  for (std::vector<std::string>::iterator it = remote_session_stores_locations.begin();
+       it != remote_session_stores_locations.end();
+       ++it)
+  {
+    TopologyNeutralMemcachedStore* remote_memstore =
+                     new TopologyNeutralMemcachedStore(*it,
+                                                       astaire_resolver,
+                                                       remote_astaire_comm_monitor);
+    remote_memstores.push_back(remote_memstore);
+    SessionStore* remote_session_store = new SessionStore(remote_memstore,
+                                                          serializer,
+                                                          deserializers);
+    remote_session_stores.push_back(remote_session_store);
+  }
+
   BillingHandlerConfig* cfg = new BillingHandlerConfig();
   PeerMessageSenderFactory* factory = new PeerMessageSenderFactory(options.billing_realm);
-
-  // Create a DNS resolver.  We'll use this both for HTTP and for Diameter.
-  DnsCachedResolver* dns_resolver = new DnsCachedResolver(options.dns_server);
 
   std::string port_str = std::to_string(options.http_port);
 
@@ -636,7 +741,7 @@ int main(int argc, char**argv)
                                                  options.http_blacklist_duration);
   ChronosConnection* timer_conn = new ChronosConnection(local_chronos, chronos_callback_addr, http_resolver, chronos_comm_monitor);
 
-  cfg->mgr = new SessionManager(store, dict, factory, timer_conn, diameter_stack, hc);
+  cfg->mgr = new SessionManager(local_session_store, remote_session_stores, dict, factory, timer_conn, diameter_stack, hc);
 
   HttpStack* http_stack = HttpStack::get_instance();
   HttpStackUtils::PingHandler ping_handler;
@@ -701,6 +806,24 @@ int main(int argc, char**argv)
   delete dns_resolver; dns_resolver = NULL;
   delete load_monitor; load_monitor = NULL;
 
+  delete local_session_store; local_session_store = NULL;
+  delete local_memstore; local_memstore = NULL;
+  for (std::vector<SessionStore*>::iterator it = remote_session_stores.begin();
+       it != remote_session_stores.end();
+       ++it)
+  {
+    delete *it;
+  }
+  remote_session_stores.clear();
+  for (std::vector<Store*>::iterator it = remote_memstores.begin();
+       it != remote_memstores.end();
+       ++it)
+  {
+    delete *it;
+  }
+  remote_memstores.clear();
+  delete astaire_resolver; astaire_resolver = NULL;
+
   hc->stop_thread();
   delete exception_handler; exception_handler = NULL;
   delete hc; hc = NULL;
@@ -711,8 +834,8 @@ int main(int argc, char**argv)
   // Delete Ralf's alarm objects
   delete cdf_comm_monitor;
   delete chronos_comm_monitor;
-  delete memcached_comm_monitor;
-  delete vbucket_alarm;
+  delete astaire_comm_monitor;
+  delete remote_astaire_comm_monitor;
 
   signal(SIGTERM, SIG_DFL);
   sem_destroy(&term_sem);
