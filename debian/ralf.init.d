@@ -99,7 +99,7 @@ get_settings()
         num_http_threads=$(($(grep processor /proc/cpuinfo | wc -l) * 50))
         log_level=2
         . /etc/clearwater/config
-      
+
         # Work out which features are enabled.
         if [ -d /etc/clearwater/features.d ]
         then

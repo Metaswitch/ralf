@@ -7,7 +7,7 @@ COMMON_SOURCES := accesslogger.cpp \
                   memcachedstoreview.cpp \
                   memcached_config.cpp \
                   signalhandler.cpp \
-                  sessionstore.cpp \
+                  session_store.cpp \
                   session_manager.cpp \
                   peer_message_sender.cpp \
                   diameterstack.cpp \
@@ -27,6 +27,7 @@ COMMON_SOURCES := accesslogger.cpp \
                   utils.cpp \
                   zmq_lvc.cpp \
                   log.cpp \
+                  pdlog.cpp \
                   baseresolver.cpp \
                   diameterresolver.cpp \
                   dnscachedresolver.cpp \
@@ -44,7 +45,7 @@ COMMON_SOURCES := accesslogger.cpp \
 
 ralf_SOURCES := ${COMMON_SOURCES} main.cpp
 ralf_test_SOURCES := ${COMMON_SOURCES} \
-                     test_sessionstore.cpp \
+                     test_session_store.cpp \
                      test_session_manager.cpp \
                      test_rf.cpp \
                      test_handlers.cpp \
@@ -70,7 +71,6 @@ COMMON_LDFLAGS := -L../usr/lib \
                   -lz \
                   -lmemcached \
                   -lboost_regex \
-                  -lboost_date_time \
                   -lboost_system \
                   -lboost_filesystem \
                   -lcurl \

@@ -1,5 +1,5 @@
 /**
- * @file sessionstore.cpp Ralf session data store.
+ * @file session_store.cpp Ralf session data store.
  *
  * Project Clearwater - IMS in the Cloud
  * Copyright (C) 2013  Metaswitch Networks Ltd
@@ -37,7 +37,7 @@
 #include <string>
 #include <sstream>
 
-#include "sessionstore.h"
+#include "session_store.h"
 #include "message.hpp"
 #include "log.h"
 #include "json_parse_utils.h"
@@ -131,6 +131,26 @@ Store::Status SessionStore::set_session_data(const std::string& call_id,
                                           data,
                                           cas,
                                           2 * session->session_refresh_time,
+                                          trail);
+  TRC_DEBUG("Store returned %d", status);
+
+  return status;
+}
+
+Store::Status SessionStore::delete_session_data(const std::string& call_id,
+                                                const role_of_node_t role,
+                                                const node_functionality_t function,
+                                                Session* session,
+                                                SAS::TrailId trail)
+{
+  std::string key = create_key(call_id, role, function);
+  TRC_DEBUG("Deleting session data for %s, CAS = %ld", key.c_str(), session->_cas);
+
+  Store::Status status = _store->set_data("session",
+                                          key,
+                                          "",
+                                          session->_cas,
+                                          0,
                                           trail);
   TRC_DEBUG("Store returned %d", status);
 

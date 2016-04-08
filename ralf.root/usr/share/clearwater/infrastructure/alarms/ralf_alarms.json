@@ -8,12 +8,18 @@
                 {
                     "severity": "CLEARED",
                     "details": "The Ralf process has been restored to normal operation.",
-                    "description": "Ralf: Process failure cleared"
+                    "description": "Ralf: Process failure cleared.",
+                    "cause": "The Ralf process has been restored to normal operation. The previously issued alarm has been cleared.",
+                    "effect": "Normal call detail event recording by the I-CSCF and S-CSCF has been restored.",
+                    "action": "No action."
                 },
                 {
                     "severity": "CRITICAL",
                     "details": "Monit has detected that the Ralf process has failed. A restart will automatically be attempted. If this alarm does not clear, the Ralf process may have been stopped or an unrecoverable failure may have occurred.",
-                    "description": "Ralf: Process failure"
+                    "description": "Ralf: Process failure.",
+                    "cause": "The system has detected that the Ralf process has failed.",
+                    "effect": "Call detail event recording may be interrupted and not transmitted to the CDF. If a single Ralf process failed then there is no significant affect to call detail event recording capacity. If multiple Ralf processes fail then call detail event recording capacity will be reduced.",
+                    "action": "Monitor for the alarm to clear and confirm that call detail event recording is operating normally. If Ralf does not return to service then contact your support representative."
                 }
             ]
         },
@@ -25,12 +31,18 @@
                 {
                     "severity": "CLEARED",
                     "details": "Ralf has re-established connection with Astaire.",
-                    "description": "Ralf: Astaire communication error cleared"
+                    "description": "Ralf: Astaire communication error cleared.",
+                    "cause": "Ralf communication to at least one Astaire process has been restored. The previously issued alarm has been cleared.",
+                    "effect": "Normal call detail event recording by the I-CSCF and S-CSCF has been restored.",
+                    "action": "No action."
                 },
                 {
                     "severity": "CRITICAL",
                     "details": "Ralf has failed to make a connection with the Astaire processes in the cluster. If this alarm does not clear, network connection may have been lost, or the Astaire processes may have failed and be in an unrecoverable condition.",
-                    "description": "Ralf: Astaire communication error"
+                    "description": "Ralf: Astaire communication error.",
+                    "cause": "Ralf is unable to contact any Astaire processes.",
+                    "effect": "In progress and new calls can no longer record call detail events and have it reliably transmitted to the CDF. Ralf drops incoming call detail events and logs the error. No caching or queuing of call detail events is provided by Ralf.",
+                    "action": "Monitor for this alarm to clear. If this alarm does not clear, ensure that at least one Astaire process is operational and that network connectivity exists between it and Ralf. If Astaire does not return to service then contact your support representative."
                 }
             ]
         },
@@ -42,12 +54,18 @@
                 {
                     "severity": "CLEARED",
                     "details": "Ralf communication to at least one Chronos has been restored.",
-                    "description": "Ralf: Chronos communication error cleared"
+                    "description": "Ralf: Chronos communication error cleared.",
+                    "cause": "Ralf communication to at least one Chronos has been restored. The previously issued alarm has been cleared.",
+                    "effect": "Normal call detail event recording by the I-CSCF and S-CSCF has been restored.",
+                    "action": "No action."
                 },
                 {
                     "severity": "CRITICAL",
                     "details": "Ralf is unable to contact any Chronos's. It will periodically attempt to reconnect. If this alarm does not clear, investigate the health of the Chronos cluster and ensure that at least the local Chronos mode is operational.",
-                    "description": "Ralf: Chronos communication error"
+                    "description": "Ralf: Chronos communication error.",
+                    "cause": "Ralf is unable to contact any Chronos processes.",
+                    "effect": "Ralf will no longer generate Interim messages for active calls. Refer to your CDF vendor's documentation for the CDF behavior under this circumstance. The associated calls will remain active on Clearwater Core even though Interim messages are not being transmitted to the CDF.",
+                    "action": "Monitor for this alarm to clear. If this alarm does not clear, ensure that at least one Chronos is operational and that network connectivity exists between it and Ralf. If Chronos does not return to service then contact your support representative."
                 }
             ]
         },
@@ -59,12 +77,18 @@
                 {
                     "severity": "CLEARED",
                     "details": "Ralf communication to at least one CDF has been restored.",
-                    "description": "Ralf: CDF communication error cleared"
+                    "description": "Ralf: CDF communication error cleared.",
+                    "cause": "Ralf communication to at least one CDF has been restored. The previously issued alarm has been cleared.",
+                    "effect": "Normal call detail event recording by the I-CSCF and S-CSCF has been restored.",
+                    "action": "No action."
                 },
                 {
                     "severity": "CRITICAL",
                     "details": "Ralf is unable to contact any CDFs. It will periodically attempt to reconnect. If this alarm does not clear, ensure that at least one HSS is operational and that network connectivity exists between it and Ralf.",
-                    "description": "Ralf: CDF communication error"
+                    "description": "Ralf: CDF communication error.",
+                    "cause": "Ralf is unable to contact any CDFs.",
+                    "effect": "Ralf drops incoming call detail events from the I-CSCF and the S-CSCF and logs the error. No caching or queuing of call detail events occurs. Clearwater Core continues to handle in progress and new calls.",
+                    "action": "Monitor for this alarm to clear. If this alarm does not clear, ensure that a CDF is operational and that network connectivity exists between it and Ralf. If the CDF does not return to service then you may need to contact the CDF vendor."
                 }
             ]
         },
@@ -76,12 +100,19 @@
                 {
                     "severity": "CLEARED",
                     "details": "Ralf has re-established connection with remote Astaires.",
-                    "description": "Ralf: Remote Astaire communication error cleared"
+                    "description": "Ralf: Remote Astaire communication error cleared.",
+                    "cause": "Ralf communication to at least one remote Astaire process has been restored. The previously issued alarm has been cleared.",
+                    "effect": "Normal site synchronization of call detail event recording by the I-CSCF and S-CSCF has been restored.",
+                    "action": "No action."
                 },
                 {
                     "severity": "CRITICAL",
                     "details": "Ralf has failed to make a connection with the Astaire processes in a remote cluster. If this alarm does not clear, network connection may have been lost, or the Astaire processes may have failed and be in an unrecoverable condition.",
-                    "description": "Ralf: Remote Astaire communication error"
+                    "description": "Ralf: Remote Astaire communication error.",
+                    "cause": "Ralf is unable to contact any remote Astaires.",
+                    "effect": "In progress and new calls can no longer record call detail events and have it reliably transmitted to the CDF. Ralf drops incoming call detail events and logs the error. No caching or queuing of call detail events is provided by Ralf.",
+                    "effect": "The deployment is no longer geographically redundant because the call detail events from the I-CSCF and S-CSCF are not synchronized to the remote site. If subscribers switch to the other geographic site then call detail events for in progress and new calls will no longer be reliably transmitted to the CDF.
+                    "action": "Monitor for this alarm to clear. If this alarm does not clear, ensure that at least one remote Astaire process is operational and that network connectivity exists between it and Ralf. If the remote Astaire processes do not return to service then contact your support representative."
                 }
             ]
         }
