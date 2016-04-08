@@ -636,7 +636,7 @@ int main(int argc, char**argv)
                                                  options.http_blacklist_duration);
   ChronosConnection* timer_conn = new ChronosConnection(local_chronos, chronos_callback_addr, http_resolver, chronos_comm_monitor);
 
-  cfg->mgr = new SessionManager(store, dict, factory, timer_conn, diameter_stack, hc);
+  cfg->mgr = new SessionManager(store, {}, dict, factory, timer_conn, diameter_stack, hc);
 
   HttpStack* http_stack = HttpStack::get_instance();
   HttpStackUtils::PingHandler ping_handler;
