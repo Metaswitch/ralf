@@ -18,7 +18,7 @@
                     "details": "Monit has detected that the Ralf process has failed. A restart will automatically be attempted. If this alarm does not clear, the Ralf process may have been stopped or an unrecoverable failure may have occurred.",
                     "description": "Ralf: Process failure.",
                     "cause": "The system has detected that the Ralf process has failed.",
-                    "effect": "Call detail event recording may be interrupted and not transmitted to the CDF. If a single Ralf process failed then there is no significant affect to call detail event recording capacity. If multiple Ralf processes fail then call detail event recording capacity will be reduced.",
+                    "effect": "Call detail event recording may be interrupted and not transmitted to the CDF. If a single Ralf process failed then there is no significant effect to call detail event recording capacity. If multiple Ralf processes fail then call detail event recording capacity will be reduced.",
                     "action": "Monitor for the alarm to clear and confirm that call detail event recording is operating normally. If Ralf does not return to service then contact your support representative."
                 }
             ]
