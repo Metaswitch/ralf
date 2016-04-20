@@ -715,6 +715,17 @@ int main(int argc, char**argv)
     fprintf(stderr, "Caught HttpStack::Exception - %s - %d\n", e._func, e._rc);
   }
 
+  try
+  {
+    diameter_stack->stop();
+    diameter_stack->wait_stopped();
+  }
+  catch (Diameter::Stack::Exception& e)
+  {
+    CL_RALF_DIAMETER_STOP_FAIL.log(e._func, e._rc);
+    TRC_ERROR("Failed to stop Diameter stack - function %s, rc %d", e._func, e._rc);
+  }
+
   realm_manager->stop();
 
   delete realm_manager; realm_manager = NULL;
