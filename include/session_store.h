@@ -166,26 +166,27 @@ public:
 
   // Save the session object back into the store (this may fail due to CAS
   // atomicity checking).
-  bool set_session_data(const std::string& call_id,
-                        const role_of_node_t role,
-                        const node_functionality_t function,
-                        Session* data,
-                        SAS::TrailId trail);
+  Store::Status set_session_data(const std::string& call_id,
+                                 const role_of_node_t role,
+                                 const node_functionality_t function,
+                                 Session* data,
+                                 bool new_session,
+                                 SAS::TrailId trail);
 
   // Delete the session object from the store safely (this may fail due to CAS
   // atomicity checking).
-  bool delete_session_data(const std::string& call_id,
-                           const role_of_node_t role,
-                           const node_functionality_t function,
-                           Session* data,
-                           SAS::TrailId trail);
+  Store::Status delete_session_data(const std::string& call_id,
+                                    const role_of_node_t role,
+                                    const node_functionality_t function,
+                                    Session* data,
+                                    SAS::TrailId trail);
 
   // Delete the session object from the store aggressively (this will never fail
   // due to CAS atomicity checking).
-  bool delete_session_data(const std::string& call_id,
-                           const role_of_node_t role,
-                           const node_functionality_t function,
-                           SAS::TrailId trail);
+  Store::Status delete_session_data(const std::string& call_id,
+                                    const role_of_node_t role,
+                                    const node_functionality_t function,
+                                    SAS::TrailId trail);
 
 private:
   // Serialise a session to a string, ready to store in the DB.

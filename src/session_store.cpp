@@ -110,12 +110,17 @@ SessionStore::Session* SessionStore::get_session_data(const std::string& call_id
   return session;
 }
 
-bool SessionStore::set_session_data(const std::string& call_id,
-                                    const role_of_node_t role,
-                                    const node_functionality_t function,
-                                    Session* session,
-                                    SAS::TrailId trail)
+Store::Status SessionStore::set_session_data(const std::string& call_id,
+                                             const role_of_node_t role,
+                                             const node_functionality_t function,
+                                             Session* session,
+                                             bool new_session,
+                                             SAS::TrailId trail)
 {
+  // The new_session flag is used to indicate that we should overwrite the CAS
+  // on the Session object and write to the store as if we were adding the
+  // session for the first time.
+  uint64_t cas = new_session ? 0 : session->_cas;
   std::string key = create_key(call_id, role, function);
   TRC_DEBUG("Saving session data for %s, CAS = %ld", key.c_str(), session->_cas);
 
@@ -124,19 +129,19 @@ bool SessionStore::set_session_data(const std::string& call_id,
   Store::Status status = _store->set_data("session",
                                           key,
                                           data,
-                                          session->_cas,
+                                          cas,
                                           2 * session->session_refresh_time,
                                           trail);
   TRC_DEBUG("Store returned %d", status);
 
-  return (status == Store::Status::OK);
+  return status;
 }
 
-bool SessionStore::delete_session_data(const std::string& call_id,
-                                       const role_of_node_t role,
-                                       const node_functionality_t function,
-                                       Session* session,
-                                       SAS::TrailId trail)
+Store::Status SessionStore::delete_session_data(const std::string& call_id,
+                                                const role_of_node_t role,
+                                                const node_functionality_t function,
+                                                Session* session,
+                                                SAS::TrailId trail)
 {
   std::string key = create_key(call_id, role, function);
   TRC_DEBUG("Deleting session data for %s, CAS = %ld", key.c_str(), session->_cas);
@@ -149,13 +154,13 @@ bool SessionStore::delete_session_data(const std::string& call_id,
                                           trail);
   TRC_DEBUG("Store returned %d", status);
 
-  return (status == Store::Status::OK);
+  return status;
 }
 
-bool SessionStore::delete_session_data(const std::string& call_id,
-                                       const role_of_node_t role,
-                                       const node_functionality_t function,
-                                       SAS::TrailId trail)
+Store::Status SessionStore::delete_session_data(const std::string& call_id,
+                                                const role_of_node_t role,
+                                                const node_functionality_t function,
+                                                SAS::TrailId trail)
 {
   std::string key = create_key(call_id, role, function);
   TRC_DEBUG("Deleting session data for %s", key.c_str());
@@ -163,7 +168,7 @@ bool SessionStore::delete_session_data(const std::string& call_id,
   Store::Status status = _store->delete_data("session", key, trail);
   TRC_DEBUG("Store returned %d", status);
 
-  return (status == Store::Status::OK);
+  return status;
 }
 
 // Serialize a session to a string that can later be loaded by deserialize_session().
