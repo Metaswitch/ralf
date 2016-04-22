@@ -180,7 +180,7 @@ do_start()
         # daemon is not running, so attempt to start it.
         setup_environment
         get_daemon_args
-        $namespace_prefix start-stop-daemon --start --quiet --background --pidfile $PIDFILE --exec $DAEMON --chuid $NAME --chdir $HOME -- $DAEMON_ARGS --daemon --pidfile=$PIDFILE \
+        $namespace_prefix start-stop-daemon --start --quiet --pidfile $PIDFILE --exec $DAEMON --chuid $NAME --chdir $HOME -- $DAEMON_ARGS --daemon --pidfile=$PIDFILE \
                 || return 2
         # Add code here, if necessary, that waits for the process to be ready
         # to handle requests from services started subsequently which depend

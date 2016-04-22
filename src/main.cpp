@@ -531,6 +531,8 @@ int main(int argc, char**argv)
     }
   }
 
+  Utils::start_signal_handlers();
+
   // Create Ralf's alarm objects. Note that the alarm identifier strings must match those
   // in the alarm definition JSON file exactly.
   CommunicationMonitor* cdf_comm_monitor = new CommunicationMonitor(new Alarm("ralf",
