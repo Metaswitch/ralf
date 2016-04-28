@@ -30,19 +30,19 @@
             "levels": [
                 {
                     "severity": "CLEARED",
-                    "details": "Ralf communication to at least one Memcached has been restored.",
+                    "details": "Ralf communication Memcached has been restored.",
                     "description": "Ralf: Memcached communication error cleared.",
-                    "cause": "Ralf communication to at least one Memcached has been restored. The previously issued alarm has been cleared.",
+                    "cause": "Ralf communication to Memcached has been restored. The previously issued alarm has been cleared.",
                     "effect": "Normal call detail event recording by the I-CSCF and S-CSCF has been restored.",
                     "action": "No action."
                 },
                 {
                     "severity": "CRITICAL",
-                    "details": "Ralf is unable to contact any Memcacheds. It will periodically attempt to reconnect. If this alarm does not clear, ensure that at least one Memcached is operational and that network connectivity exists between it and Ralf.",
+                    "details": "Ralf is unable to contact any Memcached processes. It will periodically attempt to reconnect. If this alarm does not clear, ensure that at least one Memcached is operational and that network connectivity exists between it and Ralf.",
                     "description": "Ralf: Memcached communication error.",
-                    "cause": "Ralf is unable to contact any Memcacheds.",
+                    "cause": "Ralf is unable to contact any Memcached processes.",
                     "effect": "In progress and new calls can no longer record call detail events and have it reliably transmitted to the CDF. Ralf drops incoming call detail events and logs the error. No caching or queuing of call detail events is provided by Ralf.",
-                    "action": "Monitor for this alarm to clear. If this alarm does not clear, ensure that at least one Memcached is operational and that network connectivity exists between it and Ralf. If Memcached does not return to service then contact your support representative."
+                    "action": "Ensure that all Memcached processes are operational and that network connectivity exists between them and Ralf. If the alarm does not clear then contact your support representative."
                 }
             ]
         },
@@ -53,19 +53,19 @@
             "levels": [
                 {
                     "severity": "CLEARED",
-                    "details": "Ralf communication to at least one Chronos has been restored.",
+                    "details": "Ralf communication to the local Chronos has been restored.",
                     "description": "Ralf: Chronos communication error cleared.",
-                    "cause": "Ralf communication to at least one Chronos has been restored. The previously issued alarm has been cleared.",
+                    "cause": "Ralf communication to the local Chronos has been restored. The previously issued alarm has been cleared.",
                     "effect": "Normal call detail event recording by the I-CSCF and S-CSCF has been restored.",
                     "action": "No action."
                 },
                 {
                     "severity": "CRITICAL",
-                    "details": "Ralf is unable to contact any Chronos's. It will periodically attempt to reconnect. If this alarm does not clear, investigate the health of the Chronos cluster and ensure that at least the local Chronos mode is operational.",
+                    "details": "Ralf is unable to contact the local Chronos process. It will periodically attempt to reconnect. If this alarm does not clear, investigate the health of the Chronos cluster and ensure that at least the local Chronos is operational.",
                     "description": "Ralf: Chronos communication error.",
-                    "cause": "Ralf is unable to contact any Chronos processes.",
+                    "cause": "Ralf is unable to contact the local Chronos process.",
                     "effect": "Ralf will no longer generate Interim messages for active calls. Refer to your CDF vendor's documentation for the CDF behavior under this circumstance. The associated calls will remain active on Clearwater Core even though Interim messages are not being transmitted to the CDF.",
-                    "action": "Monitor for this alarm to clear. If this alarm does not clear, ensure that at least one Chronos is operational and that network connectivity exists between it and Ralf. If Chronos does not return to service then contact your support representative."
+                    "action": "Ensure that the local Chronos is operational. If this alarm does not clear, then contact your support representative."
                 }
             ]
         },
@@ -99,19 +99,19 @@
             "levels": [
                 {
                     "severity": "CLEARED",
-                    "details": "Ralf communication to Memcached for a piece of data has been restored.",
+                    "details": "Ralf communication to Memcached has been restored for all active calls.",
                     "description": "Ralf: Memcached vBucket communication error cleared.",
-                    "cause": "Ralf communication to Memcached for a vBucket has been restored. The previously issued alarm has been cleared.",
+                    "cause": "Ralf communication to Memcached has been restored for all active calls. The previously issued alarm has been cleared.",
                     "effect": "Normal call detail event recording by the I-CSCF and S-CSCF has been restored.",
                     "action": "No action."
                 },
                 {
                     "severity": "MAJOR",
-                    "details": "Ralf is unable to contact any Memcacheds for a piece of data. Some subscriber data will be unavailable. If this alarm does not clear, ensure that all Memcacheds are operational and that network connectivity exists between them and Ralf.",
+                    "details": "Ralf is unable to contact any Memcached processes for a subset of active calls. If this alarm does not clear, ensure that all Memcached processes are operational and that network connectivity exists between them and Ralf.",
                     "description": "Ralf: Memcached vBucket communication error.",
-                    "cause": "Ralf is unable to contact any Memcacheds for a vBucket.",
+                    "cause": "Ralf is unable to contact any Memcached processes for a subset of active calls.",
                     "effect": "A subset of the active calls can no longer record call detail events and have it reliably transmitted to the CDF.",
-                    "action": "Monitor for this alarm to clear. If this alarm does not clear, ensure that at least one Memcached vBucket is operational and that network connectivity exists between it and Ralf. If Memcached does not return to service then contact your support representative."
+                    "action": "Ensure that all Memcached processes are operational and that network connectivity exists between them and Ralf. If the alarm does not clear then contact your support representative."
                 }
             ]
         }
