@@ -30,7 +30,7 @@
             "levels": [
                 {
                     "severity": "CLEARED",
-                    "details": "Ralf communication Memcached has been restored.",
+                    "details": "Ralf communication to Memcached has been restored.",
                     "description": "Ralf: Memcached communication error cleared.",
                     "cause": "Ralf communication to Memcached has been restored. The previously issued alarm has been cleared.",
                     "effect": "Normal call detail event recording by the I-CSCF and S-CSCF has been restored.",
