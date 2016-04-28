@@ -111,7 +111,7 @@
                     "description": "Ralf: Memcached vBucket communication error.",
                     "cause": "Ralf is unable to contact any Memcached processes for a subset of active calls.",
                     "effect": "A subset of the active calls can no longer record call detail events and have it reliably transmitted to the CDF.",
-                    "action": "Ensure that all remote Memcached processes are operational and that network connectivity exists between them and Ralf. If the alarm does not clear then contact your support representative."
+                    "action": "Ensure that all Memcached processes are operational and that network connectivity exists between them and Ralf. If the alarm does not clear then contact your support representative."
                 }
             ]
         }
