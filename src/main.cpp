@@ -531,7 +531,7 @@ int main(int argc, char**argv)
     }
   }
 
-  Utils::start_signal_handlers();
+  start_signal_handlers();
 
   // Create Ralf's alarm objects. Note that the alarm identifier strings must match those
   // in the alarm definition JSON file exactly.
