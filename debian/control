@@ -13,7 +13,7 @@ Package: ralf
 Architecture: any
 # Ralf has a dependency on gnutls-bin because it uses the generic_create_diameterconf script in clearwater-infrastructure - we don't want to make this a clearwater-infrastructure dependency as that will pull it in unnecessarily on sprout/bono/homer.
 Depends: clearwater-infrastructure, clearwater-tcp-scalability, clearwater-log-cleanup, ralf-libs, chronos, libsctp1, libboost-regex1.54.0, libzmq3, clearwater-memcached, gnutls-bin, clearwater-socket-factory, libboost-filesystem1.54.0, astaire, libsnmp30 (>= 5.7.2~dfsg-clearwater4)
-Suggests: ralf-dbg, clearwater-snmp-handler-alarm
+Suggests: ralf-dbg, clearwater-snmp-alarm-agent
 Description: ralf, the Clearwater CTF
 
 Package: ralf-dbg
