@@ -260,11 +260,6 @@ int init_options(int argc, char**argv, struct options& options)
         TRC_INFO("SAS set to %s\n", options.sas_server.c_str());
         TRC_INFO("System name is set to %s\n", options.sas_system_name.c_str());
       }
-      else
-      {
-        CL_RALF_INVALID_SAS_OPTION.log();
-        TRC_WARNING("Invalid --sas option, SAS disabled\n");
-      }
     }
     break;
 
@@ -532,6 +527,12 @@ int main(int argc, char**argv)
   }
 
   start_signal_handlers();
+
+  if (options.sas_server == "0.0.0.0")
+  {
+    TRC_WARNING("SAS server option was invalid or not configured - SAS is disabled");
+    CL_RALF_INVALID_SAS_OPTION.log();
+  }
 
   // Create Ralf's alarm objects. Note that the alarm identifier strings must match those
   // in the alarm definition JSON file exactly.
