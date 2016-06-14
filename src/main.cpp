@@ -536,28 +536,33 @@ int main(int argc, char**argv)
 
   // Create Ralf's alarm objects. Note that the alarm identifier strings must match those
   // in the alarm definition JSON file exactly.
-  CommunicationMonitor* cdf_comm_monitor = new CommunicationMonitor(new Alarm("ralf",
+  AlarmManager* alarm_manager = new AlarmManager();
+
+  CommunicationMonitor* cdf_comm_monitor = new CommunicationMonitor(new Alarm(alarm_manager,
+                                                                              "ralf",
                                                                               AlarmDef::RALF_CDF_COMM_ERROR,
                                                                               AlarmDef::CRITICAL),
                                                                     "Ralf",
                                                                     "CDF");
 
-  CommunicationMonitor* chronos_comm_monitor = new CommunicationMonitor(new Alarm("ralf",
+  CommunicationMonitor* chronos_comm_monitor = new CommunicationMonitor(new Alarm(alarm_manager,
+                                                                                  "ralf",
                                                                                   AlarmDef::RALF_CHRONOS_COMM_ERROR,
                                                                                   AlarmDef::CRITICAL),
                                                                         "Ralf",
                                                                         "Chronos");
 
-  CommunicationMonitor* memcached_comm_monitor = new CommunicationMonitor(new Alarm("ralf",
+  CommunicationMonitor* memcached_comm_monitor = new CommunicationMonitor(new Alarm(alarm_manager,
+                                                                                    "ralf",
                                                                                     AlarmDef::RALF_MEMCACHED_COMM_ERROR,
                                                                                     AlarmDef::CRITICAL),
                                                                           "Ralf",
                                                                           "Memcached");
 
-  Alarm* vbucket_alarm = new Alarm("ralf", AlarmDef::RALF_VBUCKET_ERROR, AlarmDef::MAJOR);
-
-  // Start the alarm request agent
-  AlarmReqAgent::get_instance().start();
+  Alarm* vbucket_alarm = new Alarm(alarm_manager,
+                                   "ralf",
+                                   AlarmDef::RALF_VBUCKET_ERROR,
+                                   AlarmDef::MAJOR);
 
   MemcachedStore* mstore = new MemcachedStore(true,
                                               "./cluster_settings",
@@ -741,14 +746,12 @@ int main(int argc, char**argv)
   delete exception_handler; exception_handler = NULL;
   delete hc; hc = NULL;
 
-  // Stop the alarm request agent
-  AlarmReqAgent::get_instance().stop();
-
   // Delete Ralf's alarm objects
   delete cdf_comm_monitor;
   delete chronos_comm_monitor;
   delete memcached_comm_monitor;
   delete vbucket_alarm;
+  delete alarm_manager;
 
   signal(SIGTERM, SIG_DFL);
   sem_destroy(&term_sem);
