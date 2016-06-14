@@ -51,7 +51,8 @@ ralf_test_SOURCES := ${COMMON_SOURCES} \
                      test_handlers.cpp \
                      test_main.cpp \
                      fakelogger.cpp \
-                     mock_chronos_connection.cpp
+                     mock_chronos_connection.cpp \
+                     pthread_cond_var_helper.cpp
 
 COMMON_CPPFLAGS := -I../include \
                    -I../usr/include \
