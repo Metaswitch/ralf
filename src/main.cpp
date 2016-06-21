@@ -76,6 +76,7 @@ enum OptionTypes
   BILLING_PEER,
   HTTP_BLACKLIST_DURATION,
   DIAMETER_BLACKLIST_DURATION,
+  SAS_USE_SIGNALING_IF,
   PIDFILE,
   DAEMON,
 };
@@ -113,6 +114,7 @@ struct options
   int diameter_blacklist_duration;
   std::string pidfile;
   bool daemon;
+  bool sas_signaling_if;
 };
 
 const static struct option long_opt[] =
@@ -140,6 +142,7 @@ const static struct option long_opt[] =
   {"diameter-blacklist-duration", required_argument, NULL, DIAMETER_BLACKLIST_DURATION},
   {"pidfile",                     required_argument, NULL, PIDFILE},
   {"daemon",                      no_argument,       NULL, DAEMON},
+  {"sas-use-signaling-interface", no_argument,       NULL, SAS_USE_SIGNALING_IF},
   {NULL,                          0,                 NULL, 0},
 };
 
@@ -187,6 +190,9 @@ void usage(void)
        "                            The amount of time to blacklist an HTTP peer when it is unresponsive.\n"
        "     --diameter-blacklist-duration <secs>\n"
        "                            The amount of time to blacklist a Diameter peer when it is unresponsive.\n"
+       "     --sas-use-signaling-interface\n"
+       "                            Whether SAS traffic is to be dispatched over the signaling network\n"
+       "                            interface rather than the default management interface\n"
        "     --pidfile=<filename>   Write pidfile\n"
        "     --daemon               Run as a daemon\n"
        " -h, --help                 Show this help screen\n"
@@ -386,6 +392,10 @@ int init_options(int argc, char**argv, struct options& options)
       options.daemon = true;
       break;
 
+    case SAS_USE_SIGNALING_IF:
+      options.sas_signaling_if = true;
+      break;
+
     default:
       CL_RALF_INVALID_OPTION_C.log();
       TRC_ERROR("Unknown option: %d.  Run with --help for options.\n", opt);
@@ -462,6 +472,7 @@ int main(int argc, char**argv)
   options.diameter_blacklist_duration = DiameterResolver::DEFAULT_BLACKLIST_DURATION;
   options.pidfile = "";
   options.daemon = false;
+  options.sas_signaling_if = false;
 
   // Initialise ENT logging before making "Started" log
   PDLogStatic::init(argv[0]);
@@ -586,7 +597,8 @@ int main(int argc, char**argv)
             SASEvent::CURRENT_RESOURCE_BUNDLE,
             options.sas_server,
             sas_write,
-            create_connection_in_management_namespace);
+            options.sas_signaling_if ? create_connection_in_signaling_namespace
+                                     : create_connection_in_management_namespace);
 
   LoadMonitor* load_monitor = new LoadMonitor(options.target_latency_us,
                                               options.max_tokens,
