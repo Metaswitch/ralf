@@ -81,6 +81,7 @@ enum OptionTypes
   PIDFILE,
   LOCAL_SITE_NAME,
   SESSION_STORES
+  DAEMON,
 };
 
 enum struct MemcachedWriteFormat
@@ -118,6 +119,7 @@ struct options
   int diameter_blacklist_duration;
   int astaire_blacklist_duration;
   std::string pidfile;
+  bool daemon;
 };
 
 const static struct option long_opt[] =
@@ -147,6 +149,7 @@ const static struct option long_opt[] =
   {"diameter-blacklist-duration", required_argument, NULL, DIAMETER_BLACKLIST_DURATION},
   {"astaire-blacklist-duration",  required_argument, NULL, ASTAIRE_BLACKLIST_DURATION},
   {"pidfile",                     required_argument, NULL, PIDFILE},
+  {"daemon",                      no_argument,       NULL, DAEMON},
   {NULL,                          0,                 NULL, 0},
 };
 
@@ -188,7 +191,7 @@ void usage(void)
        "     --target-latency-us <usecs>\n"
        "                            Target latency above which throttling applies (default: 100000)\n"
        "     --max-tokens N         Maximum number of tokens allowed in the token bucket (used by\n"
-       "                            the throttling code (default: 20))\n"
+       "                            the throttling code (default: 1000))\n"
        "     --init-token-rate N    Initial token refill rate of tokens in the token bucket (used by\n"
        "                            the throttling code (default: 100.0))\n"
        "     --min-token-rate N     Minimum token refill rate of tokens in the token bucket (used by\n"
@@ -203,6 +206,7 @@ void usage(void)
        "     --astaire-blacklist-duration <secs>\n"
        "                            The amount of time to blacklist an Astaire node when it is unresponsive.\n"
        "     --pidfile=<filename>   Write pidfile\n"
+       "     --daemon               Run as a daemon\n"
        " -h, --help                 Show this help screen\n"
       );
 }
@@ -292,11 +296,6 @@ int init_options(int argc, char**argv, struct options& options)
         options.sas_system_name = sas_options[1];
         TRC_INFO("SAS set to %s\n", options.sas_server.c_str());
         TRC_INFO("System name is set to %s\n", options.sas_system_name.c_str());
-      }
-      else
-      {
-        CL_RALF_INVALID_SAS_OPTION.log();
-        TRC_WARNING("Invalid --sas option, SAS disabled\n");
       }
     }
     break;
@@ -426,6 +425,10 @@ int init_options(int argc, char**argv, struct options& options)
       options.pidfile = std::string(optarg);
       break;
 
+    case DAEMON:
+      options.daemon = true;
+      break;
+
     default:
       CL_RALF_INVALID_OPTION_C.log();
       TRC_ERROR("Unknown option: %d.  Run with --help for options.\n", opt);
@@ -494,7 +497,7 @@ int main(int argc, char**argv)
   options.sas_system_name = "";
   options.memcached_write_format = MemcachedWriteFormat::JSON;
   options.target_latency_us = 100000;
-  options.max_tokens = 20;
+  options.max_tokens = 1000;
   options.init_token_rate = 100.0;
   options.min_token_rate = 10.0;
   options.exception_max_ttl = 600;
@@ -502,6 +505,8 @@ int main(int argc, char**argv)
   options.diameter_blacklist_duration = DiameterResolver::DEFAULT_BLACKLIST_DURATION;
   options.astaire_blacklist_duration = AstaireResolver::DEFAULT_BLACKLIST_DURATION;
   options.session_stores = {"127.0.0.1"};
+  options.pidfile = "";
+  options.daemon = false;
 
   // Initialise ENT logging before making "Started" log
   PDLogStatic::init(argv[0]);
@@ -541,6 +546,18 @@ int main(int argc, char**argv)
   if (init_options(argc, argv, options) != 0)
   {
     return 1;
+  }
+
+  if (options.daemon)
+  {
+    // Options parsed and validated, time to demonize before writing out our
+    // pidfile or spwaning threads.
+    int errnum = Utils::daemonize();
+    if (errnum != 0)
+    {
+      TRC_ERROR("Failed to convert to daemon, %d (%s)", errnum, strerror(errnum));
+      exit(0);
+    }
   }
 
   if (options.pidfile != "")
@@ -584,36 +601,46 @@ int main(int argc, char**argv)
     }
   }
 
+  start_signal_handlers();
+
+  if (options.sas_server == "0.0.0.0")
+  {
+    TRC_WARNING("SAS server option was invalid or not configured - SAS is disabled");
+    CL_RALF_INVALID_SAS_OPTION.log();
+  }
+
   // Create Ralf's alarm objects. Note that the alarm identifier strings must match those
   // in the alarm definition JSON file exactly.
-  CommunicationMonitor* cdf_comm_monitor = new CommunicationMonitor(new Alarm("ralf",
+  AlarmManager* alarm_manager = new AlarmManager();
+
+  CommunicationMonitor* cdf_comm_monitor = new CommunicationMonitor(new Alarm(alarm_manager,
+                                                                              "ralf",
                                                                               AlarmDef::RALF_CDF_COMM_ERROR,
                                                                               AlarmDef::CRITICAL),
                                                                     "Ralf",
                                                                     "CDF");
 
-  CommunicationMonitor* chronos_comm_monitor = new CommunicationMonitor(new Alarm("ralf",
+  CommunicationMonitor* chronos_comm_monitor = new CommunicationMonitor(new Alarm(alarm_manager,
+                                                                                  "ralf",
                                                                                   AlarmDef::RALF_CHRONOS_COMM_ERROR,
                                                                                   AlarmDef::CRITICAL),
                                                                         "Ralf",
                                                                         "Chronos");
 
-  CommunicationMonitor* astaire_comm_monitor = new CommunicationMonitor(new Alarm("ralf",
+  CommunicationMonitor* astaire_comm_monitor = new CommunicationMonitor(new Alarm(alarm_manager,
+                                                                                  "ralf",
                                                                                   AlarmDef::RALF_ASTAIRE_COMM_ERROR,
                                                                                   AlarmDef::CRITICAL),
                                                                           "Ralf",
                                                                           "Astaire");
 
-  CommunicationMonitor* remote_astaire_comm_monitor = new CommunicationMonitor(new Alarm("ralf",
+  CommunicationMonitor* remote_astaire_comm_monitor = new CommunicationMonitor(new Alarm(alarm_manager,
+                                                                                         "ralf",
                                                                                          AlarmDef::RALF_REMOTE_ASTAIRE_COMM_ERROR,
                                                                                          AlarmDef::CRITICAL),
                                                                                "Ralf",
                                                                                "remote Astaire");
 
-  // Start the alarm request agent
-  AlarmReqAgent::get_instance().start();
-
-  AccessLogger* access_logger = NULL;
   if (options.access_log_enabled)
   {
     access_logger = new AccessLogger(options.access_log_directory);
@@ -798,6 +825,17 @@ int main(int argc, char**argv)
     fprintf(stderr, "Caught HttpStack::Exception - %s - %d\n", e._func, e._rc);
   }
 
+  try
+  {
+    diameter_stack->stop();
+    diameter_stack->wait_stopped();
+  }
+  catch (Diameter::Stack::Exception& e)
+  {
+    CL_RALF_DIAMETER_STOP_FAIL.log(e._func, e._rc);
+    TRC_ERROR("Failed to stop Diameter stack - function %s, rc %d", e._func, e._rc);
+  }
+
   realm_manager->stop();
 
   delete realm_manager; realm_manager = NULL;
@@ -828,14 +866,12 @@ int main(int argc, char**argv)
   delete exception_handler; exception_handler = NULL;
   delete hc; hc = NULL;
 
-  // Stop the alarm request agent
-  AlarmReqAgent::get_instance().stop();
-
   // Delete Ralf's alarm objects
   delete cdf_comm_monitor;
   delete chronos_comm_monitor;
   delete astaire_comm_monitor;
   delete remote_astaire_comm_monitor;
+  delete alarm_manager;
 
   signal(SIGTERM, SIG_DFL);
   sem_destroy(&term_sem);

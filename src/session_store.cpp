@@ -230,7 +230,7 @@ std::string SessionStore::BinarySerializerDeserializer::
 
   for (std::vector<std::string>::iterator it = session->ccf.begin();
        it != session->ccf.end();
-       it++)
+       ++it)
   {
     oss << *it << '\0';
   }
@@ -382,7 +382,7 @@ SessionStore::Session* SessionStore::JsonSerializerDeserializer::
     JSON_GET_INT_MEMBER(doc, JSON_REFRESH_TIME, session->session_refresh_time);
     JSON_GET_INT_MEMBER(doc, JSON_INTERIM_INTERVAL, session->interim_interval);
   }
-  catch(JsonFormatError err)
+  catch(JsonFormatError& err)
   {
     TRC_INFO("Failed to deserialize JSON document (hit error at %s:%d)",
              err._file, err._line);

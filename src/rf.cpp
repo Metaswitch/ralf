@@ -127,7 +127,7 @@ AccountingRequest::AccountingRequest(const Dictionary* dict,
         break;
       }
     }
-    catch (Diameter::Stack::Exception e)
+    catch (Diameter::Stack::Exception& e)
     {
       TRC_WARNING("AVP %s not recognised, ignoring", it->name.GetString());
     }

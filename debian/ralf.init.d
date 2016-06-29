@@ -117,7 +117,7 @@ get_daemon_args()
 {
         # Get the settings
         get_settings
-      
+
         # Set the destination realm correctly
         if [ ! -z $billing_realm ]
         then
@@ -126,7 +126,7 @@ get_daemon_args()
         then
           billing_realm_arg="--billing-realm=$home_domain"
         fi
-      
+
         [ -z "$target_latency_us" ] || target_latency_us_arg="--target-latency-us=$target_latency_us"
         [ -z "$max_tokens" ] || max_tokens_arg="--max-tokens=$max_tokens"
         [ -z "$init_token_rate" ] || init_token_rate_arg="--init-token-rate=$init_token_rate"
@@ -152,8 +152,7 @@ get_daemon_args()
                      $init_token_rate_arg
                      $min_token_rate_arg
                      $exception_max_ttl_arg
-                     --sas=$sas_server,$NAME@$public_hostname
-                     --pidfile=$PIDFILE"
+                     --sas=$sas_server,$NAME@$public_hostname"
 
         [ "$http_blacklist_duration" = "" ]     || DAEMON_ARGS="$DAEMON_ARGS --http-blacklist-duration=$http_blacklist_duration"
         [ "$diameter_blacklist_duration" = "" ] || DAEMON_ARGS="$DAEMON_ARGS --diameter-blacklist-duration=$diameter_blacklist_duration"
@@ -179,7 +178,7 @@ do_start()
         # daemon is not running, so attempt to start it.
         setup_environment
         get_daemon_args
-        $namespace_prefix start-stop-daemon --start --quiet --background --pidfile $PIDFILE --exec $DAEMON --chuid $NAME --chdir $HOME -- $DAEMON_ARGS \
+        $namespace_prefix start-stop-daemon --start --quiet --pidfile $PIDFILE --exec $DAEMON --chuid $NAME --chdir $HOME -- $DAEMON_ARGS --daemon --pidfile=$PIDFILE \
                 || return 2
         # Add code here, if necessary, that waits for the process to be ready
         # to handle requests from services started subsequently which depend
