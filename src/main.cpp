@@ -80,8 +80,8 @@ enum OptionTypes
   ASTAIRE_BLACKLIST_DURATION,
   PIDFILE,
   LOCAL_SITE_NAME,
-  SESSION_STORES
-  DAEMON,
+  SESSION_STORES,
+  DAEMON
 };
 
 enum struct MemcachedWriteFormat
@@ -641,6 +641,7 @@ int main(int argc, char**argv)
                                                                                "Ralf",
                                                                                "remote Astaire");
 
+  AccessLogger* access_logger = NULL;
   if (options.access_log_enabled)
   {
     access_logger = new AccessLogger(options.access_log_directory);
