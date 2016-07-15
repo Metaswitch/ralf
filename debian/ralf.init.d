@@ -135,6 +135,8 @@ get_daemon_args()
         [ -z "$cdf_identity" ] || billing_peer_arg="--billing-peer=$cdf_identity"
         [ -z $signaling_namespace ] || namespace_prefix="ip netns exec $signaling_namespace"
         [ -z "$local_site_name" ] || local_site_name_arg="--local-site-name=$local_site_name"
+        [ -z "$chronos_hostname" ] || chronos_hostname_arg="--chronos-hostname=$chronos_hostname"
+        [ -z "$ralf_hostname" ] || ralf_hostname_arg="--ralf-hostname=$chronos_hostname"
 
         DAEMON_ARGS="--localhost=$local_ip
                      $local_site_name_arg
@@ -145,6 +147,8 @@ get_daemon_args()
                      --dns-server=$signaling_dns_server
                      --log-file=$log_directory
                      --log-level=$log_level
+                     $chronos_hostname_arg
+                     $ralf_hostname_arg
                      $billing_realm_arg
                      $billing_peer_arg
                      $target_latency_us_arg
