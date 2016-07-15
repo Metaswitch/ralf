@@ -78,6 +78,8 @@ enum OptionTypes
   SAS_USE_SIGNALING_IF,
   PIDFILE,
   DAEMON,
+  CHRONOS_HOSTNAME,
+  RALF_HOSTNAME
 };
 
 enum struct MemcachedWriteFormat
@@ -114,6 +116,8 @@ struct options
   std::string pidfile;
   bool daemon;
   bool sas_signaling_if;
+  std::string chronos_hostname;
+  std::string ralf_hostname;
 };
 
 const static struct option long_opt[] =
@@ -142,6 +146,8 @@ const static struct option long_opt[] =
   {"pidfile",                     required_argument, NULL, PIDFILE},
   {"daemon",                      no_argument,       NULL, DAEMON},
   {"sas-use-signaling-interface", no_argument,       NULL, SAS_USE_SIGNALING_IF},
+  {"chronos-hostname",            required_argument, NULL, CHRONOS_HOSTNAME},
+  {"ralf-hostname",               required_argument, NULL, RALF_HOSTNAME},
   {NULL,                          0,                 NULL, 0},
 };
 
@@ -192,6 +198,13 @@ void usage(void)
        "     --sas-use-signaling-interface\n"
        "                            Whether SAS traffic is to be dispatched over the signaling network\n"
        "                            interface rather than the default management interface\n"
+       "     --astaire-blacklist-duration <secs>\n"
+       "                            The amount of time to blacklist an Astaire node when it is unresponsive.\n"
+       "     --chronos-hostname <hostname>\n"
+       "                            The hostname of the remote Chronos cluster to use.\n"
+       "     --ralf-hostname <hostname>\n"
+       "                            The hostname of the cluster to which this Ralf is a member for the\n"
+       "                            remote Chronos cluster to use.\n"
        "     --pidfile=<filename>   Write pidfile\n"
        "     --daemon               Run as a daemon\n"
        " -h, --help                 Show this help screen\n"
@@ -394,6 +407,14 @@ int init_options(int argc, char**argv, struct options& options)
 
     case SAS_USE_SIGNALING_IF:
       options.sas_signaling_if = true;
+      break;
+
+    case CHRONOS_HOSTNAME:
+      options.chronos_hostname = std::string(optarg);
+      break;
+
+    case RALF_HOSTNAME:
+      options.ralf_hostname = std::string(optarg);
       break;
 
     default:
@@ -637,29 +658,56 @@ int main(int argc, char**argv)
   // Create a DNS resolver.  We'll use this both for HTTP and for Diameter.
   DnsCachedResolver* dns_resolver = new DnsCachedResolver(options.dns_server);
 
+  // Create a connection to Chronos.
   std::string port_str = std::to_string(options.http_port);
 
-  // We want Chronos to call back to its local sprout instance so that we can
-  // handle Ralfs failing without missing timers.
-  int http_af = AF_INET;
+  std::string chronos_service;
   std::string chronos_callback_addr = "127.0.0.1:" + port_str;
-  std::string local_chronos = "127.0.0.1:7253";
-  Utils::IPAddressType address_type = Utils::parse_ip_address(options.http_address);
-  if ((address_type == Utils::IPAddressType::IPV6_ADDRESS) ||
-      (address_type == Utils::IPAddressType::IPV6_ADDRESS_WITH_PORT) ||
-      (address_type == Utils::IPAddressType::IPV6_ADDRESS_BRACKETED))
+  int http_af = AF_INET;
+
+  if (options.chronos_hostname == "" || options.ralf_hostname == "")
   {
-    http_af = AF_INET6;
-    chronos_callback_addr = "[::1]:" + port_str;
-    local_chronos = "[::1]:7253";
+    // We want Chronos to call back to its local Ralf instance so that we can
+    // handle Ralfs failing without missing timers.
+    chronos_service = "127.0.0.1:7253";
+
+    Utils::IPAddressType address_type = Utils::parse_ip_address(options.http_address);
+
+    if ((address_type == Utils::IPAddressType::IPV6_ADDRESS) ||
+        (address_type == Utils::IPAddressType::IPV6_ADDRESS_WITH_PORT) ||
+        (address_type == Utils::IPAddressType::IPV6_ADDRESS_BRACKETED))
+    {
+      http_af = AF_INET6;
+      chronos_callback_addr = "[::1]:" + port_str;
+    }
+  }
+  else
+  {
+    chronos_service = options.chronos_hostname + ":7253";
+
+    Utils::IPAddressType address_type = Utils::parse_ip_address(options.chronos_hostname);
+
+    if ((address_type == Utils::IPAddressType::IPV6_ADDRESS) ||
+        (address_type == Utils::IPAddressType::IPV6_ADDRESS_WITH_PORT) ||
+        (address_type == Utils::IPAddressType::IPV6_ADDRESS_BRACKETED))
+    {
+      http_af = AF_INET6;
+    }
+
+    chronos_callback_addr = options.ralf_hostname + ":" + port_str;
   }
 
   // Create a connection to Chronos.  This requires an HttpResolver.
-  TRC_STATUS("Creating connection to Chronos at %s using %s as the callback URI", local_chronos.c_str(), chronos_callback_addr.c_str());
+  TRC_STATUS("Creating connection to Chronos at %s using %s as the callback URI",
+             chronos_service.c_str(), chronos_callback_addr.c_str());
+
   HttpResolver* http_resolver = new HttpResolver(dns_resolver,
                                                  http_af,
                                                  options.http_blacklist_duration);
-  ChronosConnection* timer_conn = new ChronosConnection(local_chronos, chronos_callback_addr, http_resolver, chronos_comm_monitor);
+  ChronosConnection* timer_conn = new ChronosConnection(chronos_service,
+                                                        chronos_callback_addr,
+                                                        http_resolver,
+                                                        chronos_comm_monitor);
 
   cfg->mgr = new SessionManager(store, {}, dict, factory, timer_conn, diameter_stack, hc);
 
