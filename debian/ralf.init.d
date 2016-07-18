@@ -136,7 +136,7 @@ get_daemon_args()
         [ -z $signaling_namespace ] || namespace_prefix="ip netns exec $signaling_namespace"
         [ -z "$local_site_name" ] || local_site_name_arg="--local-site-name=$local_site_name"
         [ -z "$chronos_hostname" ] || chronos_hostname_arg="--chronos-hostname=$chronos_hostname"
-        [ -z "$ralf_hostname" ] || ralf_hostname_arg="--ralf-hostname=$chronos_hostname"
+        [ -z "$ralf_hostname" ] || ralf_hostname_arg="--ralf-hostname=$ralf_hostname"
 
         DAEMON_ARGS="--localhost=$local_ip
                      $local_site_name_arg
