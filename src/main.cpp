@@ -201,10 +201,12 @@ void usage(void)
        "     --astaire-blacklist-duration <secs>\n"
        "                            The amount of time to blacklist an Astaire node when it is unresponsive.\n"
        "     --chronos-hostname <hostname>\n"
-       "                            The hostname of the remote Chronos cluster to use.\n"
-       "     --ralf-hostname <hostname>\n"
-       "                            The hostname of the cluster to which this Ralf is a member for the\n"
-       "                            remote Chronos cluster to use.\n"
+       "                            The hostname of the remote Chronos cluster to use. If unset, the default\n"
+       "                            is to use localhost, using localhost as the callback URL.\n"
+       "     --ralf-hostname <hostname:port>\n"
+       "                            The hostname and port of the cluster of Ralf nodes to which this Ralf is\n"
+       "                            a member. The port should be the HTTP port the nodes are listening on.\n"
+       "                            This is used to form the callback URL for the Chronos cluser.\n"
        "     --pidfile=<filename>   Write pidfile\n"
        "     --daemon               Run as a daemon\n"
        " -h, --help                 Show this help screen\n"
@@ -667,8 +669,9 @@ int main(int argc, char**argv)
 
   if (options.chronos_hostname == "" || options.ralf_hostname == "")
   {
-    // We want Chronos to call back to its local Ralf instance so that we can
-    // handle Ralfs failing without missing timers.
+    // If we are using a local chronos cluster, we want Chronos to call back to
+    // its local Ralf instance so that we can handle Ralfs failing without missing
+    // timers.
     chronos_service = "127.0.0.1:7253";
 
     Utils::IPAddressType address_type = Utils::parse_ip_address(options.http_address);
@@ -694,7 +697,7 @@ int main(int argc, char**argv)
       http_af = AF_INET6;
     }
 
-    chronos_callback_addr = options.ralf_hostname + ":" + port_str;
+    chronos_callback_addr = options.ralf_hostname
   }
 
   // Create a connection to Chronos.  This requires an HttpResolver.
