@@ -9,16 +9,16 @@ Build-Depends: debhelper (>= 8.0.0)
 Standards-Version: 3.9.2
 Homepage: http://projectclearwater.org/
 
-Package: ralf-classic
+Package: ralf-node
 Architecture: any
 Depends: ralf, clearwater-memcached, chronos, astaire
-Description: ralf-classic, the Clearwater CTF with databases
+Description: ralf-node, the Clearwater CTF
 
-Package: ralf-classic-dbg
+Package: ralf-node-dbg
 Architecture: any
-Depends: ralf-classic (= ${binary:Version})
+Depends: ralf-node (= ${binary:Version})
 Recommends: ralf-dbg, chronos-dbg
-Description: Debugging symbols for ralf-classic, the Clearwater CTF with databases
+Description: Debugging symbols for ralf-node, the Clearwater CTF
 
 Package: ralf
 Architecture: any

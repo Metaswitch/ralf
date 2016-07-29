@@ -13,7 +13,7 @@ DEB_COMPONENT := ralf
 DEB_MAJOR_VERSION := 1.0${DEB_VERSION_QUALIFIER}
 DEB_NAMES := ralf-libs ralf-libs-dbg
 DEB_NAMES += ralf ralf-dbg
-DEB_NAMES += ralf-classic ralf-classic-dbg
+DEB_NAMES += ralf-node ralf-node-dbg
 
 INCLUDE_DIR := ${INSTALL_DIR}/include
 LIB_DIR := ${INSTALL_DIR}/lib
