@@ -16,6 +16,8 @@ Description: ralf-node, the Clearwater CTF
 
 Package: ralf-node-dbg
 Architecture: any
+Section: debug
+Priority: extra
 Depends: ralf-node (= ${binary:Version})
 Recommends: ralf-dbg, chronos-dbg
 Description: Debugging symbols for ralf-node, the Clearwater CTF
