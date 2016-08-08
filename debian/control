@@ -12,7 +12,7 @@ Homepage: http://projectclearwater.org/
 Package: ralf-node
 Architecture: any
 Depends: ralf, clearwater-memcached, chronos, astaire
-Description: ralf-node, the Clearwater CTF
+Description: ralf-node, the Clearwater CTF node
 
 Package: ralf-node-dbg
 Architecture: any
@@ -20,7 +20,7 @@ Section: debug
 Priority: extra
 Depends: ralf-node (= ${binary:Version})
 Recommends: ralf-dbg, chronos-dbg
-Description: Debugging symbols for ralf-node, the Clearwater CTF
+Description: Debugging symbols for ralf-node, the Clearwater CTF node
 
 Package: ralf
 Architecture: any
