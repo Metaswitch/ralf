@@ -3,7 +3,7 @@ TEST_TARGETS := ralf_test
 
 COMMON_SOURCES := accesslogger.cpp \
                   localstore.cpp \
-                  memcachedconnectionpool.cpp \
+                  memcached_connection_pool.cpp \
                   memcachedstore.cpp \
                   memcachedstoreview.cpp \
                   memcached_config.cpp \
@@ -21,6 +21,7 @@ COMMON_SOURCES := accesslogger.cpp \
                   logger.cpp \
                   saslogger.cpp \
                   httpresolver.cpp \
+                  http_connection_pool.cpp \
                   httpconnection.cpp \
                   chronosconnection.cpp \
                   load_monitor.cpp \
