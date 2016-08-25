@@ -42,7 +42,6 @@
 
 #include "ralf_pd_definitions.h"
 
-#include "ipv6utils.h"
 #include "memcachedstore.h"
 #include "httpresolver.h"
 #include "chronosconnection.h"
@@ -645,7 +644,10 @@ int main(int argc, char**argv)
   int http_af = AF_INET;
   std::string chronos_callback_addr = "127.0.0.1:" + port_str;
   std::string local_chronos = "127.0.0.1:7253";
-  if (is_ipv6(options.http_address))
+  Utils::IPAddressType address_type = Utils::parse_ip_address(options.http_address);
+  if ((address_type == Utils::IPAddressType::IPV6_ADDRESS) ||
+      (address_type == Utils::IPAddressType::IPV6_ADDRESS_WITH_PORT) ||
+      (address_type == Utils::IPAddressType::IPV6_ADDRESS_BRACKETED))
   {
     http_af = AF_INET6;
     chronos_callback_addr = "[::1]:" + port_str;
