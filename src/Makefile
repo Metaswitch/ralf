@@ -35,7 +35,6 @@ COMMON_SOURCES := accesslogger.cpp \
                   dnscachedresolver.cpp \
                   dnsparser.cpp \
                   realmmanager.cpp \
-                  ipv6utils.cpp \
                   alarm.cpp \
                   base_communication_monitor.cpp \
                   communicationmonitor.cpp \
