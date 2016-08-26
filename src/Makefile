@@ -22,6 +22,7 @@ COMMON_SOURCES := accesslogger.cpp \
                   saslogger.cpp \
                   httpresolver.cpp \
                   http_connection_pool.cpp \
+                  httpclient.cpp \
                   httpconnection.cpp \
                   chronosconnection.cpp \
                   load_monitor.cpp \
