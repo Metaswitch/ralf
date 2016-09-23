@@ -20,7 +20,7 @@ COMMON_SOURCES := accesslogger.cpp \
                   handlers.cpp \
                   logger.cpp \
                   saslogger.cpp \
-                  httpresolver.cpp \
+                  a_record_resolver.cpp \
                   http_connection_pool.cpp \
                   httpclient.cpp \
                   httpconnection.cpp \
