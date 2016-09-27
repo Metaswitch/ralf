@@ -42,7 +42,6 @@
 
 #include "ralf_pd_definitions.h"
 
-#include "ipv6utils.h"
 #include "memcachedstore.h"
 #include "httpresolver.h"
 #include "chronosconnection.h"
@@ -78,6 +77,7 @@ enum OptionTypes
   HTTP_BLACKLIST_DURATION,
   DIAMETER_BLACKLIST_DURATION,
   ASTAIRE_BLACKLIST_DURATION,
+  SAS_USE_SIGNALING_IF,
   PIDFILE,
   LOCAL_SITE_NAME,
   SESSION_STORES,
@@ -120,6 +120,7 @@ struct options
   int astaire_blacklist_duration;
   std::string pidfile;
   bool daemon;
+  bool sas_signaling_if;
 };
 
 const static struct option long_opt[] =
@@ -150,6 +151,7 @@ const static struct option long_opt[] =
   {"astaire-blacklist-duration",  required_argument, NULL, ASTAIRE_BLACKLIST_DURATION},
   {"pidfile",                     required_argument, NULL, PIDFILE},
   {"daemon",                      no_argument,       NULL, DAEMON},
+  {"sas-use-signaling-interface", no_argument,       NULL, SAS_USE_SIGNALING_IF},
   {NULL,                          0,                 NULL, 0},
 };
 
@@ -205,6 +207,9 @@ void usage(void)
        "                            The amount of time to blacklist a Diameter peer when it is unresponsive.\n"
        "     --astaire-blacklist-duration <secs>\n"
        "                            The amount of time to blacklist an Astaire node when it is unresponsive.\n"
+       "     --sas-use-signaling-interface\n"
+       "                            Whether SAS traffic is to be dispatched over the signaling network\n"
+       "                            interface rather than the default management interface\n"
        "     --pidfile=<filename>   Write pidfile\n"
        "     --daemon               Run as a daemon\n"
        " -h, --help                 Show this help screen\n"
@@ -228,6 +233,10 @@ int init_logging_options(int argc, char**argv, struct options& options)
 
     case 'L':
       options.log_level = atoi(optarg);
+      break;
+
+    case DAEMON:
+      options.daemon = true;
       break;
 
     default:
@@ -333,7 +342,8 @@ int init_options(int argc, char**argv, struct options& options)
 
     case 'F':
     case 'L':
-      // Ignore F and L - these are handled by init_logging_options
+    case DAEMON:
+      // Ignore daemon, F and L - these are handled by init_logging_options
       break;
 
     case 'h':
@@ -425,8 +435,8 @@ int init_options(int argc, char**argv, struct options& options)
       options.pidfile = std::string(optarg);
       break;
 
-    case DAEMON:
-      options.daemon = true;
+    case SAS_USE_SIGNALING_IF:
+      options.sas_signaling_if = true;
       break;
 
     default:
@@ -507,6 +517,7 @@ int main(int argc, char**argv)
   options.session_stores = {"127.0.0.1"};
   options.pidfile = "";
   options.daemon = false;
+  options.sas_signaling_if = false;
 
   // Initialise ENT logging before making "Started" log
   PDLogStatic::init(argv[0]);
@@ -518,20 +529,12 @@ int main(int argc, char**argv)
     return 1;
   }
 
-  Log::setLoggingLevel(options.log_level);
-  if ((options.log_to_file) && (options.log_directory != ""))
-  {
-    // Work out the program name from argv[0], stripping anything before the final slash.
-    char* prog_name = argv[0];
-    char* slash_ptr = rindex(argv[0], '/');
-    if (slash_ptr != NULL)
-    {
-      prog_name = slash_ptr + 1;
-    }
-    Log::setLogger(new Logger(options.log_directory, prog_name));
-  }
-
-  TRC_STATUS("Log level set to %d", options.log_level);
+  Utils::daemon_log_setup(argc,
+                          argv,
+                          options.daemon,
+                          options.log_directory,
+                          options.log_level,
+                          options.log_to_file);
 
   std::stringstream options_ss;
   for (int ii = 0; ii < argc; ii++)
@@ -546,18 +549,6 @@ int main(int argc, char**argv)
   if (init_options(argc, argv, options) != 0)
   {
     return 1;
-  }
-
-  if (options.daemon)
-  {
-    // Options parsed and validated, time to demonize before writing out our
-    // pidfile or spwaning threads.
-    int errnum = Utils::daemonize();
-    if (errnum != 0)
-    {
-      TRC_ERROR("Failed to convert to daemon, %d (%s)", errnum, strerror(errnum));
-      exit(0);
-    }
   }
 
   if (options.pidfile != "")
@@ -652,7 +643,8 @@ int main(int argc, char**argv)
             SASEvent::CURRENT_RESOURCE_BUNDLE,
             options.sas_server,
             sas_write,
-            create_connection_in_management_namespace);
+            options.sas_signaling_if ? create_connection_in_signaling_namespace
+                                     : create_connection_in_management_namespace);
 
   LoadMonitor* load_monitor = new LoadMonitor(options.target_latency_us,
                                               options.max_tokens,
@@ -755,7 +747,10 @@ int main(int argc, char**argv)
   int http_af = AF_INET;
   std::string chronos_callback_addr = "127.0.0.1:" + port_str;
   std::string local_chronos = "127.0.0.1:7253";
-  if (is_ipv6(options.http_address))
+  Utils::IPAddressType address_type = Utils::parse_ip_address(options.http_address);
+  if ((address_type == Utils::IPAddressType::IPV6_ADDRESS) ||
+      (address_type == Utils::IPAddressType::IPV6_ADDRESS_WITH_PORT) ||
+      (address_type == Utils::IPAddressType::IPV6_ADDRESS_BRACKETED))
   {
     http_af = AF_INET6;
     chronos_callback_addr = "[::1]:" + port_str;

@@ -127,6 +127,8 @@ get_daemon_args()
           billing_realm_arg="--billing-realm=$home_domain"
         fi
 
+        [ "$sas_use_signaling_interface" != "Y" ] || sas_signaling_if_arg="--sas-use-signaling-interface"
+
         [ -z "$target_latency_us" ] || target_latency_us_arg="--target-latency-us=$target_latency_us"
         [ -z "$max_tokens" ] || max_tokens_arg="--max-tokens=$max_tokens"
         [ -z "$init_token_rate" ] || init_token_rate_arg="--init-token-rate=$init_token_rate"
@@ -152,6 +154,7 @@ get_daemon_args()
                      $init_token_rate_arg
                      $min_token_rate_arg
                      $exception_max_ttl_arg
+                     $sas_signaling_if_arg
                      --sas=$sas_server,$NAME@$public_hostname"
 
         [ "$http_blacklist_duration" = "" ]     || DAEMON_ARGS="$DAEMON_ARGS --http-blacklist-duration=$http_blacklist_duration"

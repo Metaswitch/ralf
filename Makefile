@@ -1,4 +1,4 @@
-# Top level Makefile for building homestead
+# Top level Makefile for building ralf
 
 # This should come first so make does the right thing by default
 all: build
@@ -11,7 +11,9 @@ MODULE_DIR := ${ROOT}/modules
 
 DEB_COMPONENT := ralf
 DEB_MAJOR_VERSION := 1.0${DEB_VERSION_QUALIFIER}
-DEB_NAMES := ralf ralf-dbg ralf-libs ralf-libs-dbg
+DEB_NAMES := ralf-libs ralf-libs-dbg
+DEB_NAMES += ralf ralf-dbg
+DEB_NAMES += ralf-node ralf-node-dbg
 
 INCLUDE_DIR := ${INSTALL_DIR}/include
 LIB_DIR := ${INSTALL_DIR}/lib

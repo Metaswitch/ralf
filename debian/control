@@ -9,10 +9,23 @@ Build-Depends: debhelper (>= 8.0.0)
 Standards-Version: 3.9.2
 Homepage: http://projectclearwater.org/
 
+Package: ralf-node
+Architecture: any
+Depends: ralf (= ${binary:Version}), clearwater-memcached, chronos, astaire
+Description: ralf-node, the Clearwater CTF node
+
+Package: ralf-node-dbg
+Architecture: any
+Section: debug
+Priority: extra
+Depends: ralf-node (= ${binary:Version})
+Recommends: ralf-dbg, chronos-dbg
+Description: Debugging symbols for ralf-node, the Clearwater CTF node
+
 Package: ralf
 Architecture: any
 # Ralf has a dependency on gnutls-bin because it uses the generic_create_diameterconf script in clearwater-infrastructure - we don't want to make this a clearwater-infrastructure dependency as that will pull it in unnecessarily on sprout/bono/homer.
-Depends: clearwater-infrastructure, clearwater-tcp-scalability, clearwater-log-cleanup, ralf-libs, chronos, libsctp1, libboost-regex1.54.0, libzmq3, clearwater-memcached, gnutls-bin, clearwater-socket-factory, libboost-filesystem1.54.0, astaire, libsnmp30 (>= 5.7.2~dfsg-clearwater4)
+Depends: clearwater-infrastructure, clearwater-tcp-scalability, clearwater-log-cleanup, ralf-libs, libsctp1, libboost-regex1.54.0, libzmq3, gnutls-bin, clearwater-socket-factory, libboost-filesystem1.54.0, libsnmp30 (>= 5.7.2~dfsg-clearwater4), clearwater-monit
 Suggests: ralf-dbg, clearwater-snmp-alarm-agent
 Description: ralf, the Clearwater CTF
 
@@ -20,7 +33,7 @@ Package: ralf-dbg
 Architecture: any
 Section: debug
 Priority: extra
-Depends: ralf (= ${binary:Version}), ralf-libs-dbg (= ${binary:Version}), gdb, chronos-dbg
+Depends: ralf (= ${binary:Version}), ralf-libs-dbg (= ${binary:Version}), gdb
 Description: Debugging symbols for ralf
 
 Package: ralf-libs

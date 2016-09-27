@@ -1,0 +1,12 @@
+/var/log/ralf/ralf_out.log /var/log/ralf/ralf_err.log {
+        rotate 4
+        weekly
+        minsize 1M
+        missingok
+        create 640 root adm
+        notifempty
+        compress
+        delaycompress
+        copytruncate
+}
+
