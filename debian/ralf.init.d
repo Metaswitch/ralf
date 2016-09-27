@@ -142,6 +142,8 @@ get_daemon_args()
         [ -z "$exception_max_ttl" ] || exception_max_ttl_arg="--exception-max-ttl=$exception_max_ttl"
         [ -z "$cdf_identity" ] || billing_peer_arg="--billing-peer=$cdf_identity"
         [ -z $signaling_namespace ] || namespace_prefix="ip netns exec $signaling_namespace"
+        [ -z "$chronos_hostname" ] || chronos_hostname_arg="--chronos-hostname=$chronos_hostname"
+        [ -z "$ralf_hostname" ] || ralf_hostname_arg="--ralf-hostname=$ralf_hostname"
 
         DAEMON_ARGS="--localhost=$local_ip
                      --http=$local_ip
@@ -150,6 +152,8 @@ get_daemon_args()
                      --dns-server=$signaling_dns_server
                      --log-file=$log_directory
                      --log-level=$log_level
+                     $chronos_hostname_arg
+                     $ralf_hostname_arg
                      $billing_realm_arg
                      $billing_peer_arg
                      $target_latency_us_arg
