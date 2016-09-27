@@ -685,8 +685,10 @@ int main(int argc, char**argv)
   DnsCachedResolver* dns_resolver = new DnsCachedResolver(options.dns_server);
 
   int addr_family = AF_INET;
-  if (is_ipv6(options.local_host))
+  struct in6_addr dummy_addr_resolver;
+  if (inet_pton(AF_INET6, options.local_host.c_str(), &dummy_addr_resolver) == 1)
   {
+    TRC_DEBUG("Local host is an IPv6 address");
     addr_family = AF_INET6;
   }
 
