@@ -198,8 +198,6 @@ void usage(void)
        "     --sas-use-signaling-interface\n"
        "                            Whether SAS traffic is to be dispatched over the signaling network\n"
        "                            interface rather than the default management interface\n"
-       "     --astaire-blacklist-duration <secs>\n"
-       "                            The amount of time to blacklist an Astaire node when it is unresponsive.\n"
        "     --chronos-hostname <hostname>\n"
        "                            The hostname of the remote Chronos cluster to use. If unset, the default\n"
        "                            is to use localhost, using localhost as the callback URL.\n"
