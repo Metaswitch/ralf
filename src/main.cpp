@@ -697,7 +697,7 @@ int main(int argc, char**argv)
       http_af = AF_INET6;
     }
 
-    chronos_callback_addr = options.ralf_hostname
+    chronos_callback_addr = options.ralf_hostname;
   }
 
   // Create a connection to Chronos.  This requires an HttpResolver.
