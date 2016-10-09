@@ -749,6 +749,9 @@ int main(int argc, char**argv)
        it != remote_session_stores_locations.end();
        ++it)
   {
+    SessionStore::SerializerDeserializer* serializer;
+    std::vector<SessionStore::SerializerDeserializer*> deserializers;
+
     if (options.memcached_write_format == MemcachedWriteFormat::JSON)
     {
       serializer = new SessionStore::JsonSerializerDeserializer();
