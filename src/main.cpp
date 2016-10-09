@@ -749,6 +749,18 @@ int main(int argc, char**argv)
        it != remote_session_stores_locations.end();
        ++it)
   {
+    if (options.memcached_write_format == MemcachedWriteFormat::JSON)
+    {
+      serializer = new SessionStore::JsonSerializerDeserializer();
+    }
+    else
+    {
+      serializer = new SessionStore::BinarySerializerDeserializer();
+    }
+
+    deserializers.push_back(new SessionStore::JsonSerializerDeserializer());
+    deserializers.push_back(new SessionStore::BinarySerializerDeserializer());
+
     TopologyNeutralMemcachedStore* remote_memstore =
                      new TopologyNeutralMemcachedStore(*it,
                                                        astaire_resolver,
