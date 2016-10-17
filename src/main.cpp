@@ -832,18 +832,17 @@ int main(int argc, char**argv)
 
   cfg->mgr = new SessionManager(local_session_store, remote_session_stores, dict, factory, timer_conn, diameter_stack, hc);
 
-  HttpStack* http_stack = HttpStack::get_instance();
+  HttpStack* http_stack = new HttpStack(options.http_threads,
+                                        exception_handler,
+                                        access_logger,
+                                        load_monitor);
   HttpStackUtils::PingHandler ping_handler;
   BillingHandler billing_handler(cfg);
   try
   {
     http_stack->initialize();
-    http_stack->configure(options.http_address,
-                          options.http_port,
-                          options.http_threads,
-                          exception_handler,
-                          access_logger,
-                          load_monitor);
+    http_stack->bind_tcp_socket(options.http_address,
+                                options.http_port);
     http_stack->register_handler("^/ping$", &ping_handler);
     http_stack->register_handler("^/call-id/[^/]*$", &billing_handler);
     http_stack->start();
@@ -927,6 +926,7 @@ int main(int argc, char**argv)
   hc->stop_thread();
   delete exception_handler; exception_handler = NULL;
   delete hc; hc = NULL;
+  delete http_stack; http_stack = NULL;
 
   // Delete Ralf's alarm objects
   delete cdf_comm_monitor;
