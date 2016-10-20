@@ -83,7 +83,7 @@ enum OptionTypes
   SESSION_STORES,
   DAEMON,
   CHRONOS_HOSTNAME,
-  CHRONOS_RALF_CALLBACK_URI,
+  RALF_CHRONOS_CALLBACK_URI,
   RALF_HOSTNAME
 };
 
@@ -125,7 +125,7 @@ struct options
   bool daemon;
   bool sas_signaling_if;
   std::string chronos_hostname;
-  std::string chronos_ralf_callback_uri;
+  std::string ralf_chronos_callback_uri;
   std::string ralf_hostname;
 };
 
@@ -159,7 +159,7 @@ const static struct option long_opt[] =
   {"daemon",                      no_argument,       NULL, DAEMON},
   {"sas-use-signaling-interface", no_argument,       NULL, SAS_USE_SIGNALING_IF},
   {"chronos-hostname",            required_argument, NULL, CHRONOS_HOSTNAME},
-  {"chronos-ralf-callback-uri",   required_argument, NULL, CHRONOS_RALF_CALLBACK_URI},
+  {"ralf-chronos-callback-uri",   required_argument, NULL, RALF_CHRONOS_CALLBACK_URI},
   {"ralf-hostname",               required_argument, NULL, RALF_HOSTNAME},
   {NULL,                          0,                 NULL, 0},
 };
@@ -222,6 +222,10 @@ void usage(void)
        "     --chronos-hostname <hostname>\n"
        "                            The hostname of the remote Chronos cluster to use. If unset, the default\n"
        "                            is to use localhost, using localhost as the callback URL.\n"
+       "     --ralf-chronos-callback-uri <hostname>\n"
+       "                            The ralf hostname used for Chronos callbacks. If unset the default \n"
+       "                            is to use the ralf-hostname.\n"
+       "                            Ignored if chronos-hostname is not set.\n"
        "     --ralf-hostname <hostname:port>\n"
        "                            The hostname and port of the cluster of Ralf nodes to which this Ralf is\n"
        "                            a member. The port should be the HTTP port the nodes are listening on.\n"
@@ -459,8 +463,8 @@ int init_options(int argc, char**argv, struct options& options)
       options.chronos_hostname = std::string(optarg);
       break;
 
-    case CHRONOS_RALF_CALLBACK_URI:
-      options.chronos_ralf_callback_uri = std::string(optarg);
+    case RALF_CHRONOS_CALLBACK_URI:
+      options.ralf_chronos_callback_uri = std::string(optarg);
       break;
 
     case RALF_HOSTNAME:
@@ -822,9 +826,10 @@ int main(int argc, char**argv)
       http_af = AF_INET6;
     }
 
-    if (options.chronos_ralf_callback_uri != "")
+    if (options.ralf_chronos_callback_uri != "")
     {
-      chronos_callback_addr = options.chronos_ralf_callback_uri;
+      // The callback URI doesn't include the port
+      chronos_callback_addr = options.ralf_chronos_callback_uri + ":" + port_str;
     }
     else
     {
