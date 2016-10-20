@@ -138,6 +138,7 @@ get_daemon_args()
         [ -z $signaling_namespace ] || namespace_prefix="ip netns exec $signaling_namespace"
         [ -z "$local_site_name" ] || local_site_name_arg="--local-site-name=$local_site_name"
         [ -z "$chronos_hostname" ] || chronos_hostname_arg="--chronos-hostname=$chronos_hostname"
+        [ -z "$chronos_ralf_callback_uri" ] || chronos_ralf_callback_uri_arg="--chronos-ralf-callback-uri=$chronos_ralf_callback_uri"
         [ -z "$ralf_hostname" ] || ralf_hostname_arg="--ralf-hostname=$ralf_hostname"
 
         DAEMON_ARGS="--localhost=$local_ip
@@ -150,6 +151,7 @@ get_daemon_args()
                      --log-file=$log_directory
                      --log-level=$log_level
                      $chronos_hostname_arg
+                     $chronos_ralf_callback_uri_arg
                      $ralf_hostname_arg
                      $billing_realm_arg
                      $billing_peer_arg

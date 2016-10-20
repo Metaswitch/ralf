@@ -83,6 +83,7 @@ enum OptionTypes
   SESSION_STORES,
   DAEMON,
   CHRONOS_HOSTNAME,
+  CHRONOS_RALF_CALLBACK_URI,
   RALF_HOSTNAME
 };
 
@@ -124,6 +125,7 @@ struct options
   bool daemon;
   bool sas_signaling_if;
   std::string chronos_hostname;
+  std::string chronos_ralf_callback_uri;
   std::string ralf_hostname;
 };
 
@@ -157,6 +159,7 @@ const static struct option long_opt[] =
   {"daemon",                      no_argument,       NULL, DAEMON},
   {"sas-use-signaling-interface", no_argument,       NULL, SAS_USE_SIGNALING_IF},
   {"chronos-hostname",            required_argument, NULL, CHRONOS_HOSTNAME},
+  {"chronos-ralf-callback-uri",   required_argument, NULL, CHRONOS_RALF_CALLBACK_URI},
   {"ralf-hostname",               required_argument, NULL, RALF_HOSTNAME},
   {NULL,                          0,                 NULL, 0},
 };
@@ -454,6 +457,10 @@ int init_options(int argc, char**argv, struct options& options)
 
     case CHRONOS_HOSTNAME:
       options.chronos_hostname = std::string(optarg);
+      break;
+
+    case CHRONOS_RALF_CALLBACK_URI:
+      options.chronos_ralf_callback_uri = std::string(optarg);
       break;
 
     case RALF_HOSTNAME:
@@ -815,7 +822,14 @@ int main(int argc, char**argv)
       http_af = AF_INET6;
     }
 
-    chronos_callback_addr = options.ralf_hostname;
+    if (options.chronos_ralf_callback_uri != "")
+    {
+      chronos_callback_addr = options.chronos_ralf_callback_uri;
+    }
+    else
+    {
+      chronos_callback_addr = options.ralf_hostname;
+    }
   }
 
   // Create a connection to Chronos.  This requires an HttpResolver.
