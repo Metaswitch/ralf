@@ -45,9 +45,7 @@
 // The fields for each PDLog instance contains:
 //   Identity - Identifies the log id to be used in the syslog id field.
 //   Severity - One of Emergency, Alert, Critical, Error, Warning, Notice, 
-//              and Info.  Directly corresponds to the syslog severity types.
-//              Only PDLOG_ERROR or PDLOG_NOTICE are used.  
-//              See syslog_facade.h for definitions.
+//              and Info. Only LOG_ERROR or LOG_NOTICE are used.  
 //   Message  - Formatted description of the condition.
 //   Cause    - The cause of the condition.
 //   Effect   - The effect the condition.
@@ -56,7 +54,7 @@
 const static PDLog CL_RALF_INVALID_SAS_OPTION
 (
   PDLogBase::CL_RALF_ID + 1,
-  PDLOG_INFO,
+  LOG_INFO,
   "The sas_server option in /etc/clearwater/config is invalid or "
   "not configured.",
   "The interface to the SAS is not specified.",
@@ -67,7 +65,7 @@ const static PDLog CL_RALF_INVALID_SAS_OPTION
 const static PDLog CL_RALF_INVALID_OPTION_C
 (
   PDLogBase::CL_RALF_ID + 2,
-  PDLOG_ERR,
+  LOG_ERR,
   "Fatal - Unknown command line option %c.  Run with --help for options.",
   "There was an invalid command line option in /etc/clearwater/config",
   "The application will exit and restart until the problem is fixed.",
@@ -77,7 +75,7 @@ const static PDLog CL_RALF_INVALID_OPTION_C
 const static PDLog1<const char*> CL_RALF_CRASHED
 (
   PDLogBase::CL_RALF_ID + 3,
-  PDLOG_ERR,
+  LOG_ERR,
   "Fatal - Ralf has exited or crashed with signal %s.",
   "Ralf has encountered a fatal software error or has been terminated",
   "The application will exit and restart until the problem is fixed.",
@@ -88,7 +86,7 @@ const static PDLog1<const char*> CL_RALF_CRASHED
 const static PDLog CL_RALF_STARTED
 (
   PDLogBase::CL_RALF_ID + 4,
-  PDLOG_ERR,
+  LOG_ERR,
   "Ralf started.",
   "The Ralf application is starting.",
   "Normal.",
@@ -98,7 +96,7 @@ const static PDLog CL_RALF_STARTED
 const static PDLog2<const char*, int> CL_RALF_HTTP_ERROR
 (
   PDLogBase::CL_RALF_ID + 5,
-  PDLOG_ERR,
+  LOG_ERR,
   "The HTTP stack has encountered an error in function %s with error %d.",
   "Ralf encountered an error when attempting to make an HTTP connection "
   "to Chronos.",
@@ -109,7 +107,7 @@ const static PDLog2<const char*, int> CL_RALF_HTTP_ERROR
 const static PDLog CL_RALF_ENDED
 (
   PDLogBase::CL_RALF_ID + 6,
-  PDLOG_ERR,
+  LOG_ERR,
   "Ralf ended - Termination signal received - terminating.",
   "Ralf has been terminated by Monit or has exited.",
   "Ralf billing service is not longer available.",
@@ -120,7 +118,7 @@ const static PDLog CL_RALF_ENDED
 const static PDLog2<const char*, int> CL_RALF_HTTP_STOP_ERROR
 (
   PDLogBase::CL_RALF_ID + 7,
-  PDLOG_ERR,
+  LOG_ERR,
   "Failed to stop HTTP stack in function %s with error %d.",
   "When Ralf was exiting it encountered an error when shutting "
   "down the HTTP stack.",
@@ -131,7 +129,7 @@ const static PDLog2<const char*, int> CL_RALF_HTTP_STOP_ERROR
 static const PDLog2<const char*, int> CL_RALF_DIAMETER_INIT_FAIL
 (
   PDLogBase::CL_RALF_ID + 8,
-  PDLOG_ERR,
+  LOG_ERR,
   "Fatal - Failed to initialize Diameter stack in function %s with error %d.",
   "The Diameter interface could not be initialized or encountered an "
   "error while running.",
@@ -143,7 +141,7 @@ static const PDLog2<const char*, int> CL_RALF_DIAMETER_INIT_FAIL
 static const PDLog2<const char*, int> CL_RALF_DIAMETER_STOP_FAIL
 (
   PDLogBase::CL_RALF_ID + 9,
-  PDLOG_ERR,
+  LOG_ERR,
   "Failed to stop Diameter stack in function %s with error %d.",
   "The Diameter interface encountered an error when shutting "
   "down the Diameter interface.",
