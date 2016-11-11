@@ -91,7 +91,7 @@ struct options
 {
   std::string local_host;
   std::string diameter_conf;
-  std::string dns_server;
+  std::vector<std::string> dns_servers;
   std::string http_address;
   unsigned short http_port;
   int http_threads;
@@ -159,7 +159,8 @@ void usage(void)
        "\n"
        " -l, --localhost <hostname> Specify the local hostname or IP address\n"
        " -c, --diameter-conf <file> File name for Diameter configuration\n"
-       "     --dns-server <IP>      DNS server to use to resolve addresses\n"
+       "     --dns-server <server>[,<server2>,<server3>]\n"
+       "                            IP addresses of the DNS servers to use (defaults to 127.0.0.1)\n"
        " -H, --http <address>[:<port>]\n"
        "                            Set HTTP bind address and port (default: 0.0.0.0:8888)\n"
        " -t, --http-threads N       Number of HTTP threads (default: 1)\n"
@@ -312,8 +313,10 @@ int init_options(int argc, char**argv, struct options& options)
       break;
 
     case DNS_SERVER:
-      TRC_INFO("DNS server set to %s", optarg);
-      options.dns_server = std::string(optarg);
+      options.dns_servers.clear();
+      Utils::split_string(std::string(optarg), ',', options.dns_servers, 0, false);
+      TRC_INFO("%d DNS servers passed on the command line",
+               options.dns_servers.size());
       break;
 
     case 'F':
@@ -471,7 +474,7 @@ int main(int argc, char**argv)
   struct options options;
   options.local_host = "127.0.0.1";
   options.diameter_conf = "/var/lib/ralf/ralf.conf";
-  options.dns_server = "127.0.0.1";
+  options.dns_servers.push_back("127.0.0.1");
   options.http_address = "0.0.0.0";
   options.http_port = 10888;
   options.http_threads = 1;
@@ -655,7 +658,7 @@ int main(int argc, char**argv)
   PeerMessageSenderFactory* factory = new PeerMessageSenderFactory(options.billing_realm);
 
   // Create a DNS resolver.  We'll use this both for HTTP and for Diameter.
-  DnsCachedResolver* dns_resolver = new DnsCachedResolver(options.dns_server);
+  DnsCachedResolver* dns_resolver = new DnsCachedResolver(options.dns_servers);
 
   // Create a connection to Chronos.
   std::string port_str = std::to_string(options.http_port);
