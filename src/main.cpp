@@ -124,7 +124,7 @@ const static struct option long_opt[] =
 {
   {"localhost",                   required_argument, NULL, 'l'},
   {"diameter-conf",               required_argument, NULL, 'c'},
-  {"dns-server",                  required_argument, NULL, DNS_SERVER},
+  {"dns-servers",                 required_argument, NULL, DNS_SERVER},
   {"http",                        required_argument, NULL, 'H'},
   {"http-threads",                required_argument, NULL, 't'},
   {"billing-realm",               required_argument, NULL, 'b'},
@@ -159,7 +159,7 @@ void usage(void)
        "\n"
        " -l, --localhost <hostname> Specify the local hostname or IP address\n"
        " -c, --diameter-conf <file> File name for Diameter configuration\n"
-       "     --dns-server <server>[,<server2>,<server3>]\n"
+       "     --dns-servers <server>[,<server2>,<server3>]\n"
        "                            IP addresses of the DNS servers to use (defaults to 127.0.0.1)\n"
        " -H, --http <address>[:<port>]\n"
        "                            Set HTTP bind address and port (default: 0.0.0.0:8888)\n"

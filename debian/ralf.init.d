@@ -149,7 +149,7 @@ get_daemon_args()
                      --http=$local_ip
                      --http-threads=$num_http_threads
                      --access-log=$log_directory
-                     --dns-server=$signaling_dns_server
+                     --dns-servers=$signaling_dns_server
                      --log-file=$log_directory
                      --log-level=$log_level
                      $chronos_hostname_arg
