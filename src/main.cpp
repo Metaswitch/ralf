@@ -97,7 +97,7 @@ struct options
   std::string local_host;
   std::string local_site_name;
   std::string diameter_conf;
-  std::string dns_server;
+  std::vector<std::string> dns_servers;
   std::vector<std::string> session_stores;
   std::string http_address;
   unsigned short http_port;
@@ -134,7 +134,7 @@ const static struct option long_opt[] =
   {"localhost",                   required_argument, NULL, 'l'},
   {"local-site-name",             required_argument, NULL, LOCAL_SITE_NAME},
   {"diameter-conf",               required_argument, NULL, 'c'},
-  {"dns-server",                  required_argument, NULL, DNS_SERVER},
+  {"dns-servers",                 required_argument, NULL, DNS_SERVER},
   {"session-stores",              required_argument, NULL, SESSION_STORES},
   {"http",                        required_argument, NULL, 'H'},
   {"http-threads",                required_argument, NULL, 't'},
@@ -174,7 +174,8 @@ void usage(void)
        "     --local-site-name <name>\n"
        "                            The name of the local site (used in a geo-redundant deployment)\n"
        " -c, --diameter-conf <file> File name for Diameter configuration\n"
-       "     --dns-server <IP>      DNS server to use to resolve addresses\n"
+       "     --dns-servers <server>[,<server2>,<server3>]\n"
+       "                            IP addresses of the DNS servers to use (defaults to 127.0.0.1)\n"
        "     --session-stores <site_name>=<domain>[:<port>][,<site_name>=<domain>[:<port>],...]\n"
        "                            Specifies location of the memcached store in each GR site for storing\n"
        "                            sessions. One of the sites must be the local site. Remote sites for\n"
@@ -356,8 +357,10 @@ int init_options(int argc, char**argv, struct options& options)
       break;
 
     case DNS_SERVER:
-      TRC_INFO("DNS server set to %s", optarg);
-      options.dns_server = std::string(optarg);
+      options.dns_servers.clear();
+      Utils::split_string(std::string(optarg), ',', options.dns_servers, 0, false);
+      TRC_INFO("%d DNS servers passed on the command line",
+               options.dns_servers.size());
       break;
 
     case 'F':
@@ -525,7 +528,7 @@ int main(int argc, char**argv)
   struct options options;
   options.local_host = "127.0.0.1";
   options.diameter_conf = "/var/lib/ralf/ralf.conf";
-  options.dns_server = "127.0.0.1";
+  options.dns_servers.push_back("127.0.0.1");
   options.http_address = "0.0.0.0";
   options.http_port = 10888;
   options.http_threads = 1;
@@ -713,7 +716,7 @@ int main(int argc, char**argv)
   }
 
   // Create a DNS resolver.  We'll use this for HTTP, for Diameter and for Astaire.
-  DnsCachedResolver* dns_resolver = new DnsCachedResolver(options.dns_server);
+  DnsCachedResolver* dns_resolver = new DnsCachedResolver(options.dns_servers);
 
   int addr_family = AF_INET;
   struct in6_addr dummy_addr_resolver;

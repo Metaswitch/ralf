@@ -77,8 +77,6 @@ void BillingTask::run()
   }
   else
   {
-    send_http_reply(rc);
-
     if (msg != NULL)
     {
       TRC_DEBUG("Handle the received message");
@@ -88,6 +86,11 @@ void BillingTask::run()
       _sess_mgr->handle(msg);
       msg = NULL;
     }
+
+    // The HTTP reply won't be sent until afer we leave this function, so by
+    // putting this last we ensure that the load monitor will get a sensible
+    // value for the latency
+    send_http_reply(rc);
   }
 
   delete this;
