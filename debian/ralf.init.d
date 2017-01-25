@@ -35,13 +35,13 @@
 # as those licenses appear in the file LICENSE-OPENSSL.
 
 ### BEGIN INIT INFO
-# Provides:          homestead
+# Provides:          ralf
 # Required-Start:    $remote_fs $syslog clearwater-infrastructure
 # Required-Stop:     $remote_fs $syslog
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
-# Short-Description: Clearwater Homestead
-# Description:       Clearwater Homestead HSS Cache/Gateway
+# Short-Description: Clearwater Ralf
+# Description:       Clearwater CTF Ralf
 ### END INIT INFO
 
 # Author: Mike Evans <mike.evans@metaswitch.com>
@@ -84,7 +84,7 @@ setup_environment()
         ulimit -Hn 1000000
         ulimit -Sn 1000000
         ulimit -c unlimited
-        # enable gdb to dump a parent homestead process's stack
+        # enable gdb to dump a parent ralf process's stack
         echo 0 > /proc/sys/kernel/yama/ptrace_scope
 }
 
@@ -259,7 +259,7 @@ do_reload() {
         return 0
 }
 
-# There should only be at most one homestead process, and it should be the one in /var/run/homestead.pid.
+# There should only be at most one ralf process, and it should be the one in /var/run/ralf.pid.
 # Sanity check this, and kill and log any leaked ones.
 if [ -f $PIDFILE ] ; then
   leaked_pids=$(pgrep -f "^$DAEMON" | grep -v $(cat $PIDFILE))
@@ -268,7 +268,7 @@ else
 fi
 if [ -n "$leaked_pids" ] ; then
   for pid in $leaked_pids ; do
-    logger -p daemon.error -t $NAME Found leaked homestead $pid \(correct is $(cat $PIDFILE)\) - killing $pid
+    logger -p daemon.error -t $NAME Found leaked ralf $pid \(correct is $(cat $PIDFILE)\) - killing $pid
     kill -9 $pid
   done
 fi
