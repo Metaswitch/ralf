@@ -580,7 +580,7 @@ int main(int argc, char**argv)
 
   MemcachedStore* mstore = new MemcachedStore(true,
                                               "./cluster_settings",
-                                              true,
+                                              false,
                                               memcached_comm_monitor,
                                               vbucket_alarm);
 
