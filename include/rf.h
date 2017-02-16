@@ -49,6 +49,11 @@ namespace Rf {
 
 const std::vector<std::string> VENDORS { "3GPP", "" };
 
+// Do I need to set this to static??
+// This will need updating when the version of Spec TS32.299 that we support
+// changes. Currently we support v10.
+static const std::string SERV_CONTXT_ID = "MNC.MCC.10.32260@3gpp.org";
+
 class AccountingRecordType {
 public:
   AccountingRecordType(int type): _type(type) {};
@@ -71,6 +76,7 @@ public:
   const Diameter::Dictionary::Vendor TGPP;
   const Diameter::Dictionary::Message ACCOUNTING_REQUEST;
   const Diameter::Dictionary::Message ACCOUNTING_RESPONSE;
+  const Diameter::Dictionary::Message SERVICE_CONTEXT_ID;
 };
 
 class AccountingRequest : public Diameter::Message

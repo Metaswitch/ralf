@@ -43,7 +43,8 @@ Dictionary::Dictionary() :
   RF("Diameter Base Accounting"),
   TGPP("3GPP"),
   ACCOUNTING_REQUEST("Accounting-Request"),
-  ACCOUNTING_RESPONSE("Accounting-Answer")
+  ACCOUNTING_RESPONSE("Accounting-Answer"),
+  SERVICE_CONTEXT_ID("Service-Context-Id")
 {
 }
 
@@ -85,6 +86,12 @@ AccountingRequest::AccountingRequest(const Dictionary* dict,
   Diameter::Dictionary::AVP record_number_dict("Accounting-Record-Number");
   Diameter::AVP record_number_avp(record_number_dict);
   add(record_number_avp.val_i32(record_number));
+
+  printf("from header: %s", Rf::SERV_CONTXT_ID.c_str());
+
+  Diameter::Dictionary::AVP service_context_dict("Service-Context-Id");
+  Diameter::AVP service_context_avp(service_context_dict);
+  add(service_context_avp.val_str("MNC.MCC.10.32260@3gpp.org"));
 
   if (contents.GetType() != rapidjson::kObjectType)
   {
