@@ -75,7 +75,7 @@ public:
   const Diameter::Dictionary::Vendor TGPP;
   const Diameter::Dictionary::Message ACCOUNTING_REQUEST;
   const Diameter::Dictionary::Message ACCOUNTING_RESPONSE;
-  const Diameter::Dictionary::Message SERVICE_CONTEXT_ID;
+  const Diameter::Dictionary::AVP SERVICE_CONTEXT_ID;
 };
 
 class AccountingRequest : public Diameter::Message
