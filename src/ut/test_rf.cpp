@@ -110,7 +110,7 @@ TEST_F(RfTest, CreateMessageTest)
 
   Rf::AccountingRequest acr = Rf::AccountingRequest(_dict,
                                                     _real_stack,
-                                                    "session-id",
+                                                    "example-session-id",
                                                     "host.example.com",
                                                     "realm.example.com",
                                                     3u,
@@ -118,9 +118,6 @@ TEST_F(RfTest, CreateMessageTest)
   Diameter::Message msg = launder_message(acr);
   acr = Rf::AccountingRequest(msg);
 
-  printf("\n\nhi\n\n");
-  printf("acr: %s", acr.get_session_id().c_str());
-//  printf("sci: %s", acr.begin((Rf::Dictionary*)(acr.dict())->SERVICE_CONTEXT_ID)->val_str().c_str());
   delete body_doc;
 };
 

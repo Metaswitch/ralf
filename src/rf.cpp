@@ -87,11 +87,11 @@ AccountingRequest::AccountingRequest(const Dictionary* dict,
   Diameter::AVP record_number_avp(record_number_dict);
   add(record_number_avp.val_i32(record_number));
 
-  printf("from header: %s", Rf::SERV_CONTXT_ID.c_str());
+  printf("\n\nfrom header: %s\n\n", Rf::SERV_CONTXT_ID);
 
   Diameter::Dictionary::AVP service_context_dict("Service-Context-Id");
   Diameter::AVP service_context_avp(service_context_dict);
-  add(service_context_avp.val_str("MNC.MCC.10.32260@3gpp.org"));
+  add(service_context_avp.val_str(Rf::SERV_CONTXT_ID));
 
   if (contents.GetType() != rapidjson::kObjectType)
   {
