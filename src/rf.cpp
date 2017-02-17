@@ -89,7 +89,7 @@ AccountingRequest::AccountingRequest(const Dictionary* dict,
 
   Diameter::Dictionary::AVP service_context_dict("Service-Context-Id");
   Diameter::AVP service_context_avp(service_context_dict);
-  add(service_context_avp.val_str(Rf::SERV_CONTXT_ID));
+  add(service_context_avp.val_str(Rf::SERVICE_CONTEXT_ID_STR));
 
   if (contents.GetType() != rapidjson::kObjectType)
   {
