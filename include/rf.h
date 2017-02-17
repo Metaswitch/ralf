@@ -49,6 +49,13 @@ namespace Rf {
 
 const std::vector<std::string> VENDORS { "3GPP", "" };
 
+// The service context id will need updating when the version of Spec TS32.299
+// that we support changes - currently v10 is supported. The current format
+// follows what is specified in Chapter 7.1.12. No operator-specific extensions
+// are required, and a full stop is not present in before "MNC" for
+// consistency with other products.
+static const std::string SERVICE_CONTEXT_ID_STR = "MNC.MCC.10.32260@3gpp.org";
+
 class AccountingRecordType {
 public:
   AccountingRecordType(int type): _type(type) {};
@@ -71,6 +78,7 @@ public:
   const Diameter::Dictionary::Vendor TGPP;
   const Diameter::Dictionary::Message ACCOUNTING_REQUEST;
   const Diameter::Dictionary::Message ACCOUNTING_RESPONSE;
+  const Diameter::Dictionary::AVP SERVICE_CONTEXT_ID;
 };
 
 class AccountingRequest : public Diameter::Message
