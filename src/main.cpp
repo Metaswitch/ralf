@@ -749,6 +749,7 @@ int main(int argc, char**argv)
   TopologyNeutralMemcachedStore* local_memstore =
                       new TopologyNeutralMemcachedStore(session_store_location,
                                                         astaire_resolver,
+                                                        false,
                                                         astaire_comm_monitor);
 
   SessionStore* local_session_store = new SessionStore(local_memstore,
@@ -780,6 +781,7 @@ int main(int argc, char**argv)
     TopologyNeutralMemcachedStore* remote_memstore =
                      new TopologyNeutralMemcachedStore(*it,
                                                        astaire_resolver,
+                                                       true,
                                                        remote_astaire_comm_monitor);
     remote_memstores.push_back(remote_memstore);
     SessionStore* remote_session_store = new SessionStore(remote_memstore,

@@ -110,7 +110,7 @@ TEST_F(RfTest, CreateMessageTest)
 
   Rf::AccountingRequest acr = Rf::AccountingRequest(_dict,
                                                     _real_stack,
-                                                    "session-id",
+                                                    "example-session-id",
                                                     "host.example.com",
                                                     "realm.example.com",
                                                     3u,
