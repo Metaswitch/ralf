@@ -100,12 +100,6 @@ get_settings()
         log_level=2
         . /etc/clearwater/config
 
-        # Set up a default cluster_settings file if it does not exist.
-        [ -f /etc/clearwater/cluster_settings ] || echo "servers=$local_ip:11211" > /etc/clearwater/cluster_settings
-
-        # If the remote cluster settings file exists then start sprout with geo-redundancy enabled
-        [ -f /etc/clearwater/remote_cluster_settings ] && remote_memstore_arg="--remote-memstore=/etc/clearwater/remote_cluster_settings"
-
         # Work out which features are enabled.
         if [ -d /etc/clearwater/features.d ]
         then
@@ -142,17 +136,22 @@ get_daemon_args()
         [ -z "$exception_max_ttl" ] || exception_max_ttl_arg="--exception-max-ttl=$exception_max_ttl"
         [ -z "$cdf_identity" ] || billing_peer_arg="--billing-peer=$cdf_identity"
         [ -z $signaling_namespace ] || namespace_prefix="ip netns exec $signaling_namespace"
+        [ -z "$local_site_name" ] || local_site_name_arg="--local-site-name=$local_site_name"
         [ -z "$chronos_hostname" ] || chronos_hostname_arg="--chronos-hostname=$chronos_hostname"
+        [ -z "$ralf_chronos_callback_uri" ] || ralf_chronos_callback_uri_arg="--ralf-chronos-callback-uri=$ralf_chronos_callback_uri"
         [ -z "$ralf_hostname" ] || ralf_hostname_arg="--ralf-hostname=$ralf_hostname"
 
         DAEMON_ARGS="--localhost=$local_ip
+                     $local_site_name_arg
                      --http=$local_ip
                      --http-threads=$num_http_threads
+                     --session-stores=$ralf_session_store
                      --access-log=$log_directory
                      --dns-servers=$signaling_dns_server
                      --log-file=$log_directory
                      --log-level=$log_level
                      $chronos_hostname_arg
+                     $ralf_chronos_callback_uri_arg
                      $ralf_hostname_arg
                      $billing_realm_arg
                      $billing_peer_arg
@@ -166,6 +165,7 @@ get_daemon_args()
 
         [ "$http_blacklist_duration" = "" ]     || DAEMON_ARGS="$DAEMON_ARGS --http-blacklist-duration=$http_blacklist_duration"
         [ "$diameter_blacklist_duration" = "" ] || DAEMON_ARGS="$DAEMON_ARGS --diameter-blacklist-duration=$diameter_blacklist_duration"
+        [ "$astaire_blacklist_duration" = "" ]  || DAEMON_ARGS="$DAEMON_ARGS --astaire-blacklist-duration=$astaire_blacklist_duration"
 }
 
 #
