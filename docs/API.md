@@ -21,7 +21,7 @@ The `event` object contains the data for the ACR. Each field is mapped exactly t
 
 For more detailed information on the fields in an ACR, see [RFC6733](https://tools.ietf.org/html/rfc6733) and [3GPP TS32.299](http://www.3gpp.org/DynaReport/32299.htm).
 
-The `timer-interim` API is used by Chronos to trigger an INTERIM ACR. The CDF specifies a session refresh time, and so Ralf must send INTERIM ACRs regularly to keep the session alive. This API is distinct from the API that is used for a real INTERIM ACR so that Ralf can eventually send a STOP ACR to close the Rf session if it hasn't received a real INTERIM for a long period of time.
+The `timer-interim` API is used by Chronos to trigger an INTERIM ACR. The CDF specifies a session refresh time, and so Ralf must send INTERIM ACRs regularly to keep the session alive. This API is distinct from the API that is used for a real INTERIM ACR so that Ralf doesn't reset its INTERIM timer, which would result in sessions that terminated unexpectedly (i.e. without a BYE transaction that would trigger a STOP ACR) being kept alive forever.
 
 ## Diameter
 
