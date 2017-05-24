@@ -613,31 +613,39 @@ int main(int argc, char**argv)
   // in the alarm definition JSON file exactly.
   AlarmManager* alarm_manager = new AlarmManager();
 
-  CommunicationMonitor* cdf_comm_monitor = new CommunicationMonitor(new Alarm(alarm_manager,
+  CommunicationMonitor* cdf_comm_monitor = new CommunicationMonitor(new CMAlarmAdaptor(
+                                                                    new Alarm(alarm_manager,
                                                                               "ralf",
-                                                                              AlarmDef::RALF_CDF_COMM_ERROR,
-                                                                              AlarmDef::CRITICAL),
+                                                                              AlarmDef::RALF_CDF_COMM_ERROR),
+                                                                    AlarmDef::CLEARED,
+                                                                    AlarmDef::CRITICAL),
                                                                     "Ralf",
                                                                     "CDF");
 
-  CommunicationMonitor* chronos_comm_monitor = new CommunicationMonitor(new Alarm(alarm_manager,
+  CommunicationMonitor* chronos_comm_monitor = new CommunicationMonitor(new CMAlarmAdaptor(
+                                                                        new Alarm(alarm_manager,
                                                                                   "ralf",
-                                                                                  AlarmDef::RALF_CHRONOS_COMM_ERROR,
-                                                                                  AlarmDef::CRITICAL),
+                                                                                  AlarmDef::RALF_CHRONOS_COMM_ERROR),
+                                                                        AlarmDef::CLEARED,
+                                                                        AlarmDef::CRITICAL),
                                                                         "Ralf",
                                                                         "Chronos");
 
-  CommunicationMonitor* astaire_comm_monitor = new CommunicationMonitor(new Alarm(alarm_manager,
+  CommunicationMonitor* astaire_comm_monitor = new CommunicationMonitor(new CMAlarmAdaptor(
+                                                                        new Alarm(alarm_manager,
                                                                                   "ralf",
-                                                                                  AlarmDef::RALF_ASTAIRE_COMM_ERROR,
-                                                                                  AlarmDef::CRITICAL),
-                                                                          "Ralf",
-                                                                          "Astaire");
+                                                                                  AlarmDef::RALF_ASTAIRE_COMM_ERROR),
+                                                                        AlarmDef::CLEARED,
+                                                                        AlarmDef::CRITICAL),
+                                                                        "Ralf",
+                                                                        "Astaire");
 
-  CommunicationMonitor* remote_astaire_comm_monitor = new CommunicationMonitor(new Alarm(alarm_manager,
+  CommunicationMonitor* remote_astaire_comm_monitor = new CommunicationMonitor(new CMAlarmAdaptor(
+                                                                               new Alarm(alarm_manager,
                                                                                          "ralf",
-                                                                                         AlarmDef::RALF_REMOTE_ASTAIRE_COMM_ERROR,
-                                                                                         AlarmDef::CRITICAL),
+                                                                                         AlarmDef::RALF_REMOTE_ASTAIRE_COMM_ERROR),
+                                                                               AlarmDef::CLEARED,
+                                                                               AlarmDef::CRITICAL),
                                                                                "Ralf",
                                                                                "remote Astaire");
 
