@@ -11,6 +11,20 @@
 
 . /etc/clearwater/config
 
+if [ -z "$ralf_hostname" ]; then
+
+  if [ -f /etc/monit/conf.d/ralf.monit ]; then
+    rm /etc/monit/conf.d/ralf.monit
+
+    # Force monit to reload its configuration
+    reload clearwater-monit || true
+
+    # Stop ralf if it was running
+    service ralf stop
+  fi
+
+else
+
 # Set up the monit configuration for ralf with the right IP addresses and ports
 cat > /etc/monit/conf.d/ralf.monit <<EOF
 # Check the Ralf process.
@@ -48,3 +62,5 @@ chmod 0644 /etc/monit/conf.d/ralf.monit
 
 # Force monit to reload its configuration
 reload clearwater-monit || true
+
+fi
