@@ -33,7 +33,7 @@
                     "details": "Communication between the local Ralf process and the Astaire service has been restored.",
                     "description": "Ralf: Astaire communication error cleared.",
                     "cause": "Communication between the local Ralf process and the Astaire service has been restored.",
-                    "effect": "This Ralf node is providing full service again.",
+                    "effect": "The local Ralf process is able to successfully contact the Astaire service.",
                     "action": "No action."
                 },
                 {
@@ -56,7 +56,7 @@
                     "details": "Communication between the local Ralf process and the Chronos service has been restored.",
                     "description": "Ralf: Chronos communication error cleared.",
                     "cause": "Communication between the local Ralf process and the Chronos service has been restored.",
-                    "effect": "This Ralf node is providing full service again.",
+                    "effect": "The local Ralf process is able to successfully contact the Chronos service.",
                     "action": "No action."
                 },
                 {
@@ -79,7 +79,7 @@
                     "details": "Communication between the local Ralf process and the CDF has been restored.",
                     "description": "Ralf: CDF communication error cleared.",
                     "cause": "Communication between the local Ralf process and the CDF has been restored.",
-                    "effect": "This Ralf node is providing full service again.",
+                    "effect": "The local Ralf process is able to successfully contact the CDF.",
                     "action": "No action."
                 },
                 {
@@ -99,19 +99,19 @@
             "levels": [
                 {
                     "severity": "CLEARED",
-                    "details": "Communication between the local Ralf process and the remote Astaire service has been restored.",
+                    "details": "The local Ralf process is able to successfully communicate with one or more Astaire processes in remote sites.",
                     "description": "Ralf: Remote Astaire communication error cleared.",
-                    "cause": "Communication between the local Ralf process and the remote Astaire service has been restored.",
-                    "effect": "This Ralf node is providing full service again.",
+                    "cause": "The local Ralf process is able to successfully communicate with one or more remote Astaire instances.",
+                    "effect": "The local Ralf process can successfully contact the remote Astaire service.",
                     "action": "No action."
                 },
                 {
                     "severity": "CRITICAL",
-                    "details": "The local Ralf process is unable to contact the Astaire service in a remote site.",
+                    "details": "The local Ralf process is unable to contact any Astaire instances in remote sites.",
                     "description": "Ralf: Remote Astaire communication error.",
-                    "cause": "The local Ralf process is unable to contact any Astaire processes in the remote site. The likely cause depends on whether this is affecting all Ralf instances or just a subset. If the issue impacts just a subset of Ralf instances then it is likely to be due to a partial network outage or configuration issues on just those nodes. If it impacts all Ralf instances then it is likely to be due to a misconfiguration of the remote Ralf session store in shared configuration, misconfiguration of the Astaire cluster DNS record for the remote site, a significant network outage, or because all Astaire instances in the remote iste are currently failed.",
-                    "effect": "The deployment is no longer geographically redundant because call detail events are not synchronized to the remote site. If subscribers switch to the other geographic site then call detail events for in progress and new calls will no longer be reliably transmitted to the CDF.",
-                    "action": "Investigate the issue that is preventing the local Ralf process from contacting the Astaire service in the remote site. The Ralf process will periodically attempt to reconnect and this alarm will clear once connectivity has been restored. If you cannot determine the issue or the alarm fails to clear then contact your support representative."
+                    "cause": "The local Ralf process is unable to contact any Astaire processes in remote sites. The likely cause depends on whether this is affecting all Ralf instances or just a subset. If the issue impacts just a subset of Ralf instances then it is likely to be due to a partial network outage or configuration issues on just those nodes. If it impacts all Ralf instances then it is likely to be due to a misconfiguration of the remote Ralf session store in shared configuration, misconfiguration of the Astaire cluster DNS record for the remote site, a significant network outage, or because all Astaire instances in the remote iste are currently failed.",
+                    "effect": "The deployment is no longer geographically redundant because call detail events are not synchronized to remote sites. If subscribers switch to other geographic sites then call detail events for in progress and new calls will no longer be reliably transmitted to the CDF.",
+                    "action": "Investigate the issue that is preventing the local Ralf process from contacting Astaire processes in remote sites. The Ralf process will periodically attempt to reconnect and this alarm will clear once connectivity has been restored. If you cannot determine the issue or the alarm fails to clear then contact your support representative."
                 }
             ]
         }
