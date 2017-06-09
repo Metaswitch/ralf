@@ -65,7 +65,8 @@ public:
     }
     else
     {
-      return &HttpStack::DEFAULT_SAS_LOGGER;
+      // TODO - Allow configuration to switch to DEFAULT_SAS_LOGGER
+      return &HttpStack::PRIVATE_SAS_LOGGER;
     }
   }
 };
