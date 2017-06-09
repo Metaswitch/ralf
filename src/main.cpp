@@ -141,7 +141,7 @@ const static struct option long_opt[] =
   {"chronos-hostname",            required_argument, NULL, CHRONOS_HOSTNAME},
   {"ralf-chronos-callback-uri",   required_argument, NULL, RALF_CHRONOS_CALLBACK_URI},
   {"ralf-hostname",               required_argument, NULL, RALF_HOSTNAME},
-  {"http_acr_logging",            required_argument, NULL, HTTP_ACR_LOGGING},
+  {"http-acr-logging",            required_argument, NULL, HTTP_ACR_LOGGING},
   {NULL,                          0,                 NULL, 0},
 };
 
