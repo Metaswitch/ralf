@@ -60,7 +60,8 @@ enum OptionTypes
   DAEMON,
   CHRONOS_HOSTNAME,
   RALF_CHRONOS_CALLBACK_URI,
-  RALF_HOSTNAME
+  RALF_HOSTNAME,
+  HTTP_ACR_LOGGING
 };
 
 enum struct MemcachedWriteFormat
