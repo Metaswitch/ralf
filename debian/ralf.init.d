@@ -115,6 +115,7 @@ get_daemon_args()
         [ -z "$chronos_hostname" ] || chronos_hostname_arg="--chronos-hostname=$chronos_hostname"
         [ -z "$ralf_chronos_callback_uri" ] || ralf_chronos_callback_uri_arg="--ralf-chronos-callback-uri=$ralf_chronos_callback_uri"
         [ -z "$ralf_hostname" ] || ralf_hostname_arg="--ralf-hostname=$ralf_hostname"
+        [ -z "$http_acr_logging" ] || http_acr_logging_arg="--http-acr-logging"
 
         DAEMON_ARGS="--localhost=$local_ip
                      $local_site_name_arg
@@ -128,6 +129,7 @@ get_daemon_args()
                      $chronos_hostname_arg
                      $ralf_chronos_callback_uri_arg
                      $ralf_hostname_arg
+                     $http_acr_logging_arg
                      $billing_realm_arg
                      $billing_peer_arg
                      $target_latency_us_arg
