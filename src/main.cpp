@@ -582,6 +582,13 @@ int main(int argc, char**argv)
     }
   }
 
+  // Check we've been provided with a hostname
+  if (options.ralf_hostname == "")
+  {
+    TRC_ERROR("No Ralf hostname provided - exiting");
+    return 1;
+  }
+
   // Parse the session-stores argument.
   std::string session_store_location;
   std::vector<std::string> remote_session_stores_locations;
@@ -787,7 +794,7 @@ int main(int argc, char**argv)
   std::string chronos_callback_addr = "127.0.0.1:" + port_str;
   int http_af = AF_INET;
 
-  if (options.chronos_hostname == "" || options.ralf_hostname == "")
+  if (options.chronos_hostname == "")
   {
     // If we are using a local chronos cluster, we want Chronos to call back to
     // its local Ralf instance so that we can handle Ralfs failing without missing
