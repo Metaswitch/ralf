@@ -73,7 +73,9 @@ public:
       }
       else
       {
-        // Ommit bodies from ACR HTTP messages logged to SAS.
+        // Omit bodies from ACR HTTP messages logged to SAS.
+        // The private SAS logger does exactly this.  We aren't using it for
+        // privacy reasons, but it achieves the correct result.
         return &HttpStack::PRIVATE_SAS_LOGGER;
       }
     }

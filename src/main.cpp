@@ -214,7 +214,7 @@ void usage(void)
        "                            The hostname and port of the cluster of Ralf nodes to which this Ralf is\n"
        "                            a member. The port should be the HTTP port the nodes are listening on.\n"
        "                            This is used to form the callback URL for the Chronos cluser.\n"
-       "     --http_acr_logging     Whether to include the bodies of ACR HTTP requests when they are logged\n"
+       "     --http-acr-logging     Whether to include the bodies of ACR HTTP requests when they are logged\n"
        "                            to SAS\n"
        "     --pidfile=<filename>   Write pidfile\n"
        "     --daemon               Run as a daemon\n"
