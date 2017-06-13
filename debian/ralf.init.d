@@ -153,11 +153,6 @@ do_start()
         #   1 if daemon was already running
         #   2 if daemon could not be started
 
-        # Exit if there is no ralf hostname configured
-        if [ -z "$ralf_hostname" ]; then
-          return 2
-        fi
-
         # Allow us to write to the pidfile directory
         install -m 755 -o $NAME -g root -d /var/run/$NAME && chown -R $NAME /var/run/$NAME
 
