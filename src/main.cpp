@@ -60,7 +60,8 @@ enum OptionTypes
   DAEMON,
   CHRONOS_HOSTNAME,
   RALF_CHRONOS_CALLBACK_URI,
-  RALF_HOSTNAME
+  RALF_HOSTNAME,
+  HTTP_ACR_LOGGING
 };
 
 enum struct MemcachedWriteFormat
@@ -104,6 +105,7 @@ struct options
   std::string chronos_hostname;
   std::string ralf_chronos_callback_uri;
   std::string ralf_hostname;
+  bool http_acr_logging;
 };
 
 const static struct option long_opt[] =
@@ -139,6 +141,7 @@ const static struct option long_opt[] =
   {"chronos-hostname",            required_argument, NULL, CHRONOS_HOSTNAME},
   {"ralf-chronos-callback-uri",   required_argument, NULL, RALF_CHRONOS_CALLBACK_URI},
   {"ralf-hostname",               required_argument, NULL, RALF_HOSTNAME},
+  {"http-acr-logging",            required_argument, NULL, HTTP_ACR_LOGGING},
   {NULL,                          0,                 NULL, 0},
 };
 
@@ -211,6 +214,8 @@ void usage(void)
        "                            The hostname and port of the cluster of Ralf nodes to which this Ralf is\n"
        "                            a member. The port should be the HTTP port the nodes are listening on.\n"
        "                            This is used to form the callback URL for the Chronos cluser.\n"
+       "     --http-acr-logging     Whether to include the bodies of ACR HTTP requests when they are logged\n"
+       "                            to SAS\n"
        "     --pidfile=<filename>   Write pidfile\n"
        "     --daemon               Run as a daemon\n"
        " -h, --help                 Show this help screen\n"
@@ -457,6 +462,10 @@ int init_options(int argc, char**argv, struct options& options)
 
     case RALF_HOSTNAME:
       options.ralf_hostname = std::string(optarg);
+      break;
+
+    case HTTP_ACR_LOGGING:
+      options.http_acr_logging = true;
       break;
 
     default:
@@ -854,7 +863,7 @@ int main(int argc, char**argv)
                                         access_logger,
                                         load_monitor);
   HttpStackUtils::PingHandler ping_handler;
-  BillingHandler billing_handler(cfg);
+  BillingHandler billing_handler(cfg, options.http_acr_logging);
   try
   {
     http_stack->initialize();

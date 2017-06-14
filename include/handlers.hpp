@@ -51,8 +51,9 @@ class BillingHandler:
   public HttpStackUtils::SpawningHandler<BillingTask, BillingHandlerConfig>
 {
 public:
-  BillingHandler(BillingHandlerConfig* cfg) :
-    SpawningHandler<BillingTask, BillingHandlerConfig>(cfg)
+  BillingHandler(BillingHandlerConfig* cfg, bool http_acr_logging) :
+    SpawningHandler<BillingTask, BillingHandlerConfig>(cfg),
+    _http_acr_logging(http_acr_logging)
   {}
   virtual ~BillingHandler() {}
 
@@ -65,9 +66,23 @@ public:
     }
     else
     {
-      return &HttpStack::DEFAULT_SAS_LOGGER;
+      if (_http_acr_logging)
+      {
+        // Include bodies in ACR HTTP messages logged to SAS.
+        return &HttpStack::DEFAULT_SAS_LOGGER;
+      }
+      else
+      {
+        // Omit bodies from ACR HTTP messages logged to SAS.
+        // The private SAS logger does exactly this.  We aren't using it for
+        // privacy reasons, but it achieves the correct result.
+        return &HttpStack::PRIVATE_SAS_LOGGER;
+      }
     }
   }
+
+private:
+  bool _http_acr_logging;
 };
 
 #endif
