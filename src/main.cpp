@@ -309,8 +309,8 @@ int init_options(int argc, char**argv, struct options& options)
       {
         options.sas_server = sas_options[0];
         options.sas_system_name = sas_options[1];
-        TRC_INFO("SAS set to %s\n", options.sas_server.c_str());
-        TRC_INFO("System name is set to %s\n", options.sas_system_name.c_str());
+        TRC_INFO("SAS set to %s", options.sas_server.c_str());
+        TRC_INFO("System name is set to %s", options.sas_system_name.c_str());
       }
     }
     break;
@@ -470,7 +470,7 @@ int init_options(int argc, char**argv, struct options& options)
 
     default:
       CL_RALF_INVALID_OPTION_C.log();
-      TRC_ERROR("Unknown option: %d.  Run with --help for options.\n", opt);
+      TRC_ERROR("Unknown option: %d.  Run with --help for options.", opt);
       return -1;
     }
   }
