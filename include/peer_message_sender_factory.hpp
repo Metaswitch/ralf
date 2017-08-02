@@ -18,6 +18,8 @@ class PeerMessageSenderFactory
 public:
   PeerMessageSenderFactory(const std::string& dest_realm) : _dest_realm(dest_realm) {};
 
+  virtual ~PeerMessageSenderFactory() {};
+
   virtual PeerMessageSender* newSender(SAS::TrailId trail)
   {
     return new PeerMessageSender(trail, _dest_realm);

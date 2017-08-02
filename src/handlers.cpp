@@ -18,14 +18,12 @@
 #include "rapidjson/prettywriter.h"
 #include "rapidjson/stringbuffer.h"
 
-//LCOV_EXCL_START
-// We don't want to actually run the handlers
-
 void BillingTask::run()
 {
   if (_req.method() != htp_method_POST)
   {
     send_http_reply(405);
+    delete this;
     return;
   }
 
@@ -70,7 +68,6 @@ void BillingTask::run()
 
   delete this;
 }
-//LCOV_EXCL_STOP
 
 HTTPCode BillingTask::parse_body(std::string call_id,
                                  bool timer_interim,
