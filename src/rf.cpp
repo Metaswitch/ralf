@@ -119,10 +119,21 @@ AccountingRequest::~AccountingRequest()
 }
 
 AccountingResponse::AccountingResponse(const Dictionary* dict,
-                                       Diameter::Stack* diameter_stack) :
+                                       Diameter::Stack* diameter_stack,
+                                       const int32_t& result_code,
+                                       const std::string& session_id) :
     Diameter::Message(dict, dict->ACCOUNTING_RESPONSE, diameter_stack)
 {
   TRC_DEBUG("Building an Accounting-Response");
+  if (result_code)
+  {
+    add(Diameter::AVP(dict->RESULT_CODE).val_i32(result_code));
+  }
+
+  if (session_id != "")
+  {
+    add_session_id(session_id);
+  }
 }
 
 AccountingResponse::~AccountingResponse()
