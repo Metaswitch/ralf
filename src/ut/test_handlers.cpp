@@ -28,6 +28,11 @@ using ::testing::Invoke;
 using ::testing::WithArgs;
 using ::testing::An;
 
+static const int EVENT = 1;
+static const int START = 2;
+static const int INTERIM = 3;
+static const int STOP = 4;
+
 static const SAS::TrailId FAKE_TRAIL_ID = 0;
 static const std::string CALL_ID = "abc123";
 
@@ -118,6 +123,7 @@ class HandlerTest : public ::testing::Test
   }
 
   void request_response_template(int result_code,
+                                 int record_type,
                                  bool timer_interim)
   {
     std::string query = "";
@@ -126,7 +132,7 @@ class HandlerTest : public ::testing::Test
       query += "?timer-interim=true";
     }
 
-    std::string body = "{\"peers\": {\"ccf\": [\"ec2-54-197-167-141.compute-1.amazonaws.com\"]}, \"event\": {\"Accounting-Record-Type\": 1, \"Acct-Interim-Interval\": 300, \"Service-Information\": {\"IMS-Information\": {\"Role-Of-Node\": 0, \"Node-Functionality\": 0}}}}";
+    std::string body = "{\"peers\": {\"ccf\": [\"ec2-54-197-167-141.compute-1.amazonaws.com\"]}, \"event\": {\"Accounting-Record-Type\": " + std::to_string(record_type) +", \"Acct-Interim-Interval\": 300, \"Service-Information\": {\"IMS-Information\": {\"Role-Of-Node\": 0, \"Node-Functionality\": 0}}}}";
 
     // Send in a mock HTTP resuest.
     MockHttpStack::Request req(_httpstack,
@@ -400,17 +406,31 @@ TEST_F(HandlerTest, BadBody)
 
 TEST_F(HandlerTest, SimpleMainline)
 {
-  request_response_template(2001, false);
+  request_response_template(2001, EVENT, false);
 }
 
-TEST_F(HandlerTest, SimpleInterim)
+TEST_F(HandlerTest, SimpleDialog)
 {
-  request_response_template(2001, true);
+  request_response_template(2001, START, false);
+  request_response_template(2001, INTERIM, true);
+  request_response_template(2001, STOP, true);
+}
+
+TEST_F(HandlerTest, FailedDialog)
+{
+  request_response_template(2001, START, false);
+  request_response_template(3002, INTERIM, true);
+}
+
+TEST_F(HandlerTest, FailedDialog5002)
+{
+  request_response_template(2001, START, false);
+  request_response_template(5002, INTERIM, true);
 }
 
 TEST_F(HandlerTest, DeliveryFailed)
 {
-  request_response_template(3002, false);
+  request_response_template(3002, EVENT, false);
 }
 
 TEST_F(HandlerTest, Timeout)
