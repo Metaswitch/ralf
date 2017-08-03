@@ -44,6 +44,7 @@ enum OptionTypes
   DNS_SERVER=256+1,
   MEMCACHED_WRITE_FORMAT,
   TARGET_LATENCY_US,
+  DIAMETER_TIMEOUT_MS,
   MAX_TOKENS,
   INIT_TOKEN_RATE,
   MIN_TOKEN_RATE,
@@ -91,6 +92,7 @@ struct options
   std::string sas_system_name;
   MemcachedWriteFormat memcached_write_format;
   int target_latency_us;
+  int diameter_timeout_ms;
   int max_tokens;
   float init_token_rate;
   float min_token_rate;
@@ -127,6 +129,7 @@ const static struct option long_opt[] =
   {"help",                        no_argument,       NULL, 'h'},
   {"memcached-write-format",      required_argument, 0,    MEMCACHED_WRITE_FORMAT},
   {"target-latency-us",           required_argument, NULL, TARGET_LATENCY_US},
+  {"diameter-timeout-ms",         required_argument, NULL, DIAMETER_TIMEOUT_MS},
   {"max-tokens",                  required_argument, NULL, MAX_TOKENS},
   {"init-token-rate",             required_argument, NULL, INIT_TOKEN_RATE},
   {"min-token-rate",              required_argument, NULL, MIN_TOKEN_RATE},
@@ -388,6 +391,11 @@ int init_options(int argc, char**argv, struct options& options)
       }
       break;
 
+    case DIAMETER_TIMEOUT_MS:
+      TRC_INFO("Diameter timeout: %s", optarg);
+      options.diameter_timeout_ms = atoi(optarg);
+      break;
+
     case MAX_TOKENS:
       options.max_tokens = atoi(optarg);
       if (options.max_tokens <= 0)
@@ -536,6 +544,7 @@ int main(int argc, char**argv)
   options.sas_system_name = "";
   options.memcached_write_format = MemcachedWriteFormat::JSON;
   options.target_latency_us = 100000;
+  options.diameter_timeout_ms = 200;
   options.max_tokens = 1000;
   options.init_token_rate = 100.0;
   options.min_token_rate = 10.0;
@@ -794,7 +803,8 @@ int main(int argc, char**argv)
   }
 
   BillingHandlerConfig* cfg = new BillingHandlerConfig();
-  PeerMessageSenderFactory* factory = new PeerMessageSenderFactory(options.billing_realm);
+  PeerMessageSenderFactory* factory = new PeerMessageSenderFactory(options.billing_realm,
+                                                                   options.diameter_timeout_ms);
 
   // Create a connection to Chronos.
   std::string port_str = std::to_string(options.http_port);

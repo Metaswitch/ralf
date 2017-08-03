@@ -77,7 +77,7 @@ class HandlerTest : public ::testing::Test
     _remote_data_store = new LocalStore();
     _remote_session_store = new SessionStore(_remote_data_store);
     _dict = new Rf::Dictionary();
-    _factory = new PeerMessageSenderFactory("example.com");
+    _factory = new PeerMessageSenderFactory("example.com", 200);
     _chronos_connection = new FakeChronosConnection();
     _hc = new MockHealthChecker();
     _mgr = new SessionManager(_local_session_store, { _remote_session_store }, _dict, _factory, _chronos_connection, _mock_stack, _hc);
@@ -149,7 +149,7 @@ class HandlerTest : public ::testing::Test
     // Running the handler should trigger an HTTP response and a Diameter
     // request.
     EXPECT_CALL(*_httpstack, send_reply(_, 200, _));
-    EXPECT_CALL(*_mock_stack, send(_, An<Diameter::Transaction*>()))
+    EXPECT_CALL(*_mock_stack, send(_, An<Diameter::Transaction*>(), 200))
       .Times(1)
       .WillOnce(WithArgs<0,1>(Invoke(store_msg_tsx)));;
     task->run();
@@ -197,7 +197,7 @@ class HandlerTest : public ::testing::Test
     // Running the handler should trigger an HTTP response and a Diameter
     // request.
     EXPECT_CALL(*_httpstack, send_reply(_, 200, _));
-    EXPECT_CALL(*_mock_stack, send(_, An<Diameter::Transaction*>()))
+    EXPECT_CALL(*_mock_stack, send(_, An<Diameter::Transaction*>(), 200))
       .Times(1)
       .WillOnce(WithArgs<0,1>(Invoke(store_msg_tsx)));;
     task->run();
@@ -206,7 +206,7 @@ class HandlerTest : public ::testing::Test
     // first request.
     if (multiple_peers)
     {
-      EXPECT_CALL(*_mock_stack, send(_, An<Diameter::Transaction*>()))
+      EXPECT_CALL(*_mock_stack, send(_, An<Diameter::Transaction*>(), 200))
         .Times(1)
         .WillOnce(WithArgs<0,1>(Invoke(store_msg_tsx)));;
     }

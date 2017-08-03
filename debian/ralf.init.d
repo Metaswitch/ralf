@@ -102,8 +102,18 @@ get_daemon_args()
           billing_realm_arg="--billing-realm=$home_domain"
         fi
 
+        # Default the diameter timeout to twice the target latency if not
+        # already overridden (rounding up).  Note that the former is expressed
+        # in milliseconds and the latter in microseconds, hence division by 500
+        # (i.e. multiplication by 2/1000).
+        if [ -z $diameter_timeout_ms ] && [ ! -z $target_latency_us ]
+        then
+          diameter_timeout_ms=$(( ($target_latency_us + 499)/500 ))
+        fi
+
         [ "$sas_use_signaling_interface" != "Y" ] || sas_signaling_if_arg="--sas-use-signaling-interface"
 
+        [ -z "$diameter_timeout_ms" ] || diameter_timeout_ms_arg="--diameter-timeout-ms=$diameter_timeout_ms"
         [ -z "$target_latency_us" ] || target_latency_us_arg="--target-latency-us=$target_latency_us"
         [ -z "$max_tokens" ] || max_tokens_arg="--max-tokens=$max_tokens"
         [ -z "$init_token_rate" ] || init_token_rate_arg="--init-token-rate=$init_token_rate"
@@ -132,6 +142,7 @@ get_daemon_args()
                      $http_acr_logging_arg
                      $billing_realm_arg
                      $billing_peer_arg
+                     $diameter_timeout_ms_arg
                      $target_latency_us_arg
                      $max_tokens_arg
                      $init_token_rate_arg
