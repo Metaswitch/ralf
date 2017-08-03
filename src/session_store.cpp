@@ -18,18 +18,6 @@
 #include "json_parse_utils.h"
 #include "ralfsasevent.h"
 
-SessionStore::SessionStore(Store *store,
-                           SerializerDeserializer*& serializer,
-                           std::vector<SerializerDeserializer*>& deserializers) :
-  _store(store),
-  _serializer(serializer),
-  _deserializers(deserializers)
-{
-  // We have taken ownership of the (de)serializers.
-  serializer = NULL;
-  deserializers.clear();
-}
-
 SessionStore::SessionStore(Store* store) : _store(store)
 {
   _serializer = new JsonSerializerDeserializer();
@@ -40,7 +28,7 @@ SessionStore::~SessionStore()
 {
   delete _serializer; _serializer = NULL;
 
-  for(std::vector<SerializerDeserializer*>::iterator it = _deserializers.begin();
+  for(std::vector<JsonSerializerDeserializer*>::iterator it = _deserializers.begin();
       it != _deserializers.end();
       ++it)
   {
@@ -157,14 +145,13 @@ SessionStore::Session* SessionStore::deserialize_session(const std::string& data
 {
   Session* session = NULL;
 
-  for (std::vector<SerializerDeserializer*>::iterator it = _deserializers.begin();
+  for (std::vector<JsonSerializerDeserializer*>::iterator it = _deserializers.begin();
        it != _deserializers.end();
        ++it)
   {
-    SerializerDeserializer* deserializer = *it;
+    JsonSerializerDeserializer* deserializer = *it;
 
-    TRC_DEBUG("Try to deserialize record with '%s' deserializer",
-              deserializer->name().c_str());
+    TRC_DEBUG("Try to deserialize record with JSON deserializer");
     session = deserializer->deserialize_session(data);
 
     if (session != NULL)
@@ -187,94 +174,6 @@ std::string SessionStore::create_key(const std::string& call_id,
 {
   return call_id + std::to_string(role) + std::to_string(function);
 }
-
-
-//
-// (De)serializer for the binary SessionStore format.
-//
-//
-std::string SessionStore::BinarySerializerDeserializer::
-  serialize_session(Session *session)
-{
-  std::ostringstream oss(std::ostringstream::out|std::ostringstream::binary);
-
-  oss << session->session_id << '\0';
-
-  int num_ccf = session->ccf.size();
-  oss.write((const char*)&num_ccf, sizeof(int));
-
-  for (std::vector<std::string>::iterator it = session->ccf.begin();
-       it != session->ccf.end();
-       ++it)
-  {
-    oss << *it << '\0';
-  }
-
-  oss.write((const char*)&session->acct_record_number, sizeof(uint32_t));
-
-  oss << session->timer_id << '\0';
-
-  oss.write((const char*)&session->session_refresh_time, sizeof(uint32_t));
-
-  oss.write((const char*)&session->interim_interval, sizeof(uint32_t));
-
-  return oss.str();
-}
-
-
-SessionStore::Session* SessionStore::BinarySerializerDeserializer::
-  deserialize_session(const std::string& data)
-{
-  std::istringstream iss(data, std::istringstream::in|std::istringstream::binary);
-  Session* session = new Session();
-
-  // Helper macro that bails out if we unexpectedly hit the end of the input
-  // stream.
-#define ASSERT_NOT_EOF(STREAM)                                                 \
-if ((STREAM).eof())                                                            \
-{                                                                              \
-  TRC_INFO("Failed to deserialize binary document (hit EOF at %s:%d)",         \
-           __FILE__, __LINE__);                                                \
-  delete session; session = NULL;                                              \
-  return NULL;                                                                 \
-}
-
-  getline(iss, session->session_id, '\0');
-  ASSERT_NOT_EOF(iss);
-
-  int num_ccf;
-  iss.read((char*)&num_ccf, sizeof(int));
-  ASSERT_NOT_EOF(iss);
-
-  for (int ii = 0; ii < num_ccf; ii++)
-  {
-    std::string ccf;
-    getline(iss, ccf, '\0');
-    ASSERT_NOT_EOF(iss);
-    session->ccf.push_back(ccf);
-  }
-
-  iss.read((char*)&session->acct_record_number, sizeof(uint32_t));
-  ASSERT_NOT_EOF(iss);
-
-  getline(iss, session->timer_id, '\0');
-  ASSERT_NOT_EOF(iss);
-
-  iss.read((char*)&session->session_refresh_time, sizeof(uint32_t));
-  ASSERT_NOT_EOF(iss);
-
-  iss.read((char*)&session->interim_interval, sizeof(uint32_t));
-  // This could legitimately be the end of the stream.
-
-  return session;
-}
-
-
-std::string SessionStore::BinarySerializerDeserializer::name()
-{
-  return "binary";
-}
-
 
 //
 // (De)serializer for the JSON SessionStore format.
@@ -365,10 +264,4 @@ SessionStore::Session* SessionStore::JsonSerializerDeserializer::
   }
 
   return session;
-}
-
-
-std::string SessionStore::JsonSerializerDeserializer::name()
-{
-  return "JSON";
 }
