@@ -601,31 +601,14 @@ int main(int argc, char**argv)
   // Parse the session-stores argument.
   std::string session_store_location;
   std::vector<std::string> remote_session_stores_locations;
-  if (!options.session_stores.empty())
-  {
-    if (!Utils::parse_stores_arg(options.session_stores,
-                                 options.local_site_name,
-                                 session_store_location,
-                                 remote_session_stores_locations))
-    {
-      TRC_ERROR("Invalid format of session-stores program argument");
-      return 1;
-    }
 
-    if (session_store_location == "")
-    {
-      // If we've failed to find a local site session store then Ralf has
-      // been misconfigured.
-      TRC_ERROR("No local site session store specified");
-      return 1;
-    }
-    else
-    {
-      TRC_INFO("Using memcached session stores");
-      TRC_INFO("  Primary store: %s", session_store_location.c_str());
-      std::string remote_session_stores_str = boost::algorithm::join(remote_session_stores_locations, ", ");
-      TRC_INFO("  Backup store(s): %s", remote_session_stores_str.c_str());
-    }
+  if (!Utils::parse_multi_site_stores_arg(options.session_stores,
+                                          options.local_site_name,
+                                          "session-stores",
+                                          session_store_location,
+                                          remote_session_stores_locations))
+  {
+    return 1;
   }
 
   start_signal_handlers();
