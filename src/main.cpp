@@ -42,7 +42,6 @@
 enum OptionTypes
 {
   DNS_SERVER=256+1,
-  MEMCACHED_WRITE_FORMAT,
   TARGET_LATENCY_US,
   DIAMETER_TIMEOUT_MS,
   MAX_TOKENS,
@@ -65,11 +64,6 @@ enum OptionTypes
   HTTP_ACR_LOGGING
 };
 
-enum struct MemcachedWriteFormat
-{
-  BINARY, JSON
-};
-
 struct options
 {
   std::string local_host;
@@ -90,7 +84,6 @@ struct options
   int log_level;
   std::string sas_server;
   std::string sas_system_name;
-  MemcachedWriteFormat memcached_write_format;
   int target_latency_us;
   int diameter_timeout_ms;
   int max_tokens;
@@ -127,7 +120,6 @@ const static struct option long_opt[] =
   {"log-level",                   required_argument, NULL, 'L'},
   {"sas",                         required_argument, NULL, 's'},
   {"help",                        no_argument,       NULL, 'h'},
-  {"memcached-write-format",      required_argument, 0,    MEMCACHED_WRITE_FORMAT},
   {"target-latency-us",           required_argument, NULL, TARGET_LATENCY_US},
   {"diameter-timeout-ms",         required_argument, NULL, DIAMETER_TIMEOUT_MS},
   {"max-tokens",                  required_argument, NULL, MAX_TOKENS},
@@ -180,10 +172,6 @@ void usage(void)
        "                            Use specified host as Service Assurance Server and specified\n"
        "                            system name to identify this system to SAS. If this option isn't\n"
        "                            specified, SAS is disabled\n"
-       "     --memcached-write-format\n"
-       "                            The data format to use when writing sessions\n"
-       "                            to memcached. Values are 'binary' and 'json'\n"
-       "                            (defaults to 'json')\n"
        "     --target-latency-us <usecs>\n"
        "                            Target latency above which throttling applies (default: 100000)\n"
        "     --diameter-timeout <milliseconds>\n"
@@ -364,27 +352,6 @@ int init_options(int argc, char**argv, struct options& options)
       usage();
       return -1;
 
-    case MEMCACHED_WRITE_FORMAT:
-      if (strcmp(optarg, "binary") == 0)
-      {
-        TRC_INFO("Memcached write format set to 'binary'");
-        options.memcached_write_format = MemcachedWriteFormat::BINARY;
-      }
-      else if (strcmp(optarg, "json") == 0)
-      {
-        TRC_INFO("Memcached write format set to 'json'");
-        options.memcached_write_format = MemcachedWriteFormat::JSON;
-      }
-      else
-      {
-        TRC_WARNING("Invalid value for memcached-write-format, using '%s'."
-                    "Got '%s', valid values are 'json' and 'binary'",
-                    ((options.memcached_write_format == MemcachedWriteFormat::JSON) ?
-                     "json" : "binary"),
-                    optarg);
-      }
-      break;
-
     case TARGET_LATENCY_US:
       options.target_latency_us = atoi(optarg);
       if (options.target_latency_us <= 0)
@@ -552,7 +519,6 @@ int main(int argc, char**argv)
   options.log_level = 0;
   options.sas_server = "0.0.0.0";
   options.sas_system_name = "";
-  options.memcached_write_format = MemcachedWriteFormat::JSON;
   options.target_latency_us = 100000;
   options.diameter_timeout_ms = 200;
   options.max_tokens = 1000;
@@ -753,30 +719,13 @@ int main(int argc, char**argv)
                                             addr_family,
                                             options.astaire_blacklist_duration);
 
-  SessionStore::SerializerDeserializer* serializer;
-  std::vector<SessionStore::SerializerDeserializer*> deserializers;
-
-  if (options.memcached_write_format == MemcachedWriteFormat::JSON)
-  {
-    serializer = new SessionStore::JsonSerializerDeserializer();
-  }
-  else
-  {
-    serializer = new SessionStore::BinarySerializerDeserializer();
-  }
-
-  deserializers.push_back(new SessionStore::JsonSerializerDeserializer());
-  deserializers.push_back(new SessionStore::BinarySerializerDeserializer());
-
   TopologyNeutralMemcachedStore* local_memstore =
                       new TopologyNeutralMemcachedStore(session_store_location,
                                                         astaire_resolver,
                                                         false,
                                                         astaire_comm_monitor);
 
-  SessionStore* local_session_store = new SessionStore(local_memstore,
-                                                       serializer,
-                                                       deserializers);
+  SessionStore* local_session_store = new SessionStore(local_memstore);
 
   std::vector<Store*> remote_memstores;
   std::vector<SessionStore*> remote_session_stores;
@@ -785,30 +734,13 @@ int main(int argc, char**argv)
        it != remote_session_stores_locations.end();
        ++it)
   {
-    SessionStore::SerializerDeserializer* serializer;
-    std::vector<SessionStore::SerializerDeserializer*> deserializers;
-
-    if (options.memcached_write_format == MemcachedWriteFormat::JSON)
-    {
-      serializer = new SessionStore::JsonSerializerDeserializer();
-    }
-    else
-    {
-      serializer = new SessionStore::BinarySerializerDeserializer();
-    }
-
-    deserializers.push_back(new SessionStore::JsonSerializerDeserializer());
-    deserializers.push_back(new SessionStore::BinarySerializerDeserializer());
-
     TopologyNeutralMemcachedStore* remote_memstore =
                      new TopologyNeutralMemcachedStore(*it,
                                                        astaire_resolver,
                                                        true,
                                                        remote_astaire_comm_monitor);
     remote_memstores.push_back(remote_memstore);
-    SessionStore* remote_session_store = new SessionStore(remote_memstore,
-                                                          serializer,
-                                                          deserializers);
+    SessionStore* remote_session_store = new SessionStore(remote_memstore);
     remote_session_stores.push_back(remote_session_store);
   }
 
