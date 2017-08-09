@@ -73,7 +73,10 @@ public:
 class AccountingResponse : public Diameter::Message
 {
 public:
-  AccountingResponse(const Dictionary* dict, Diameter::Stack* diameter_stack);
+  AccountingResponse(const Dictionary* dict,
+                     Diameter::Stack* diameter_stack,
+                     const int32_t& result_code,
+                     const std::string& session_id);
   inline AccountingResponse(Diameter::Message& msg) : Diameter::Message(msg) {};
   ~AccountingResponse();
 };

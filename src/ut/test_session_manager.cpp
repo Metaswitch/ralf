@@ -23,12 +23,16 @@
 
 const SAS::TrailId FAKE_TRAIL_ID = 0;
 const std::string BILLING_REALM = "billing.example.com";
+const int DIAMETER_TIMEOUT = 200;
 
 // Simulates a request to a CDF that returns successfully
 class DummyPeerMessageSender : public PeerMessageSender
 {
 public:
-  DummyPeerMessageSender(SAS::TrailId trail, const std::string& dest_realm) : PeerMessageSender(trail, dest_realm) {}
+  DummyPeerMessageSender(SAS::TrailId trail,
+                         const std::string& dest_realm,
+                         const int diameter_timeout) :
+    PeerMessageSender(trail, dest_realm, diameter_timeout) {}
 
   void send(Message* msg, SessionManager* sm, Rf::Dictionary* dict, Diameter::Stack* diameter_stack)
   {
@@ -40,17 +44,24 @@ public:
 class DummyPeerMessageSenderFactory : public PeerMessageSenderFactory
 {
 public:
-  DummyPeerMessageSenderFactory(const std::string& dest_realm) : PeerMessageSenderFactory(dest_realm) {}
+  DummyPeerMessageSenderFactory(const std::string& dest_realm,
+                                const int diameter_timeout) :
+    PeerMessageSenderFactory(dest_realm, diameter_timeout)
+  {}
   virtual ~DummyPeerMessageSenderFactory(){}
 
-  PeerMessageSender* newSender(SAS::TrailId trail) {return new DummyPeerMessageSender(trail, BILLING_REALM);}
+  PeerMessageSender* newSender(SAS::TrailId trail) {return new DummyPeerMessageSender(trail, BILLING_REALM, DIAMETER_TIMEOUT);}
 };
 
 // Simulates a request to a CDF that returns a 5001 error
 class DummyErrorPeerMessageSender : public PeerMessageSender
 {
 public:
-  DummyErrorPeerMessageSender(SAS::TrailId trail, const std::string& dest_realm) : PeerMessageSender(trail, dest_realm) {}
+  DummyErrorPeerMessageSender(SAS::TrailId trail,
+                              const std::string& dest_realm,
+                              const int diameter_timeout) :
+    PeerMessageSender(trail, dest_realm, diameter_timeout)
+  {}
 
   void send(Message* msg, SessionManager* sm, Rf::Dictionary* dict, Diameter::Stack* diameter_stack)
   {
@@ -62,17 +73,24 @@ public:
 class DummyErrorPeerMessageSenderFactory : public PeerMessageSenderFactory
 {
 public:
-  DummyErrorPeerMessageSenderFactory(const std::string& dest_realm) : PeerMessageSenderFactory(dest_realm) {}
+  DummyErrorPeerMessageSenderFactory(const std::string& dest_realm,
+                                     const int diameter_timeout) :
+    PeerMessageSenderFactory(dest_realm, diameter_timeout)
+  {}
   virtual ~DummyErrorPeerMessageSenderFactory(){}
 
-  PeerMessageSender* newSender(SAS::TrailId trail) {return new DummyErrorPeerMessageSender(trail, BILLING_REALM);}
+  PeerMessageSender* newSender(SAS::TrailId trail) {return new DummyErrorPeerMessageSender(trail, BILLING_REALM, DIAMETER_TIMEOUT);}
 };
 
 // Simulates a request to a CDF that returns a 5002 (session unknown) error, which is handled specially
 class DummyUnknownErrorPeerMessageSender : public PeerMessageSender
 {
 public:
-  DummyUnknownErrorPeerMessageSender(SAS::TrailId trail, const std::string& dest_realm) : PeerMessageSender(trail, dest_realm) {}
+  DummyUnknownErrorPeerMessageSender(SAS::TrailId trail,
+                                     const std::string& dest_realm,
+                                     const int diameter_timeout) :
+    PeerMessageSender(trail, dest_realm, diameter_timeout)
+  {}
 
   void send(Message* msg, SessionManager* sm, Rf::Dictionary* dict, Diameter::Stack* diameter_stack)
   {
@@ -84,10 +102,13 @@ public:
 class DummyUnknownErrorPeerMessageSenderFactory : public PeerMessageSenderFactory
 {
 public:
-  DummyUnknownErrorPeerMessageSenderFactory(const std::string& dest_realm) : PeerMessageSenderFactory(dest_realm) {}
+  DummyUnknownErrorPeerMessageSenderFactory(const std::string& dest_realm,
+                                            const int diameter_timeout) :
+    PeerMessageSenderFactory(dest_realm, diameter_timeout)
+  {}
   virtual ~DummyUnknownErrorPeerMessageSenderFactory(){}
 
-  PeerMessageSender* newSender(SAS::TrailId trail) {return new DummyUnknownErrorPeerMessageSender(trail, BILLING_REALM);}
+  PeerMessageSender* newSender(SAS::TrailId trail) {return new DummyUnknownErrorPeerMessageSender(trail, BILLING_REALM, DIAMETER_TIMEOUT);}
 };
 
 class SessionManagerTest : public ::testing::Test
@@ -110,7 +131,7 @@ TEST_F(SessionManagerTest, SimpleTest)
 {
   LocalStore* memstore = new LocalStore();
   SessionStore* store = new SessionStore(memstore);
-  DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory(BILLING_REALM);
+  DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory(BILLING_REALM, DIAMETER_TIMEOUT);
   MockChronosConnection* fake_chronos = new MockChronosConnection("http://localhost:1234");
   fake_chronos->accept_all_requests();
   HealthChecker* hc = new HealthChecker();
@@ -158,7 +179,7 @@ TEST_F(SessionManagerTest, TimerIDTest)
 {
   LocalStore* memstore = new LocalStore();
   SessionStore* store = new SessionStore(memstore);
-  DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory(BILLING_REALM);
+  DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory(BILLING_REALM, DIAMETER_TIMEOUT);
   MockChronosConnection* fake_chronos = new MockChronosConnection("http://localhost:1234");
   fake_chronos->accept_all_requests();
   HealthChecker* hc = new HealthChecker();
@@ -216,7 +237,7 @@ TEST_F(SessionManagerTest, TimeUpdateTest)
 {
   LocalStore* memstore = new LocalStore();
   SessionStore* store = new SessionStore(memstore);
-  DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory(BILLING_REALM);
+  DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory(BILLING_REALM, DIAMETER_TIMEOUT);
   MockChronosConnection* fake_chronos = new MockChronosConnection("http://localhost:1234");
   fake_chronos->accept_all_requests();
   HealthChecker* hc = new HealthChecker();
@@ -262,7 +283,7 @@ TEST_F(SessionManagerTest, NewCallTest)
 {
   LocalStore* memstore = new LocalStore();
   SessionStore* store = new SessionStore(memstore);
-  DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory(BILLING_REALM);
+  DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory(BILLING_REALM, DIAMETER_TIMEOUT);
   HealthChecker* hc = new HealthChecker();
   MockChronosConnection* fake_chronos = new MockChronosConnection("http://localhost:1234");
   fake_chronos->accept_all_requests();
@@ -302,7 +323,7 @@ TEST_F(SessionManagerTest, UnknownCallTest)
 {
   LocalStore* memstore = new LocalStore();
   SessionStore* store = new SessionStore(memstore);
-  DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory(BILLING_REALM);
+  DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory(BILLING_REALM, DIAMETER_TIMEOUT);
   MockChronosConnection* fake_chronos = new MockChronosConnection("http://localhost:1234");
   fake_chronos->accept_all_requests();
   HealthChecker* hc = new HealthChecker();
@@ -328,7 +349,7 @@ TEST_F(SessionManagerTest, CDFFailureTest)
 {
   LocalStore* memstore = new LocalStore();
   SessionStore* store = new SessionStore(memstore);
-  DummyErrorPeerMessageSenderFactory* factory = new DummyErrorPeerMessageSenderFactory(BILLING_REALM);
+  DummyErrorPeerMessageSenderFactory* factory = new DummyErrorPeerMessageSenderFactory(BILLING_REALM, DIAMETER_TIMEOUT);
   HealthChecker* hc = new HealthChecker();
   MockChronosConnection* fake_chronos = new MockChronosConnection("http://localhost:1234");
   fake_chronos->accept_all_requests();
@@ -359,12 +380,12 @@ TEST_F(SessionManagerTest, CDFInterimFailureTest)
 {
   LocalStore* memstore = new LocalStore();
   SessionStore* store = new SessionStore(memstore);
-  DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory(BILLING_REALM);
+  DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory(BILLING_REALM, DIAMETER_TIMEOUT);
   MockChronosConnection* fake_chronos = new MockChronosConnection("http://localhost:1234");
   fake_chronos->accept_all_requests();
   HealthChecker* hc = new HealthChecker();
   SessionManager* mgr = new SessionManager(store, {}, _dict, factory, fake_chronos, _diameter_stack, hc);
-  DummyErrorPeerMessageSenderFactory* fail_factory = new DummyErrorPeerMessageSenderFactory(BILLING_REALM);
+  DummyErrorPeerMessageSenderFactory* fail_factory = new DummyErrorPeerMessageSenderFactory(BILLING_REALM, DIAMETER_TIMEOUT);
   SessionManager* fail_mgr = new SessionManager(store, {}, _dict, fail_factory, fake_chronos, _diameter_stack, hc);
   SessionStore::Session* sess = NULL;
 
@@ -400,12 +421,12 @@ TEST_F(SessionManagerTest, CDFInterimFailureWithTimerIdChangeTest)
 {
   LocalStore* memstore = new LocalStore();
   SessionStore* store = new SessionStore(memstore);
-  DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory(BILLING_REALM);
+  DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory(BILLING_REALM, DIAMETER_TIMEOUT);
   MockChronosConnection* fake_chronos = new MockChronosConnection("http://localhost:1234");
   fake_chronos->accept_all_requests();
   HealthChecker* hc = new HealthChecker();
   SessionManager* mgr = new SessionManager(store, {}, _dict, factory, fake_chronos, _diameter_stack, hc);
-  DummyErrorPeerMessageSenderFactory* fail_factory = new DummyErrorPeerMessageSenderFactory(BILLING_REALM);
+  DummyErrorPeerMessageSenderFactory* fail_factory = new DummyErrorPeerMessageSenderFactory(BILLING_REALM, DIAMETER_TIMEOUT);
   SessionManager* fail_mgr = new SessionManager(store, {}, _dict, fail_factory, fake_chronos, _diameter_stack, hc);
   SessionStore::Session* sess = NULL;
 
@@ -452,12 +473,12 @@ TEST_F(SessionManagerTest, CDFInterimUnknownTest)
 {
   LocalStore* memstore = new LocalStore();
   SessionStore* store = new SessionStore(memstore);
-  DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory(BILLING_REALM);
+  DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory(BILLING_REALM, DIAMETER_TIMEOUT);
   MockChronosConnection* fake_chronos = new MockChronosConnection("http://localhost:1234");
   fake_chronos->accept_all_requests();
   HealthChecker* hc = new HealthChecker();
   SessionManager* mgr = new SessionManager(store, {}, _dict, factory, fake_chronos, _diameter_stack, hc);
-  DummyUnknownErrorPeerMessageSenderFactory* fail_factory = new DummyUnknownErrorPeerMessageSenderFactory(BILLING_REALM);
+  DummyUnknownErrorPeerMessageSenderFactory* fail_factory = new DummyUnknownErrorPeerMessageSenderFactory(BILLING_REALM, DIAMETER_TIMEOUT);
   SessionManager* fail_mgr = new SessionManager(store, {}, _dict, fail_factory, fake_chronos, _diameter_stack, hc);
   SessionStore::Session* sess = NULL;
 
@@ -493,7 +514,7 @@ TEST_F(SessionManagerTest, HealthCheckTest)
   MockChronosConnection* fake_chronos = new MockChronosConnection("http://localhost:1234");
   fake_chronos->accept_all_requests();
   MockHealthChecker* hc = new MockHealthChecker();
-  DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory(BILLING_REALM);
+  DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory(BILLING_REALM, DIAMETER_TIMEOUT);
   SessionManager* mgr = new SessionManager(store, {}, _dict, factory, fake_chronos, _diameter_stack, hc);
   SessionStore::Session* sess = NULL;
 
@@ -528,7 +549,7 @@ TEST_F(SessionManagerTest, HealthCheckFailureTest)
   MockChronosConnection* fake_chronos = new MockChronosConnection("http://localhost:1234");
   fake_chronos->accept_all_requests();
   MockHealthChecker* hc = new MockHealthChecker();
-  DummyErrorPeerMessageSenderFactory* fail_factory = new DummyErrorPeerMessageSenderFactory(BILLING_REALM);
+  DummyErrorPeerMessageSenderFactory* fail_factory = new DummyErrorPeerMessageSenderFactory(BILLING_REALM, DIAMETER_TIMEOUT);
   SessionManager* fail_mgr = new SessionManager(store, {}, _dict, fail_factory, fake_chronos, _diameter_stack, hc);
   SessionStore::Session* sess = NULL;
 
@@ -557,7 +578,7 @@ TEST_F(SessionManagerTest, CorrectTagForwarded)
   MockChronosConnection* fake_chronos = new MockChronosConnection("http://localhost:1234");
   fake_chronos->accept_all_requests();
   MockHealthChecker* hc = new MockHealthChecker();
-  DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory(BILLING_REALM);
+  DummyPeerMessageSenderFactory* factory = new DummyPeerMessageSenderFactory(BILLING_REALM, DIAMETER_TIMEOUT);
   SessionManager* mgr = new SessionManager(store, {}, _dict, factory, fake_chronos, _diameter_stack, hc);
   SessionStore::Session* sess = NULL;
 
@@ -601,7 +622,7 @@ class SessionManagerGRTest : public ::testing::Test
     _local_store = new SessionStore(_local_memstore);
     _remote_store1 = new SessionStore(_remote_memstore1);
     _remote_store2 = new SessionStore(_remote_memstore2);
-    _factory = new DummyPeerMessageSenderFactory(BILLING_REALM);
+    _factory = new DummyPeerMessageSenderFactory(BILLING_REALM, DIAMETER_TIMEOUT);
     _fake_chronos = new MockChronosConnection("http://localhost:1234");
     _fake_chronos->accept_all_requests();
     _hc = new HealthChecker();
@@ -715,7 +736,7 @@ TEST_F(SessionManagerGRTest, SimpleTest)
 
 TEST_F(SessionManagerGRTest, InterimUnknownTest)
 {
-  DummyUnknownErrorPeerMessageSenderFactory* fail_factory = new DummyUnknownErrorPeerMessageSenderFactory(BILLING_REALM);
+  DummyUnknownErrorPeerMessageSenderFactory* fail_factory = new DummyUnknownErrorPeerMessageSenderFactory(BILLING_REALM, DIAMETER_TIMEOUT);
   SessionManager* fail_mgr = new SessionManager(_local_store,
                                                 {_remote_store1, _remote_store2},
                                                 _dict,

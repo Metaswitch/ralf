@@ -1,5 +1,3 @@
-# The following files do not have full code coverage yet, because they need the freeDiameter stack to be mocked out.
+# The following files do not have full code coverage yet.
 
-ralf_transaction.cpp
 rf.cpp
-peer_message_sender.cpp

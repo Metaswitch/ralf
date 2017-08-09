@@ -16,15 +16,22 @@
 class PeerMessageSenderFactory
 {
 public:
-  PeerMessageSenderFactory(const std::string& dest_realm) : _dest_realm(dest_realm) {};
+  PeerMessageSenderFactory(const std::string& dest_realm,
+                           const int diameter_timeout) :
+    _dest_realm(dest_realm),
+    _diameter_timeout(diameter_timeout)
+  {};
+
+  virtual ~PeerMessageSenderFactory() {};
 
   virtual PeerMessageSender* newSender(SAS::TrailId trail)
   {
-    return new PeerMessageSender(trail, _dest_realm);
+    return new PeerMessageSender(trail, _dest_realm, _diameter_timeout);
   }
 
 private:
   const std::string _dest_realm;
+  const int _diameter_timeout;
 };
 
 

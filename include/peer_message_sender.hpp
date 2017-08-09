@@ -24,7 +24,9 @@
 class PeerMessageSender
 {
 public:
-  PeerMessageSender(SAS::TrailId trail, const std::string& dest_realm);
+  PeerMessageSender(SAS::TrailId trail,
+                    const std::string& dest_realm,
+                    const int diameter_timeout);
   virtual ~PeerMessageSender();
   virtual void send(Message* msg,
                     SessionManager* sm,
@@ -44,6 +46,7 @@ private:
   Diameter::Stack* _diameter_stack;
   SAS::TrailId _trail;
   const std::string _dest_realm;
+  const int _diameter_timeout;
 };
 
 #endif /* PEER_MESSAGE_SENDER_HPP_ */

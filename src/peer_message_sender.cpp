@@ -24,10 +24,13 @@
  *
  *   No action should be taken after any of the above happens, as the this pointer becomes invalid.
  */
-PeerMessageSender::PeerMessageSender(SAS::TrailId trail, const std::string& dest_realm) :
+PeerMessageSender::PeerMessageSender(SAS::TrailId trail,
+                                     const std::string& dest_realm,
+                                     const int diameter_timeout) :
   _which(0),
   _trail(trail),
-  _dest_realm(dest_realm)
+  _dest_realm(dest_realm),
+  _diameter_timeout(diameter_timeout)
 {
 }
 
@@ -75,7 +78,7 @@ void PeerMessageSender::int_send_msg()
   // Send the message to freeDiameter.  This object could get modified by a
   // callback (including being deleted) so is not safe to reference after this
   // point.
-  acr.send(tsx); return;
+  acr.send(tsx, _diameter_timeout); return;
 }
 
 /* Called when a message has been sent and a response has been received.

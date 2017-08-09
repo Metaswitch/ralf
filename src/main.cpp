@@ -43,6 +43,7 @@ enum OptionTypes
 {
   DNS_SERVER=256+1,
   TARGET_LATENCY_US,
+  DIAMETER_TIMEOUT_MS,
   MAX_TOKENS,
   INIT_TOKEN_RATE,
   MIN_TOKEN_RATE,
@@ -84,6 +85,7 @@ struct options
   std::string sas_server;
   std::string sas_system_name;
   int target_latency_us;
+  int diameter_timeout_ms;
   int max_tokens;
   float init_token_rate;
   float min_token_rate;
@@ -119,6 +121,7 @@ const static struct option long_opt[] =
   {"sas",                         required_argument, NULL, 's'},
   {"help",                        no_argument,       NULL, 'h'},
   {"target-latency-us",           required_argument, NULL, TARGET_LATENCY_US},
+  {"diameter-timeout-ms",         required_argument, NULL, DIAMETER_TIMEOUT_MS},
   {"max-tokens",                  required_argument, NULL, MAX_TOKENS},
   {"init-token-rate",             required_argument, NULL, INIT_TOKEN_RATE},
   {"min-token-rate",              required_argument, NULL, MIN_TOKEN_RATE},
@@ -171,6 +174,8 @@ void usage(void)
        "                            specified, SAS is disabled\n"
        "     --target-latency-us <usecs>\n"
        "                            Target latency above which throttling applies (default: 100000)\n"
+       "     --diameter-timeout <milliseconds>\n"
+       "                            Length of time (in ms) before timing out a Diameter request to the CDF\n"
        "     --max-tokens N         Maximum number of tokens allowed in the token bucket (used by\n"
        "                            the throttling code (default: 1000))\n"
        "     --dns-timeout <milliseconds>\n"
@@ -246,6 +251,7 @@ int init_options(int argc, char**argv, struct options& options)
 {
   int opt;
   int long_opt_ind;
+  bool diameter_timeout_set = false;
 
   optind = 0;
   while ((opt = getopt_long(argc, argv, options_description.c_str(), long_opt, &long_opt_ind)) != -1)
@@ -355,6 +361,12 @@ int init_options(int argc, char**argv, struct options& options)
       }
       break;
 
+    case DIAMETER_TIMEOUT_MS:
+      TRC_INFO("Diameter timeout: %s", optarg);
+      diameter_timeout_set = true;
+      options.diameter_timeout_ms = atoi(optarg);
+      break;
+
     case MAX_TOKENS:
       options.max_tokens = atoi(optarg);
       if (options.max_tokens <= 0)
@@ -442,6 +454,12 @@ int init_options(int argc, char**argv, struct options& options)
     }
   }
 
+  if (!diameter_timeout_set)
+  {
+    Utils::calculate_diameter_timeout(options.target_latency_us,
+                                      options.diameter_timeout_ms);
+  }
+
   return 0;
 }
 
@@ -502,6 +520,7 @@ int main(int argc, char**argv)
   options.sas_server = "0.0.0.0";
   options.sas_system_name = "";
   options.target_latency_us = 100000;
+  options.diameter_timeout_ms = 200;
   options.max_tokens = 1000;
   options.init_token_rate = 100.0;
   options.min_token_rate = 10.0;
@@ -726,7 +745,8 @@ int main(int argc, char**argv)
   }
 
   BillingHandlerConfig* cfg = new BillingHandlerConfig();
-  PeerMessageSenderFactory* factory = new PeerMessageSenderFactory(options.billing_realm);
+  PeerMessageSenderFactory* factory = new PeerMessageSenderFactory(options.billing_realm,
+                                                                   options.diameter_timeout_ms);
 
   // Create a connection to Chronos.
   std::string port_str = std::to_string(options.http_port);
