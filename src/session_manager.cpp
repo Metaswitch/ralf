@@ -387,6 +387,7 @@ void SessionManager::on_ccf_response(bool accepted,
   else
   {
     TRC_WARNING("Session for %s received error (%d) from CDF", msg->call_id.c_str(), rc);
+
     if (msg->record_type.isInterim())
     {
       if (rc == 5002)

@@ -134,7 +134,7 @@ class HandlerTest : public ::testing::Test
 
     std::string body = "{\"peers\": {\"ccf\": [\"ec2-54-197-167-141.compute-1.amazonaws.com\"]}, \"event\": {\"Accounting-Record-Type\": " + std::to_string(record_type) +", \"Acct-Interim-Interval\": 300, \"Service-Information\": {\"IMS-Information\": {\"Role-Of-Node\": 0, \"Node-Functionality\": 0}}}}";
 
-    // Send in a mock HTTP resuest.
+    // Send in a mock HTTP request.
     MockHttpStack::Request req(_httpstack,
                                "/call-id/" + CALL_ID,
                                "",
@@ -175,14 +175,13 @@ class HandlerTest : public ::testing::Test
     if (multiple_peers)
     {
       body = "{\"peers\": {\"ccf\": [\"ec2-54-197-167-141.compute-1.amazonaws.com\", \"ec2-34-189-147-119.compute-1.amazonaws.com\"]}, \"event\": {\"Accounting-Record-Type\": 1, \"Acct-Interim-Interval\": 300, \"Service-Information\": {\"IMS-Information\": {\"Role-Of-Node\": 0, \"Node-Functionality\": 0}}}}";
-
     }
     else
     {
       body = "{\"peers\": {\"ccf\": [\"ec2-54-197-167-141.compute-1.amazonaws.com\"]}, \"event\": {\"Accounting-Record-Type\": 1, \"Acct-Interim-Interval\": 300, \"Service-Information\": {\"IMS-Information\": {\"Role-Of-Node\": 0, \"Node-Functionality\": 0}}}}";
     }
 
-    // Send in a mock HTTP resuest.
+    // Send in a mock HTTP request.
     MockHttpStack::Request req(_httpstack,
                                "/call-id/" + CALL_ID,
                                "",
@@ -360,11 +359,12 @@ TEST_F(HandlerTest, NoNodeFunctionalityTest)
   delete msg; msg = NULL;
 };
 
+// Tests that Non POST HTTP requests are rejected with a 405.
 TEST_F(HandlerTest, NotPost)
 {
   std::string body = "{\"peers\": {\"ccf\": [\"ec2-54-197-167-141.compute-1.amazonaws.com\"]}, \"event\": {\"Accounting-Record-Type\": 1, \"Acct-Interim-Interval\": 300, \"Service-Information\": {\"IMS-Information\": {\"Role-Of-Node\": 0, \"Node-Functionality\": 0}}}}";
 
-  // Send in a mock HTTP resuest. It's not a POST so should be rejected with a
+  // Send in a mock HTTP request. It's not a POST so should be rejected with a
   // 405 response.
   MockHttpStack::Request req(_httpstack,
                              "/call-id/skdlfjsdkf",
@@ -382,11 +382,12 @@ TEST_F(HandlerTest, NotPost)
   task->run();
 }
 
+// Tests that a request with a bad JSON body is rejected with a 405.
 TEST_F(HandlerTest, BadBody)
 {
   std::string body = "{\"peers\": {\"ccf\": [\"ec2-54-197-167-141.compute-1.amazonaws.com\"]}, \"event\": {\"Accounting-Record-Type\": 1, \"Acct-Interim-Interval\": 300, \"Service-Information\": {\"IMS-Information\": {\"Role-Of-Node\": 0, \"Node-Functionality\": 0}}}";
 
-  // Send in a mock HTTP resuest. The body is invalid JSON so it should trigger
+  // Send in a mock HTTP request. The body is invalid JSON so it should trigger
   // a 405 response.
   MockHttpStack::Request req(_httpstack,
                              "/call-id/" + CALL_ID,
@@ -404,11 +405,13 @@ TEST_F(HandlerTest, BadBody)
   task->run();
 }
 
+// Tests that a simple EVENT ACR is handled.
 TEST_F(HandlerTest, SimpleMainline)
 {
   request_response_template(2001, EVENT, false);
 }
 
+// Tests that a sequence of START, INTERIM, and STOP ACRs are handled.
 TEST_F(HandlerTest, SimpleDialog)
 {
   request_response_template(2001, START, false);
@@ -416,28 +419,33 @@ TEST_F(HandlerTest, SimpleDialog)
   request_response_template(2001, STOP, true);
 }
 
+// Tests a failure flow where the CDF sends a negative response to an INTERIM.
 TEST_F(HandlerTest, FailedDialog)
 {
   request_response_template(2001, START, false);
   request_response_template(3002, INTERIM, true);
 }
 
+// Tests a failure flow where the CDF sends a 5002 response to an INTERIM.
 TEST_F(HandlerTest, FailedDialog5002)
 {
   request_response_template(2001, START, false);
   request_response_template(5002, INTERIM, true);
 }
 
+// Tests a request that fails to be delivered to the CDF.
 TEST_F(HandlerTest, DeliveryFailed)
 {
   request_response_template(3002, EVENT, false);
 }
 
+// Tests a request that times out before a response is sent by the CDF.
 TEST_F(HandlerTest, Timeout)
 {
   request_timeout_template(false);
 }
 
+// Another timeout test where the request is retried to a second peer.
 TEST_F(HandlerTest, TimeoutMultiplePeers)
 {
   request_timeout_template(true);
