@@ -334,17 +334,19 @@ void SessionManager::on_ccf_response(bool accepted,
                                                   msg->trail,
                                                   tags);
 
-         if (status != HTTP_OK)
+         if (status == HTTP_OK)
+         {
+           SAS::Event new_timer(msg->trail, SASEvent::INTERIM_TIMER_CREATED, 0);
+           new_timer.add_static_param(interim_interval);
+           SAS::report_event(new_timer);
+         }
+         else
          {
            // LCOV_EXCL_START
            TRC_ERROR("Chronos POST failed");
            // LCOV_EXCL_STOP
          }
       };
-
-      SAS::Event new_timer(msg->trail, SASEvent::INTERIM_TIMER_CREATED, 0);
-      new_timer.add_static_param(interim_interval);
-      SAS::report_event(new_timer);
 
       TRC_INFO("Writing session to store");
       SessionStore::Session* sess = new SessionStore::Session();
