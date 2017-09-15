@@ -53,6 +53,8 @@ ralf_test_SOURCES := ${COMMON_SOURCES} \
                      test_main.cpp \
                      fakelogger.cpp \
                      mock_chronos_connection.cpp \
+                     mockhttpstack.cpp \
+                     mockdiameterstack.cpp \
                      pthread_cond_var_helper.cpp
 
 COMMON_CPPFLAGS := -I../include \
