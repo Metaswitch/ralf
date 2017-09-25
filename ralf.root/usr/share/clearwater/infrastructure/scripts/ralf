@@ -13,13 +13,8 @@ ralf_listen_port=3869
 ralf_secure_listen_port=5659
 acl_required=false
 check_destination_host=true
+ralf_diameter_watchdog_timer=30
 . /etc/clearwater/config
-
-# If ralf_tw_timer is not set, default to 30s.
-if [[ -z "$ralf_tw_timer" ]]
-then
-  ralf_tw_timer=30
-fi
 
 # Allow a specific FQDN for Ralf to be set (in case this is an
 # all-in-one node running both ralf and homestead Diameter stacks).
@@ -37,5 +32,5 @@ then
   # Strip any characters not valid in an FQDN out of ralf_hostname (for
   # example, it might be an IPv6 address)
   realm=$(echo $ralf_hostname | sed -e 's/:[^:]*$//g' | sed -e 's/^\[//g' | sed -e 's/\]$//g')
-  /usr/share/clearwater/bin/generic_create_diameterconf ralf $identity $realm $ralf_listen_port $ralf_secure_listen_port $acl_required $check_destination_host $ralf_tw_timer
+  /usr/share/clearwater/bin/generic_create_diameterconf ralf $identity $realm $ralf_listen_port $ralf_secure_listen_port $acl_required $check_destination_host $ralf_diameter_watchdog_timer
 fi
