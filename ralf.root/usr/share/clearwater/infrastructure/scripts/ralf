@@ -13,7 +13,7 @@ ralf_listen_port=3869
 ralf_secure_listen_port=5659
 acl_required=false
 check_destination_host=true
-ralf_diameter_watchdog_timer=30
+ralf_diameter_watchdog_timer=6
 . /etc/clearwater/config
 
 # Allow a specific FQDN for Ralf to be set (in case this is an
