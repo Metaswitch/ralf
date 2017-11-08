@@ -47,6 +47,7 @@ enum OptionTypes
   MAX_TOKENS,
   INIT_TOKEN_RATE,
   MIN_TOKEN_RATE,
+  MAX_TOKEN_RATE,
   EXCEPTION_MAX_TTL,
   BILLING_PEER,
   HTTP_BLACKLIST_DURATION,
@@ -89,6 +90,7 @@ struct options
   int max_tokens;
   float init_token_rate;
   float min_token_rate;
+  float max_token_rate;
   int exception_max_ttl;
   int http_blacklist_duration;
   int diameter_blacklist_duration;
@@ -125,6 +127,7 @@ const static struct option long_opt[] =
   {"max-tokens",                  required_argument, NULL, MAX_TOKENS},
   {"init-token-rate",             required_argument, NULL, INIT_TOKEN_RATE},
   {"min-token-rate",              required_argument, NULL, MIN_TOKEN_RATE},
+  {"max-token-rate",              required_argument, NULL, MAX_TOKEN_RATE},
   {"exception-max-ttl",           required_argument, NULL, EXCEPTION_MAX_TTL},
   {"http-blacklist-duration",     required_argument, NULL, HTTP_BLACKLIST_DURATION},
   {"diameter-blacklist-duration", required_argument, NULL, DIAMETER_BLACKLIST_DURATION},
@@ -399,6 +402,15 @@ int init_options(int argc, char**argv, struct options& options)
       }
       break;
 
+    case MAX_TOKEN_RATE:
+      options.max_token_rate = atoi(optarg);
+      if (options.max_token_rate < 0)
+      {
+        TRC_ERROR("Invalid --max-token-rate option %s", optarg);
+        return -1;
+      }
+      break;
+
     case EXCEPTION_MAX_TTL:
       options.exception_max_ttl = atoi(optarg);
       TRC_INFO("Max TTL after an exception set to %d",
@@ -529,6 +541,7 @@ int main(int argc, char**argv)
   options.max_tokens = 1000;
   options.init_token_rate = 100.0;
   options.min_token_rate = 10.0;
+  options.max_token_rate = 0.0;
   options.exception_max_ttl = 600;
   options.http_blacklist_duration = HttpResolver::DEFAULT_BLACKLIST_DURATION;
   options.diameter_blacklist_duration = DiameterResolver::DEFAULT_BLACKLIST_DURATION;
@@ -658,7 +671,8 @@ int main(int argc, char**argv)
   LoadMonitor* load_monitor = new LoadMonitor(options.target_latency_us,
                                               options.max_tokens,
                                               options.init_token_rate,
-                                              options.min_token_rate);
+                                              options.min_token_rate,
+                                              options.max_token_rate);
 
   HealthChecker* hc = new HealthChecker();
   hc->start_thread();
