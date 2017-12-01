@@ -56,7 +56,7 @@ check program poll_ralf with path "/usr/share/clearwater/bin/poll_ralf.sh"
   depends on ralf_process
 
   # Aborting generates a core file and triggers diagnostic collection.
-  if status != 0 for 2 cycles then exec "/bin/bash -c '/usr/share/clearwater/infrastructure/monit_stability/sprout-stability aborted; /usr/share/clearwater/bin/issue-alarm monit 2000.3; /etc/init.d/ralf abort'"
+  if status != 0 for 2 cycles then exec "/bin/bash -c '/usr/share/clearwater/infrastructure/monit_stability/ralf-stability aborted; /usr/share/clearwater/bin/issue-alarm monit 2000.3; /etc/init.d/ralf abort'"
 EOF
 
   chmod 0644 /etc/monit/conf.d/ralf.monit
