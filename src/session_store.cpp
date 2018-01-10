@@ -47,7 +47,12 @@ SessionStore::Session* SessionStore::get_session_data(const std::string& call_id
 
   std::string data;
   uint64_t cas;
-  Store::Status status = _store->get_data("session", key, data, cas, trail);
+  Store::Status status = _store->get_data("session",
+                                          key,
+                                          data,
+                                          cas,
+                                          trail,
+                                          Store::Format::JSON);
 
   if (status == Store::Status::OK && !data.empty())
   {
@@ -94,7 +99,8 @@ Store::Status SessionStore::set_session_data(const std::string& call_id,
                                           data,
                                           cas,
                                           2 * session->session_refresh_time,
-                                          trail);
+                                          trail,
+                                          Store::Format::JSON);
   TRC_DEBUG("Store returned %d", status);
 
   return status;

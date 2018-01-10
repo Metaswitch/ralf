@@ -21,6 +21,7 @@ using ::testing::_;
 using ::testing::DoAll;
 using ::testing::Return;
 using ::testing::SetArgReferee;
+using ::testing::An;
 
 static const SAS::TrailId FAKE_TRAIL = 0;
 
@@ -119,7 +120,7 @@ TEST_F(SessionStoreCorruptDataTest, BadlyFormedJson)
 {
   SessionStore::Session* session;
 
-  EXPECT_CALL(*_memstore, get_data(_, _, _, _, _))
+  EXPECT_CALL(*_memstore, get_data(_, _, _, _, _, An<Store::Format>()))
     .WillOnce(DoAll(SetArgReferee<2>(std::string("{ \"session_id: \"12345\"}")),
                     SetArgReferee<3>(1), // CAS
                     Return(Store::OK)));
@@ -133,7 +134,7 @@ TEST_F(SessionStoreCorruptDataTest, SemanticallyInvalidJson)
 {
   SessionStore::Session* session;
 
-  EXPECT_CALL(*_memstore, get_data(_, _, _, _, _))
+  EXPECT_CALL(*_memstore, get_data(_, _, _, _, _, An<Store::Format>()))
     .WillOnce(DoAll(SetArgReferee<2>(std::string("{\"session_id\": 12345 }")),
                     SetArgReferee<3>(1), // CAS
                     Return(Store::OK)));
