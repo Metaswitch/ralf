@@ -713,7 +713,13 @@ int main(int argc, char**argv)
 
   // Create a DNS resolver.  We'll use this for HTTP, for Diameter and for Astaire.
   DnsCachedResolver* dns_resolver = new DnsCachedResolver(options.dns_servers,
-                                                          options.dns_timeout);
+                                                          options.dns_timeout,
+                                                          "/etc/clearwater/dns.json");
+
+  // Reload dns.json on SIGHUP
+  Updater<void, DnsCachedResolver>* dns_updater =
+          new Updater<void, DnsCachedResolver>(dns_resolver,
+                                               std::mem_fun(&DnsCachedResolver::reload_static_records));
 
   int addr_family = AF_INET;
   struct in6_addr dummy_addr_resolver;
@@ -888,6 +894,7 @@ int main(int argc, char**argv)
 
   delete realm_manager; realm_manager = NULL;
   delete diameter_resolver; diameter_resolver = NULL;
+  delete dns_updater; dns_updater = NULL;
   delete http_resolver; http_resolver = NULL;
   delete dns_resolver; dns_resolver = NULL;
   delete load_monitor; load_monitor = NULL;
