@@ -33,6 +33,7 @@ COMMON_SOURCES := accesslogger.cpp \
                   baseresolver.cpp \
                   diameterresolver.cpp \
                   dnscachedresolver.cpp \
+                  static_dns_cache.cpp \
                   dnsparser.cpp \
                   realmmanager.cpp \
                   alarm.cpp \
