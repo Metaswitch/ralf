@@ -805,17 +805,25 @@ int main(int argc, char**argv)
     }
   }
 
-  // Create a connection to Chronos.  This requires an HttpResolver.
+  // Create a connection to Chronos.  This requires building the HttpResolver,
+  // Client, and Connection, to pass into the ChronosConnection.
   TRC_STATUS("Creating connection to Chronos at %s using %s as the callback URI",
              chronos_service.c_str(), chronos_callback_addr.c_str());
 
   HttpResolver* http_resolver = new HttpResolver(dns_resolver,
                                                  http_af,
                                                  options.http_blacklist_duration);
-  ChronosConnection* timer_conn = new ChronosConnection(chronos_service,
-                                                        chronos_callback_addr,
-                                                        http_resolver,
-                                                        chronos_comm_monitor);
+
+  HttpClient* chronos_http_client = new HttpClient(false,
+                                                   http_resolver,
+                                                   SASEvent::HttpLogLevel::DETAIL,
+                                                   chronos_comm_monitor);
+
+  HttpConnection* chronos_http_conn = new HttpConnection(chronos_service,
+                                                         chronos_http_client);
+
+  ChronosConnection* timer_conn = new ChronosConnection(chronos_callback_addr,
+                                                        chronos_http_conn);
 
   cfg->mgr = new SessionManager(local_session_store, remote_session_stores, dict, factory, timer_conn, diameter_stack, hc);
 
@@ -888,6 +896,9 @@ int main(int argc, char**argv)
 
   delete realm_manager; realm_manager = NULL;
   delete diameter_resolver; diameter_resolver = NULL;
+  delete timer_conn; timer_conn = NULL;
+  delete chronos_http_conn; chronos_http_conn = NULL;
+  delete chronos_http_client; chronos_http_client = NULL;
   delete http_resolver; http_resolver = NULL;
   delete dns_resolver; dns_resolver = NULL;
   delete load_monitor; load_monitor = NULL;
