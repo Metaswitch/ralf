@@ -661,6 +661,11 @@ int main(int argc, char**argv)
                                                                                "Ralf",
                                                                                "remote Astaire");
 
+  Alarm* cdf_peer_connection_alarm = new Alarm(alarm_manager,
+                                               "ralf",
+                                               AlarmDef::RALF_CDF_REALM_PEER_ERROR,
+                                               AlarmDef::MINOR);
+
   AccessLogger* access_logger = NULL;
   if (options.access_log_enabled)
   {
@@ -864,7 +869,10 @@ int main(int argc, char**argv)
                                                  options.billing_realm,
                                                  options.billing_peer,
                                                  options.max_peers,
-                                                 diameter_resolver);
+                                                 diameter_resolver,
+                                                 cdf_peer_connection_alarm,
+                                                 &CL_RALF_CDF_CONNECTION_CLEARED,
+                                                 &CL_RALF_CDF_CONNECTION_ERROR);
   realm_manager->start();
 
   sem_wait(&term_sem);
@@ -895,6 +903,7 @@ int main(int argc, char**argv)
   realm_manager->stop();
 
   delete realm_manager; realm_manager = NULL;
+  delete cdf_peer_connection_alarm; cdf_peer_connection_alarm = NULL;
   delete diameter_resolver; diameter_resolver = NULL;
   delete timer_conn; timer_conn = NULL;
   delete chronos_http_conn; chronos_http_conn = NULL;

@@ -114,6 +114,29 @@
                     "action": "Investigate the issue that is preventing the local Ralf process from contacting Astaire processes in remote sites. The Ralf process will periodically attempt to reconnect and this alarm will clear once connectivity has been restored. If you cannot determine the issue or the alarm fails to clear then contact your support representative."
                 }
             ]
+        },
+        {
+            "name": "RALF_CDF_REALM_PEER_ERROR",
+            "index": 2005,
+            "cause": "UNDERLYING_RESOURCE_UNAVAILABLE",
+            "levels": [
+                {
+                  "severity": "CLEARED",
+                  "details": "Either Ralf communication to all previously unreachable CDF instances has been restored or there are at least as many reachable instances as expected.",
+                  "description": "Ralf: CDF instance communication error cleared.",
+                  "cause": "Ralf communication to previously unreachable CDF instances has been restored. The previously issued alarm has been cleared.",
+                  "effect": "The local Ralf process can successfully contact either all discovered CDF instances or the expected number of CDF instances (two, unless overridden through configuration).",
+                  "action": "No action."
+                },
+                {
+                  "severity": "MINOR",
+                  "details": "The local Ralf process is unable to contact some CDF instances. The number of reachable CDF instances is strictly less than the number expected. See the ENT logs for details.",
+                  "description": "Ralf: CDF instance communication error.",
+                  "cause": "The local Ralf process is unable to contact some CDF instances and the number of reachable CDF peers is strictly less than the number expected (two, unless overridden through configuration). The likely cause depends on whether this is effecting all Ralf instances or just a subset. If the issue impacts just a subset of Ralf instances then it is likely to be due to a partial network outage or configuration issues on those nodes. If it impacts all Ralf instances then it is likely to be due to a misconfiguration of the CDF hostname in shared configuration, misconfiguration of DNS, a significant network outage, or because all CDF instances are currently failed.",
+                  "effect": "If at least one CDF instance could be contacted, there is no impact on service, but resilience of the CDF connectivity from this Ralf is reduced.  If no CDF instances could be contacted, a separate CRITICAL ‘Ralf: CDF communication error’ will also be raised.  Refer to that alarm for the details of the effect.",
+                  "action": "Investigate the issue that is preventing the local Ralf process from contacting the CDF. The Ralf process will periodically attempt to reconnect and this alarm will clear once connectivity to this instance has been restored or the number of reachable CDF peers is at least the expected number of CDF instances (two, unless overriden through configuration). If you cannot determine the issue or the alarm fails to clear then contact your support representative."
+                }
+            ]
         }
     ]
 }
