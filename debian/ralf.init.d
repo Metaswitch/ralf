@@ -143,8 +143,8 @@ get_daemon_args()
                      $max_token_rate_arg
                      $exception_max_ttl_arg
                      $sas_signaling_if_arg
-                     --sas=$sas_server,$NAME@$public_hostname"
                      $ram_recording_arg
+                     --sas=$sas_server,$NAME@$public_hostname"
 
         [ "$http_blacklist_duration" = "" ]     || DAEMON_ARGS="$DAEMON_ARGS --http-blacklist-duration=$http_blacklist_duration"
         [ "$diameter_blacklist_duration" = "" ] || DAEMON_ARGS="$DAEMON_ARGS --diameter-blacklist-duration=$diameter_blacklist_duration"
