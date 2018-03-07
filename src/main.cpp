@@ -62,7 +62,8 @@ enum OptionTypes
   CHRONOS_HOSTNAME,
   RALF_CHRONOS_CALLBACK_URI,
   RALF_HOSTNAME,
-  HTTP_ACR_LOGGING
+  HTTP_ACR_LOGGING,
+  OPT_RAM_RECORD_EVERYTHING,
 };
 
 struct options
@@ -103,6 +104,7 @@ struct options
   std::string ralf_chronos_callback_uri;
   std::string ralf_hostname;
   bool http_acr_logging;
+  bool ram_record_everything;
 };
 
 const static struct option long_opt[] =
@@ -140,6 +142,7 @@ const static struct option long_opt[] =
   {"ralf-chronos-callback-uri",   required_argument, NULL, RALF_CHRONOS_CALLBACK_URI},
   {"ralf-hostname",               required_argument, NULL, RALF_HOSTNAME},
   {"http-acr-logging",            required_argument, NULL, HTTP_ACR_LOGGING},
+  { "ram-record-everything",      no_argument,       NULL, OPT_RAM_RECORD_EVERYTHING},
   {NULL,                          0,                 NULL, 0},
 };
 
@@ -212,6 +215,8 @@ void usage(void)
        "                            This is used to form the callback URL for the Chronos cluser.\n"
        "     --http-acr-logging     Whether to include the bodies of ACR HTTP requests when they are logged\n"
        "                            to SAS\n"
+       "     --ram-record-everything\n"
+       "                            Write all logs to RAM and dump them to file on abnormal termination\n"
        "     --pidfile=<filename>   Write pidfile\n"
        "     --daemon               Run as a daemon\n"
        " -h, --help                 Show this help screen\n"
@@ -239,6 +244,10 @@ int init_logging_options(int argc, char**argv, struct options& options)
 
     case DAEMON:
       options.daemon = true;
+      break;
+
+    case OPT_RAM_RECORD_EVERYTHING:
+      options.ram_record_everything = true;
       break;
 
     default:
@@ -353,7 +362,8 @@ int init_options(int argc, char**argv, struct options& options)
     case 'F':
     case 'L':
     case DAEMON:
-      // Ignore daemon, F and L - these are handled by init_logging_options
+    case OPT_RAM_RECORD_EVERYTHING:
+      // Ignore options that are handled by init_logging_options
       break;
 
     case 'h':
@@ -515,6 +525,8 @@ void signal_handler(int sig)
   // will trigger the log files to be copied to the diags bundle
   TRC_COMMIT();
 
+  Log::dumpRamRecorder("/var/log/ralf");
+
   // Dump a core.
   abort();
 }
@@ -558,6 +570,7 @@ int main(int argc, char**argv)
   options.pidfile = "";
   options.daemon = false;
   options.sas_signaling_if = false;
+  options.ram_record_everything = false;
 
   if (init_logging_options(argc, argv, options) != 0)
   {
@@ -570,6 +583,12 @@ int main(int argc, char**argv)
                           options.log_directory,
                           options.log_level,
                           options.log_to_file);
+
+  if (options.ram_record_everything)
+  {
+    TRC_INFO("RAM record everything enabled");
+    Log::enableRamRecordEverything();
+  }
 
   // We should now have a connection to syslog so we can write the started ENT
   // log.

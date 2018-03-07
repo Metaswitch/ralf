@@ -103,6 +103,7 @@ get_daemon_args()
         fi
 
         [ "$sas_use_signaling_interface" != "Y" ] || sas_signaling_if_arg="--sas-use-signaling-interface"
+        [ "$ram_record_everything" != "Y" ] || ram_recording_arg="--ram-record-everything"
 
         [ -z "$diameter_timeout_ms" ] || diameter_timeout_ms_arg="--diameter-timeout-ms=$diameter_timeout_ms"
         [ -z "$ralf_target_latency_us" ] || target_latency_us_arg="--target-latency-us=$ralf_target_latency_us"
@@ -143,6 +144,7 @@ get_daemon_args()
                      $exception_max_ttl_arg
                      $sas_signaling_if_arg
                      --sas=$sas_server,$NAME@$public_hostname"
+                     $ram_recording_arg
 
         [ "$http_blacklist_duration" = "" ]     || DAEMON_ARGS="$DAEMON_ARGS --http-blacklist-duration=$http_blacklist_duration"
         [ "$diameter_blacklist_duration" = "" ] || DAEMON_ARGS="$DAEMON_ARGS --diameter-blacklist-duration=$diameter_blacklist_duration"
