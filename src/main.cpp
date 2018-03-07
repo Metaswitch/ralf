@@ -63,7 +63,7 @@ enum OptionTypes
   RALF_CHRONOS_CALLBACK_URI,
   RALF_HOSTNAME,
   HTTP_ACR_LOGGING,
-  OPT_RAM_RECORD_EVERYTHING,
+  RAM_RECORD_EVERYTHING,
 };
 
 struct options
@@ -142,7 +142,7 @@ const static struct option long_opt[] =
   {"ralf-chronos-callback-uri",   required_argument, NULL, RALF_CHRONOS_CALLBACK_URI},
   {"ralf-hostname",               required_argument, NULL, RALF_HOSTNAME},
   {"http-acr-logging",            required_argument, NULL, HTTP_ACR_LOGGING},
-  { "ram-record-everything",      no_argument,       NULL, OPT_RAM_RECORD_EVERYTHING},
+  { "ram-record-everything",      no_argument,       NULL, RAM_RECORD_EVERYTHING},
   {NULL,                          0,                 NULL, 0},
 };
 
@@ -246,7 +246,7 @@ int init_logging_options(int argc, char**argv, struct options& options)
       options.daemon = true;
       break;
 
-    case OPT_RAM_RECORD_EVERYTHING:
+    case RAM_RECORD_EVERYTHING:
       options.ram_record_everything = true;
       break;
 
@@ -362,7 +362,7 @@ int init_options(int argc, char**argv, struct options& options)
     case 'F':
     case 'L':
     case DAEMON:
-    case OPT_RAM_RECORD_EVERYTHING:
+    case RAM_RECORD_EVERYTHING:
       // Ignore options that are handled by init_logging_options
       break;
 
