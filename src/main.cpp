@@ -871,8 +871,8 @@ int main(int argc, char**argv)
                                                  options.max_peers,
                                                  diameter_resolver,
                                                  cdf_peer_connection_alarm,
-                                                 &CL_RALF_CDF_CONNECTION_CLEARED,
-                                                 &CL_RALF_CDF_CONNECTION_ERROR);
+                                                 CL_RALF_CDF_CONNECTION_CLEARED,
+                                                 CL_RALF_CDF_CONNECTION_ERROR);
   realm_manager->start();
 
   sem_wait(&term_sem);
