@@ -661,11 +661,6 @@ int main(int argc, char**argv)
                                                                                "Ralf",
                                                                                "remote Astaire");
 
-  Alarm* cdf_peer_connection_alarm = new Alarm(alarm_manager,
-                                               "ralf",
-                                               AlarmDef::RALF_CDF_REALM_PEER_ERROR,
-                                               AlarmDef::MINOR);
-
   AccessLogger* access_logger = NULL;
   if (options.access_log_enabled)
   {
@@ -865,6 +860,10 @@ int main(int argc, char**argv)
   DiameterResolver* diameter_resolver = new DiameterResolver(dns_resolver,
                                                              diameter_af,
                                                              options.diameter_blacklist_duration);
+  Alarm cdf_peer_connection_alarm = Alarm(alarm_manager,
+                                          "ralf",
+                                          AlarmDef::RALF_CDF_REALM_PEER_ERROR,
+                                          AlarmDef::MINOR);
   RealmManager* realm_manager = new RealmManager(diameter_stack,
                                                  options.billing_realm,
                                                  options.billing_peer,
@@ -903,7 +902,6 @@ int main(int argc, char**argv)
   realm_manager->stop();
 
   delete realm_manager; realm_manager = NULL;
-  delete cdf_peer_connection_alarm; cdf_peer_connection_alarm = NULL;
   delete diameter_resolver; diameter_resolver = NULL;
   delete timer_conn; timer_conn = NULL;
   delete chronos_http_conn; chronos_http_conn = NULL;
