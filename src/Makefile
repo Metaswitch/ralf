@@ -43,7 +43,8 @@ COMMON_SOURCES := accesslogger.cpp \
                   health_checker.cpp \
                   counter.cpp \
                   namespace_hop.cpp \
-                  astaire_resolver.cpp
+                  astaire_resolver.cpp \
+                  sasservice.cpp
 
 ralf_SOURCES := ${COMMON_SOURCES} main.cpp
 ralf_test_SOURCES := ${COMMON_SOURCES} \
@@ -77,6 +78,7 @@ COMMON_LDFLAGS := -L../usr/lib \
                   -lmemcached \
                   -lboost_regex \
                   -lboost_system \
+                  -lboost_thread \
                   -lboost_filesystem \
                   -lcurl \
                   -levhtp \
