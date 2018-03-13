@@ -26,10 +26,8 @@
 #include "httpstack.h"
 #include "handlers.hpp"
 #include "logger.h"
-#include "saslogger.h"
 #include "rf.h"
 #include "peer_message_sender_factory.hpp"
-#include "sas.h"
 #include "load_monitor.h"
 #include "diameterresolver.h"
 #include "realmmanager.h"
@@ -296,19 +294,8 @@ int init_options(int argc, char**argv, struct options& options)
 
     case 's':
     {
-      std::vector<std::string> sas_options;
-      Utils::split_string(std::string(optarg), ',', sas_options, 0, false);
-
-      if ((sas_options.size() == 1) &&
-          !sas_options[0].empty())
-      {
-        options.sas_system_name = sas_options[0];
-        TRC_INFO("SAS system name is set to %s", options.sas_system_name.c_str());
-      }
-      else
-      {
-        TRC_WARNING("Invalid --sas option: %s", optarg);
-      }
+      options.sas_system_name = std::string(optarg);;
+      TRC_INFO("SAS system name is set to %s", options.sas_system_name.c_str());
     }
     break;
 
@@ -656,15 +643,7 @@ int main(int argc, char**argv)
   }
 
   // Initialise the SasService, to read the SAS config to pass into SAS::Init
-  SasService* sas_service = new SasService();
-
-  SAS::init(options.sas_system_name,
-            "ralf",
-            SASEvent::CURRENT_RESOURCE_BUNDLE,
-            sas_service->get_single_sas_server(),
-            sas_write,
-            options.sas_signaling_if ? create_connection_in_signaling_namespace
-                                     : create_connection_in_management_namespace);
+  SasService* sas_service = new SasService(options.sas_system_name, "ralf", options.sas_signaling_if);
 
   LoadMonitor* load_monitor = new LoadMonitor(options.target_latency_us,
                                               options.max_tokens,

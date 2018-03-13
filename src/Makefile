@@ -78,6 +78,7 @@ COMMON_LDFLAGS := -L../usr/lib \
                   -lmemcached \
                   -lboost_regex \
                   -lboost_system \
+                  -lboost_thread \
                   -lboost_filesystem \
                   -lcurl \
                   -levhtp \
