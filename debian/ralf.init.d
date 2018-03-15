@@ -69,7 +69,6 @@ setup_environment()
 get_settings()
 {
         # Set up defaults and then pull in the settings for this node.
-        sas_server=0.0.0.0
         signaling_dns_server=127.0.0.1
         num_http_threads=$(($(grep processor /proc/cpuinfo | wc -l) * 50))
         log_level=2
@@ -144,7 +143,7 @@ get_daemon_args()
                      $exception_max_ttl_arg
                      $sas_signaling_if_arg
                      $ram_recording_arg
-                     --sas=$sas_server,$NAME@$public_hostname"
+                     --sas=$NAME@$public_hostname"
 
         [ "$http_blacklist_duration" = "" ]     || DAEMON_ARGS="$DAEMON_ARGS --http-blacklist-duration=$http_blacklist_duration"
         [ "$diameter_blacklist_duration" = "" ] || DAEMON_ARGS="$DAEMON_ARGS --diameter-blacklist-duration=$diameter_blacklist_duration"

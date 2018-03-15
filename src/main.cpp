@@ -26,10 +26,8 @@
 #include "httpstack.h"
 #include "handlers.hpp"
 #include "logger.h"
-#include "saslogger.h"
 #include "rf.h"
 #include "peer_message_sender_factory.hpp"
-#include "sas.h"
 #include "load_monitor.h"
 #include "diameterresolver.h"
 #include "realmmanager.h"
@@ -38,6 +36,7 @@
 #include "exception_handler.h"
 #include "ralf_alarmdefinition.h"
 #include "namespace_hop.h"
+#include "sasservice.h"
 
 enum OptionTypes
 {
@@ -84,7 +83,6 @@ struct options
   bool log_to_file;
   std::string log_directory;
   int log_level;
-  std::string sas_server;
   std::string sas_system_name;
   int target_latency_us;
   int diameter_timeout_ms;
@@ -174,10 +172,8 @@ void usage(void)
        " -F, --log-file <directory>\n"
        "                            Log to file in specified directory\n"
        " -L, --log-level N          Set log level to N (default: 4)\n"
-       " -s, --sas <host>,<system name>\n"
-       "                            Use specified host as Service Assurance Server and specified\n"
-       "                            system name to identify this system to SAS. If this option isn't\n"
-       "                            specified, SAS is disabled\n"
+       " -s, --sas <system name>\n"
+       "                            Use specified system name to identify this system to SAS.\n"
        "     --target-latency-us <usecs>\n"
        "                            Target latency above which throttling applies (default: 100000)\n"
        "     --diameter-timeout <milliseconds>\n"
@@ -307,22 +303,8 @@ int init_options(int argc, char**argv, struct options& options)
 
     case 's':
     {
-      std::vector<std::string> sas_options;
-      Utils::split_string(std::string(optarg), ',', sas_options, 0, false);
-
-      if ((sas_options.size() == 2) &&
-          !sas_options[0].empty() &&
-          !sas_options[1].empty())
-      {
-        options.sas_server = sas_options[0];
-        options.sas_system_name = sas_options[1];
-        TRC_INFO("SAS set to %s", options.sas_server.c_str());
-        TRC_INFO("System name is set to %s", options.sas_system_name.c_str());
-      }
-      else
-      {
-        TRC_WARNING("Invalid --sas option: %s", optarg);
-      }
+      options.sas_system_name = std::string(optarg);;
+      TRC_INFO("SAS system name is set to %s", options.sas_system_name.c_str());
     }
     break;
 
@@ -553,7 +535,6 @@ int main(int argc, char**argv)
   options.access_log_enabled = false;
   options.log_to_file = false;
   options.log_level = 0;
-  options.sas_server = "0.0.0.0";
   options.sas_system_name = "";
   options.target_latency_us = 100000;
   options.diameter_timeout_ms = 200;
@@ -642,12 +623,6 @@ int main(int argc, char**argv)
 
   start_signal_handlers();
 
-  if (options.sas_server == "0.0.0.0")
-  {
-    TRC_WARNING("SAS server option was invalid or not configured - SAS is disabled");
-    CL_RALF_INVALID_SAS_OPTION.log();
-  }
-
   // Create Ralf's alarm objects. Note that the alarm identifier strings must match those
   // in the alarm definition JSON file exactly.
   AlarmManager* alarm_manager = new AlarmManager();
@@ -686,13 +661,8 @@ int main(int argc, char**argv)
     access_logger = new AccessLogger(options.access_log_directory);
   }
 
-  SAS::init(options.sas_system_name,
-            "ralf",
-            SASEvent::CURRENT_RESOURCE_BUNDLE,
-            options.sas_server,
-            sas_write,
-            options.sas_signaling_if ? create_connection_in_signaling_namespace
-                                     : create_connection_in_management_namespace);
+  // Initialise the SasService, to read the SAS config to pass into SAS::Init
+  SasService* sas_service = new SasService(options.sas_system_name, "ralf", options.sas_signaling_if);
 
   LoadMonitor* load_monitor = new LoadMonitor(options.target_latency_us,
                                               options.max_tokens,
@@ -951,6 +921,8 @@ int main(int argc, char**argv)
   delete astaire_comm_monitor;
   delete remote_astaire_comm_monitor;
   delete alarm_manager;
+
+  delete sas_service;
 
   signal(SIGTERM, SIG_DFL);
   sem_destroy(&term_sem);
