@@ -849,11 +849,18 @@ int main(int argc, char**argv)
   DiameterResolver* diameter_resolver = new DiameterResolver(dns_resolver,
                                                              diameter_af,
                                                              options.diameter_blacklist_duration);
+  Alarm cdf_peer_connection_alarm = Alarm(alarm_manager,
+                                          "ralf",
+                                          AlarmDef::RALF_CDF_REALM_PEER_ERROR,
+                                          AlarmDef::MINOR);
   RealmManager* realm_manager = new RealmManager(diameter_stack,
                                                  options.billing_realm,
                                                  options.billing_peer,
                                                  options.max_peers,
-                                                 diameter_resolver);
+                                                 diameter_resolver,
+                                                 cdf_peer_connection_alarm,
+                                                 CL_RALF_CDF_CONNECTION_CLEARED,
+                                                 CL_RALF_CDF_CONNECTION_ERROR);
   realm_manager->start();
 
   sem_wait(&term_sem);
